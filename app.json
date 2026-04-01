@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "Kew",
+    "slug": "kew",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F5F0E8"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.kew.app",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#F5F0E8"
+      },
+      "package": "com.kew.app"
+    },
+    "plugins": [
+      "expo-secure-store"
+    ],
+    "scheme": "kew",
+    "extra": {
+      "SUPABASE_URL": "https://piedqhsglgpzcdrvvihk.supabase.co",
+      "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpZWRxaHNnbGdwemNkcnZ2aWhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NTcyMzAsImV4cCI6MjA5MDAzMzIzMH0.D1kWc41oNiDV-aM1cAwnDDDnzSwfQwxWB0nZDqrIjPw",
+      "API_BASE_URL": "https://kew-backend-production.up.railway.app",
+      "eas": {
+        "projectId": "d7d74b72-c5d5-4f5a-95b2-1deacc44b4d4"
+      }
+    }
+  }
+}

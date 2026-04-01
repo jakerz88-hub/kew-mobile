@@ -1,0 +1,194 @@
+import React, { useEffect, useState, useCallback } from "react";
+import { View, FlatList, StyleSheet, SafeAreaView, Image, RefreshControl, TouchableOpacity } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { supabase } from "../services/supabase";
+import { useStore } from "../store";
+import { KewLogo, SansText, SerifText, Divider, ThumbPlaceholder, EmptyState, ErrorBanner } from "../components/UI";
+import { LogoMark } from "../components/TabIcons";
+import { Colors, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
+import { formatDuration, timeAgo } from "../types";
+import type { QueueEntry } from "../types";
+
+function toCamel(s: string) { return s.replace(/_([a-z])/g, (_, c) => c.toUpperCase()); }
+function keysToCamel<T>(obj: any): T {
+  if (Array.isArray(obj)) return obj.map(v => keysToCamel(v)) as any;
+  if (obj !== null && typeof obj === "object")
+    return Object.fromEntries(Object.entries(obj).map(([k, v]) => [toCamel(k), keysToCamel(v)])) as any;
+  return obj;
+}
+
+export default function HistoryScreen() {
+  const navigation = useNavigation<any>();
+  const { error, clearError, addToQueue, user } = useStore();
+  const [entries, setEntries] = useState<QueueEntry[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [totalSecs, setTotal] = useState(0);
+  const [addingId, setAddingId]   = useState<string | null>(null);
+  const [readdedIds, setReaddedIds] = useState<Set<string>>(new Set());
+
+  const loadHistory = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const { data } = await supabase
+        .from("queue")
+        .select("*, video:videos(*)")
+        .eq("user_id", session.user.id)
+        .eq("status", "completed")
+        .order("completed_at", { ascending: false })
+        .limit(100);
+
+      if (data) {
+        const camel = keysToCamel<QueueEntry[]>(data);
+        setEntries(camel);
+        const secs = camel.reduce((acc: number, e: QueueEntry) => acc + (e.video?.durationSecs ?? 0), 0);
+        setTotal(secs);
+      }
+    } catch (e) {
+      console.warn("History load error:", e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadHistory(); }, []);
+
+  const handleReadd = async (entry: QueueEntry) => {
+    setAddingId(entry.video.ytVideoId);
+    try {
+      await addToQueue(entry.video.ytVideoId);
+      setReaddedIds(prev => new Set([...prev, entry.video.ytVideoId]));
+    } catch {
+      // error shown via store
+    } finally {
+      setAddingId(null);
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <LogoMark size={24} />
+          <KewLogo />
+        </View>
+        <TouchableOpacity onPress={() => navigation.navigate("Profile")} activeOpacity={0.8}>
+          <View style={styles.avatarBubble}>
+            <SansText style={styles.avatarBubbleText}>
+              {user?.displayName?.charAt(0).toUpperCase() ?? "?"}
+            </SansText>
+          </View>
+        </TouchableOpacity>
+      </View>
+      <Divider />
+
+      {error && <ErrorBanner message={error} onDismiss={clearError} />}
+
+      <FlatList
+        data={entries}
+        keyExtractor={item => item.id}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={loadHistory} tintColor={Colors.accent} />}
+        ListHeaderComponent={
+          <View style={styles.pageHeader}>
+            <SerifText style={styles.pageTitle}>Your Watch History</SerifText>
+            {entries.length > 0 && (
+              <SansText style={styles.pageSubtitle}>
+                {entries.length} video{entries.length !== 1 ? "s" : ""} watched · {_formatTotalTime(totalSecs)} total
+              </SansText>
+            )}
+          </View>
+        }
+        renderItem={({ item }) => (
+          <HistoryItem
+            entry={item}
+            readded={readdedIds.has(item.video.ytVideoId)}
+            adding={addingId === item.video.ytVideoId}
+            onReadd={() => handleReadd(item)}
+          />
+        )}
+        ItemSeparatorComponent={() => <Divider style={{ marginHorizontal: 0 }} />}
+        ListEmptyComponent={
+          !loading ? (
+            <EmptyState icon="↻" title="Nothing watched yet" subtitle="Videos you finish will appear here. Go watch something!" />
+          ) : null
+        }
+        contentContainerStyle={styles.listContent}
+      />
+    </SafeAreaView>
+  );
+}
+
+function HistoryItem({ entry, readded, adding, onReadd }: {
+  entry: QueueEntry;
+  readded: boolean;
+  adding: boolean;
+  onReadd: () => void;
+}) {
+  return (
+    <View style={styles.item}>
+      <View style={styles.thumb}>
+        {entry.video.thumbnailUrl
+          ? <Image source={{ uri: entry.video.thumbnailUrl }} style={[StyleSheet.absoluteFill, styles.thumbImg]} />
+          : <ThumbPlaceholder seed={entry.video.ytVideoId} style={StyleSheet.absoluteFill} />
+        }
+        <View style={styles.completedBadge}>
+          <SansText style={styles.completedTick}>✓</SansText>
+        </View>
+      </View>
+      <View style={styles.info}>
+        <SansText style={styles.channel} numberOfLines={1}>{entry.video.channelTitle}</SansText>
+        <SansText style={styles.title} numberOfLines={2}>{entry.video.title}</SansText>
+        <View style={styles.meta}>
+          <SansText style={styles.metaText}>{formatDuration(entry.video.durationSecs)}</SansText>
+          <SansText style={styles.metaDot}>·</SansText>
+          <SansText style={styles.metaText}>Watched {timeAgo(entry.completedAt)}</SansText>
+        </View>
+      </View>
+      <TouchableOpacity
+        style={[styles.readdBtn, readded && styles.readdBtnDone]}
+        onPress={onReadd}
+        disabled={readded || adding}
+        activeOpacity={0.7}
+      >
+        <SansText style={[styles.readdBtnText, readded && styles.readdBtnTextDone]}>
+          {adding ? "..." : readded ? "✓" : "↺"}
+        </SansText>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+function _formatTotalTime(secs: number): string {
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  if (h === 0) return `${m}m`;
+  return `${h}h ${m}m`;
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: Colors.cream },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm },
+  pageHeader: { padding: Spacing.md, paddingBottom: Spacing.sm },
+  pageTitle: { fontSize: FontSize.lg },
+  pageSubtitle: { fontSize: FontSize.xs, color: Colors.warmMid, marginTop: 2 },
+  item: { flexDirection: "row", alignItems: "center", paddingVertical: Spacing.sm + 2, paddingHorizontal: Spacing.md, gap: Spacing.sm },
+  thumb: { width: 88, height: 56, borderRadius: Radius.sm, overflow: "hidden", backgroundColor: Colors.divider, flexShrink: 0, position: "relative" },
+  thumbImg: { borderRadius: Radius.sm },
+  completedBadge: { position: "absolute", bottom: 4, right: 4, width: 18, height: 18, borderRadius: 9, backgroundColor: Colors.green, alignItems: "center", justifyContent: "center" },
+  completedTick: { color: "white", fontSize: 9, fontFamily: FontFamily.sansMedium },
+  info: { flex: 1, minWidth: 0 },
+  channel: { fontSize: FontSize.xxs, color: Colors.warmMid, textTransform: "uppercase", letterSpacing: 0.5, fontFamily: FontFamily.sansMedium, marginBottom: 2 },
+  title: { fontSize: FontSize.sm, color: Colors.ink, lineHeight: 18 },
+  meta: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 3 },
+  metaText: { fontSize: FontSize.xxs, color: Colors.queued },
+  metaDot: { fontSize: FontSize.xxs, color: Colors.queued },
+  readdBtn: { width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: Colors.accent, alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  readdBtnDone: { backgroundColor: Colors.green, borderColor: Colors.green },
+  readdBtnText: { fontSize: FontSize.lg, color: Colors.accent, lineHeight: 24, marginTop: -2 },
+  readdBtnTextDone: { color: "white", fontSize: FontSize.sm, marginTop: 0 },
+  listContent: { paddingBottom: 80 },
+  avatarBubble: { width: 30, height: 30, borderRadius: 15, backgroundColor: Colors.green, alignItems: "center", justifyContent: "center" },
+  avatarBubbleText: { color: Colors.cream, fontSize: FontSize.xs, fontFamily: FontFamily.sansMedium },
+});
