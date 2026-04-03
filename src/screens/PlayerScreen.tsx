@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Modal, Image } from "react-native";
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Modal, Image, StatusBar, useWindowDimensions } from "react-native";
+import * as ScreenOrientation from "expo-screen-orientation";
 import { QueueActionSheet } from "../components/QueueActionSheet";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import YoutubePlayer from "react-native-youtube-iframe";
@@ -19,6 +20,17 @@ export default function PlayerScreen() {
   const { queue, user, updateProgress, skipCurrent, fetchQueue } = useStore();
   const current         = queue?.current ?? queue?.entries.find(e => e.status === "pending") ?? null;
   const upcomingEntries = queue?.entries.filter(e => e.status === "pending" && e.id !== current?.id) ?? [];
+
+  const { width, height } = useWindowDimensions();
+  const isLandscape = width > height;
+
+  // Unlock rotation when entering player; restore portrait lock on exit
+  useEffect(() => {
+    ScreenOrientation.unlockAsync();
+    return () => {
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+    };
+  }, []);
 
   const [playing, setPlaying]               = useState(true);
   const [showSkipModal, setShowSkipModal]   = useState(false);
@@ -95,6 +107,27 @@ export default function PlayerScreen() {
           <SerifText style={styles.noVideoText}>Nothing to play right now.</SerifText>
         </View>
       </SafeAreaView>
+    );
+  }
+
+  // Landscape: expand video to fill the screen, hide all chrome
+  if (isLandscape) {
+    return (
+      <View style={styles.fullscreenContainer}>
+        <StatusBar hidden />
+        <YoutubePlayer
+          ref={playerRef}
+          height={height}
+          width={width}
+          videoId={current.video.ytVideoId}
+          play={playing}
+          onChangeState={onStateChange}
+          webViewProps={{
+            allowsInlineMediaPlayback: true,
+            mediaPlaybackRequiresUserAction: false,
+          }}
+        />
+      </View>
     );
   }
 
@@ -264,6 +297,7 @@ export default function PlayerScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.cream },
+  fullscreenContainer: { flex: 1, backgroundColor: "black" },
   nav: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm },
   backText: { fontSize: FontSize.sm, color: Colors.ink },
   navLogo: { fontFamily: FontFamily.serif, fontSize: FontSize.lg, color: Colors.ink },
