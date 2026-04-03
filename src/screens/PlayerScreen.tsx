@@ -110,43 +110,33 @@ export default function PlayerScreen() {
     );
   }
 
-  // Landscape: expand video to fill the screen, hide all chrome
-  if (isLandscape) {
-    return (
-      <View style={styles.fullscreenContainer}>
-        <StatusBar hidden />
-        <YoutubePlayer
-          ref={playerRef}
-          height={height}
-          width={width}
-          videoId={current.video.ytVideoId}
-          play={playing}
-          onChangeState={onStateChange}
-          webViewProps={{
-            allowsInlineMediaPlayback: true,
-            mediaPlaybackRequiresUserAction: false,
-          }}
-        />
-      </View>
-    );
-  }
-
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.nav}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <SansText style={styles.backText}>← Queue</SansText>
-        </TouchableOpacity>
-        <Text style={styles.navLogo}>K<Text style={{ color: Colors.accent }}>e</Text>w</Text>
-        <View style={{ width: 60 }} />
-      </View>
-      <Divider />
+      <StatusBar hidden={isLandscape} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      {/* Portrait-only header */}
+      {!isLandscape && (
+        <>
+          <View style={styles.nav}>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <SansText style={styles.backText}>← Queue</SansText>
+            </TouchableOpacity>
+            <Text style={styles.navLogo}>K<Text style={{ color: Colors.accent }}>e</Text>w</Text>
+            <View style={{ width: 60 }} />
+          </View>
+          <Divider />
+        </>
+      )}
 
+      {/*
+        Video is ALWAYS rendered here so React never unmounts/remounts it.
+        In landscape it expands to cover the full screen via absolute positioning.
+      */}
+      <View style={isLandscape ? styles.videoLandscape : undefined}>
         <YoutubePlayer
           ref={playerRef}
-          height={210}
+          height={isLandscape ? height : 210}
+          width={isLandscape ? width : undefined}
           videoId={current.video.ytVideoId}
           play={playing}
           onChangeState={onStateChange}
@@ -155,6 +145,11 @@ export default function PlayerScreen() {
             mediaPlaybackRequiresUserAction: false,
           }}
         />
+      </View>
+
+      {/* Portrait-only scroll content */}
+      {!isLandscape && (
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
         <View style={styles.metaSection}>
           <SansText style={styles.channelName}>{current.video.channelTitle}</SansText>
@@ -223,6 +218,7 @@ export default function PlayerScreen() {
           </View>
         )}
       </ScrollView>
+      )} {/* end portrait-only scroll content */}
 
       {/* Mark as watched modal */}
       <Modal visible={showDoneModal} transparent animationType="fade" onRequestClose={() => setShowDoneModal(false)}>
@@ -297,7 +293,7 @@ export default function PlayerScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.cream },
-  fullscreenContainer: { flex: 1, backgroundColor: "black" },
+  videoLandscape: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 10, backgroundColor: "black" },
   nav: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm },
   backText: { fontSize: FontSize.sm, color: Colors.ink },
   navLogo: { fontFamily: FontFamily.serif, fontSize: FontSize.lg, color: Colors.ink },
