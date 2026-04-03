@@ -78,6 +78,10 @@ export const api = {
     return request(`/v1/browse${qs ? `?${qs}` : ""}`);
   },
 
+  getRecentUploads(days: number = 7): Promise<BrowseVideo[]> {
+    return request(`/v1/browse/recent?days=${days}`);
+  },
+
   getQueue(): Promise<Queue> {
     return request("/v1/queue");
   },

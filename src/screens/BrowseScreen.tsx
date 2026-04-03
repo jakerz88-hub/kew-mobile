@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { View, FlatList, TouchableOpacity, Modal, Pressable, StyleSheet, SafeAreaView, Image, RefreshControl } from "react-native";
+import { View, FlatList, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Image, RefreshControl } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { api } from "../services/api";
@@ -12,39 +12,41 @@ import { Colors, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 export default function BrowseScreen() {
   const navigation = useNavigation<any>();
   const { user } = useStore();
-  const [channels, setChannels] = useState<Channel[]>([]);
-  const [loading, setLoading]   = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [showSyncConfirm, setShowSyncConfirm] = useState(false);
-  const [syncing, setSyncing] = useState(false);
+  const [channels, setChannels]       = useState<Channel[]>([]);
+  const [syncing, setSyncing]         = useState(false);
+  const [loadError, setLoadError]     = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const loadChannels = useCallback(async () => {
-    setLoading(true);
-    setLoadError(null);
     try {
       const ch = await api.listChannels();
       setChannels(ch);
     } catch (e: any) {
       setLoadError(e?.message ?? "Failed to load channels");
-    } finally {
-      setLoading(false);
     }
   }, []);
 
-  const handleResync = async () => {
-    setShowSyncConfirm(false);
+  // Pull-to-refresh does a full re-sync against YouTube, then updates the list
+  const handleRefresh = useCallback(async () => {
     setSyncing(true);
+    setLoadError(null);
     try {
       const updated = await api.syncSubscriptions();
       setChannels(updated);
     } catch (e: any) {
-      setLoadError(e?.message ?? "Re-sync failed. Please try again.");
+      setLoadError(e?.message ?? "Sync failed. Pull down to try again.");
     } finally {
       setSyncing(false);
     }
-  };
+  }, []);
 
   useEffect(() => { loadChannels(); }, []);
+
+  const filteredChannels = searchQuery.trim()
+    ? channels.filter(ch =>
+        ch.title.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : channels;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -66,30 +68,49 @@ export default function BrowseScreen() {
       {loadError && <ErrorBanner message={loadError} onDismiss={() => setLoadError(null)} />}
 
       <FlatList
-        data={channels}
+        data={filteredChannels}
         keyExtractor={item => item.ytChannelId}
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={loadChannels} tintColor={Colors.accent} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={syncing}
+            onRefresh={handleRefresh}
+            tintColor={Colors.accent}
+          />
+        }
         ListHeaderComponent={
           <>
+            {/* Title + stats row */}
             <View style={styles.pageTitleRow}>
               <SerifText style={styles.pageTitle}>Browse Your Channels</SerifText>
               {channels.length > 0 && (
-                <SansText style={styles.channelCount}>
-                  {channels.length} subscription{channels.length !== 1 ? "s" : ""} loaded
-                </SansText>
+                <View style={styles.statsRow}>
+                  <SansText style={styles.channelCount}>
+                    {channels.length} subscription{channels.length !== 1 ? "s" : ""} loaded
+                  </SansText>
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate("RecentUploads")}
+                    activeOpacity={0.7}
+                  >
+                    <SansText style={styles.recentLink}>Latest uploads →</SansText>
+                  </TouchableOpacity>
+                </View>
               )}
             </View>
 
-            <TouchableOpacity
-              style={[styles.resyncBtn, syncing && { opacity: 0.5 }]}
-              onPress={() => setShowSyncConfirm(true)}
-              disabled={syncing}
-              activeOpacity={0.7}
-            >
-              <SansText style={styles.resyncBtnText}>
-                {syncing ? "Re-syncing…" : "Re-sync subscriptions"}
-              </SansText>
-            </TouchableOpacity>
+            {/* Search bar */}
+            <View style={styles.searchRow}>
+              <Feather name="search" size={14} color={Colors.warmMid} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search creators..."
+                placeholderTextColor={Colors.warmMid}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                clearButtonMode="while-editing"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
           </>
         }
         renderItem={({ item }) => (
@@ -106,49 +127,17 @@ export default function BrowseScreen() {
         )}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListEmptyComponent={
-          !loading
-            ? <EmptyState icon="☰" title="No channels yet" subtitle="Tap 'Re-sync subscriptions' above to load your YouTube subscriptions." />
+          !syncing
+            ? <EmptyState
+                icon="☰"
+                title={searchQuery ? "No matching creators" : "No channels yet"}
+                subtitle={searchQuery ? "Try a different search." : "Pull down to sync your YouTube subscriptions."}
+              />
             : null
         }
         contentContainerStyle={styles.listContent}
       />
-
-      <ResyncConfirmSheet
-        visible={showSyncConfirm}
-        onConfirm={handleResync}
-        onClose={() => setShowSyncConfirm(false)}
-      />
     </SafeAreaView>
-  );
-}
-
-function ResyncConfirmSheet({ visible, onConfirm, onClose }: {
-  visible: boolean;
-  onConfirm: () => void;
-  onClose: () => void;
-}) {
-  return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.sheetOverlay} onPress={onClose}>
-        <Pressable style={styles.sheetContainer} onPress={() => {}}>
-          <View style={styles.sheetHandle} />
-          <SerifText style={styles.sheetTitle}>Re-sync subscriptions?</SerifText>
-          <SansText style={styles.sheetSubtitle}>
-            This will update your channel list to match your{"\n"}current YouTube subscriptions.
-          </SansText>
-          <TouchableOpacity
-            style={styles.sheetActionBtn}
-            onPress={onConfirm}
-            activeOpacity={0.7}
-          >
-            <SansText style={styles.sheetActionText}>Yes, re-sync</SansText>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.sheetCancelBtn} onPress={onClose} activeOpacity={0.7}>
-            <SansText style={styles.sheetCancelText}>Cancel</SansText>
-          </TouchableOpacity>
-        </Pressable>
-      </Pressable>
-    </Modal>
   );
 }
 
@@ -172,9 +161,11 @@ const styles = StyleSheet.create({
   header:           { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm },
   pageTitleRow:     { paddingHorizontal: Spacing.md, paddingTop: Spacing.sm, paddingBottom: Spacing.xs },
   pageTitle:        { fontSize: FontSize.lg },
-  channelCount:     { fontSize: FontSize.xs, color: Colors.warmMid, marginTop: 3 },
-  resyncBtn:        { marginHorizontal: Spacing.md, marginBottom: Spacing.sm, paddingVertical: Spacing.sm, borderRadius: Radius.pill, borderWidth: 1.5, borderColor: Colors.accent, alignItems: "center" },
-  resyncBtnText:    { color: Colors.accent, fontSize: FontSize.sm, fontFamily: FontFamily.sansMedium },
+  statsRow:         { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 4 },
+  channelCount:     { fontSize: FontSize.xs, color: Colors.warmMid },
+  recentLink:       { fontSize: FontSize.xs, color: Colors.accent, fontFamily: FontFamily.sansMedium },
+  searchRow:        { flexDirection: "row", alignItems: "center", marginHorizontal: Spacing.md, marginBottom: Spacing.sm, paddingHorizontal: Spacing.sm, paddingVertical: 8, backgroundColor: Colors.cardBg, borderRadius: Radius.md, borderWidth: 1, borderColor: Colors.divider, gap: 8 },
+  searchInput:      { flex: 1, fontSize: FontSize.sm, color: Colors.ink, fontFamily: FontFamily.sansRegular, padding: 0 },
   listContent:      { paddingBottom: 80 },
   separator:        { height: 1, backgroundColor: Colors.divider, marginLeft: 72 },
   row:              { flexDirection: "row", alignItems: "center", paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, gap: Spacing.md },
@@ -184,13 +175,4 @@ const styles = StyleSheet.create({
   channelName:      { flex: 1, fontSize: FontSize.sm, color: Colors.ink, fontFamily: FontFamily.sansMedium },
   avatarBubble:     { width: 30, height: 30, borderRadius: 15, backgroundColor: Colors.green, alignItems: "center", justifyContent: "center" },
   avatarBubbleText: { color: Colors.cream, fontSize: FontSize.xs, fontFamily: FontFamily.sansMedium },
-  sheetOverlay:     { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" },
-  sheetContainer:   { backgroundColor: Colors.cream, borderTopLeftRadius: Radius.lg, borderTopRightRadius: Radius.lg, padding: Spacing.lg, paddingBottom: 40, gap: Spacing.sm },
-  sheetHandle:      { width: 36, height: 4, borderRadius: 2, backgroundColor: Colors.divider, alignSelf: "center", marginBottom: Spacing.sm },
-  sheetTitle:       { fontSize: FontSize.md, color: Colors.ink, textAlign: "center" },
-  sheetSubtitle:    { fontSize: FontSize.xs, color: Colors.warmMid, textAlign: "center", lineHeight: 20, marginBottom: Spacing.xs },
-  sheetActionBtn:   { backgroundColor: Colors.accent, borderRadius: Radius.pill, paddingVertical: Spacing.sm + 2, alignItems: "center" },
-  sheetActionText:  { color: "white", fontSize: FontSize.sm, fontFamily: FontFamily.sansMedium },
-  sheetCancelBtn:   { borderRadius: Radius.pill, borderWidth: 1.5, borderColor: Colors.divider, paddingVertical: Spacing.sm + 2, alignItems: "center" },
-  sheetCancelText:  { color: Colors.warmMid, fontSize: FontSize.sm, fontFamily: FontFamily.sansMedium },
 });

@@ -31,6 +31,7 @@ import PlayerScreen from "./src/screens/PlayerScreen";
 import CompletionScreen from "./src/screens/CompletionScreen";
 import ProfileScreen from "./src/screens/ProfileScreen";
 import ChannelScreen from "./src/screens/ChannelScreen";
+import RecentUploadsScreen from "./src/screens/RecentUploadsScreen";
 
 const Tab   = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -80,8 +81,9 @@ function AppNavigator() {
       <Stack.Screen name="Tabs"       component={TabNavigator} />
       <Stack.Screen name="Player"     component={PlayerScreen} />
       <Stack.Screen name="Completion" component={CompletionScreen} />
-      <Stack.Screen name="Channel"    component={ChannelScreen} />
-      <Stack.Screen name="Profile"    component={ProfileScreen} />
+      <Stack.Screen name="Channel"       component={ChannelScreen} />
+      <Stack.Screen name="RecentUploads" component={RecentUploadsScreen} />
+      <Stack.Screen name="Profile"       component={ProfileScreen} />
     </Stack.Navigator>
   );
 }
