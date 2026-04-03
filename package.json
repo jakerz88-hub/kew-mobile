@@ -22,6 +22,7 @@
     "expo-constants": "~18.0.13",
     "expo-secure-store": "~15.0.8",
     "expo-status-bar": "~3.0.9",
+    "expo-updates": "~29.0.16",
     "expo-web-browser": "~15.0.10",
     "react": "19.1.0",
     "react-native": "0.81.5",
@@ -34,7 +35,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",
-    "@types/react": "~18.2.0",
+    "@types/react": "~19.0.0",
     "typescript": "~5.3.0"
   }
 }

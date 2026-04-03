@@ -84,15 +84,15 @@ export default function LoginScreen() {
             <KewLogo size={56} />
           </View>
           <SansText style={styles.tagline}>
-            Push against the pull.{"\n"}Enjoyment {">"} Engagement.
+            Watch intentionally.{"\n"}No algorithm. No autoplay. No noise.
           </SansText>
         </View>
 
         <View style={styles.howItWorks}>
           {[
-            ["☰", "Build a queue from your existing subscriptions."],
-            ["▶", "Watch intentionally, one at a time."],
-            ["→", "Earn skips by completing videos."],
+            ["☰", "Build a queue from your favorite creators."],
+            ["▶", "Watch your curated videos, one at a time."],
+            ["→", "Earn skips by watching videos to the end."],
           ].map(([icon, text]) => (
             <View key={icon} style={styles.howItem}>
               <Text style={styles.howIcon}>{icon}</Text>

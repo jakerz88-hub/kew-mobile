@@ -1,6 +1,6 @@
 import "react-native-url-polyfill/auto";
-import React, { useEffect, useState } from "react";
-import { View, ActivityIndicator } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { AppState, View, ActivityIndicator } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -97,6 +97,20 @@ export default function App() {
     DMSans_500Medium,
     DMSans_300Light,
   });
+
+  // Re-sync subscriptions whenever the app comes back to the foreground
+  const appState = useRef(AppState.currentState);
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (nextState) => {
+      if (appState.current.match(/inactive|background/) && nextState === "active") {
+        supabase.auth.getSession().then(({ data }) => {
+          if (data.session) api.syncSubscriptions().catch(console.warn);
+        });
+      }
+      appState.current = nextState;
+    });
+    return () => sub.remove();
+  }, []);
 
   useEffect(() => {
     const fallback = setTimeout(() => setSession(null), 5000);
