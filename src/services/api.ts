@@ -78,8 +78,17 @@ export const api = {
     return request(`/v1/browse${qs ? `?${qs}` : ""}`);
   },
 
-  getRecentUploads(days: number = 7): Promise<BrowseVideo[]> {
-    return request(`/v1/browse/recent?days=${days}`);
+  getRecentUploads(days: number = 7, forceRefresh: boolean = false): Promise<BrowseVideo[]> {
+    const params = new URLSearchParams({ days: String(days) });
+    if (forceRefresh) params.set("force_refresh", "true");
+    return request(`/v1/browse/recent?${params}`);
+  },
+
+  updateAvatar(avatarUrl: string | null): Promise<{ message: string }> {
+    return request("/v1/profile/avatar", {
+      method: "PATCH",
+      body: JSON.stringify({ avatar_url: avatarUrl }),
+    });
   },
 
   getQueue(): Promise<Queue> {

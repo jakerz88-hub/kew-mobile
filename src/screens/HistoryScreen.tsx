@@ -3,7 +3,7 @@ import { View, FlatList, StyleSheet, SafeAreaView, Image, RefreshControl, Toucha
 import { useNavigation } from "@react-navigation/native";
 import { supabase } from "../services/supabase";
 import { useStore } from "../store";
-import { KewLogo, SansText, SerifText, Divider, ThumbPlaceholder, EmptyState, ErrorBanner } from "../components/UI";
+import { KewLogo, SansText, SerifText, Divider, ThumbPlaceholder, EmptyState, ErrorBanner, AvatarBubble } from "../components/UI";
 import { LogoMark } from "../components/TabIcons";
 import { Colors, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { formatDuration, timeAgo } from "../types";
@@ -74,13 +74,12 @@ export default function HistoryScreen() {
           <LogoMark size={24} />
           <KewLogo />
         </View>
-        <TouchableOpacity onPress={() => navigation.navigate("Profile")} activeOpacity={0.8}>
-          <View style={styles.avatarBubble}>
-            <SansText style={styles.avatarBubbleText}>
-              {user?.displayName?.charAt(0).toUpperCase() ?? "?"}
-            </SansText>
-          </View>
-        </TouchableOpacity>
+        <AvatarBubble
+          avatarUrl={user?.avatarUrl}
+          initial={user?.displayName?.charAt(0).toUpperCase() ?? "?"}
+          size={30}
+          onPress={() => navigation.navigate("Profile")}
+        />
       </View>
       <Divider />
 

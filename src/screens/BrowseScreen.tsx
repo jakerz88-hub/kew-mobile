@@ -4,7 +4,7 @@ import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { api } from "../services/api";
 import type { Channel } from "../types";
-import { KewLogo, SansText, SerifText, Divider, EmptyState, ErrorBanner } from "../components/UI";
+import { KewLogo, SansText, SerifText, Divider, EmptyState, ErrorBanner, AvatarBubble } from "../components/UI";
 import { LogoMark } from "../components/TabIcons";
 import { useStore } from "../store";
 import { Colors, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
@@ -55,13 +55,12 @@ export default function BrowseScreen() {
           <LogoMark size={24} />
           <KewLogo />
         </View>
-        <TouchableOpacity onPress={() => navigation.navigate("Profile")} activeOpacity={0.8}>
-          <View style={styles.avatarBubble}>
-            <SansText style={styles.avatarBubbleText}>
-              {user?.displayName?.charAt(0).toUpperCase() ?? "?"}
-            </SansText>
-          </View>
-        </TouchableOpacity>
+        <AvatarBubble
+          avatarUrl={user?.avatarUrl}
+          initial={user?.displayName?.charAt(0).toUpperCase() ?? "?"}
+          size={30}
+          onPress={() => navigation.navigate("Profile")}
+        />
       </View>
       <Divider />
 

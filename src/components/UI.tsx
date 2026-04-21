@@ -1,6 +1,6 @@
 import React from "react";
 import {
-  View, Text, TouchableOpacity, ActivityIndicator,
+  View, Text, TouchableOpacity, ActivityIndicator, Image,
   StyleSheet, ViewStyle, TextStyle,
 } from "react-native";
 import { Colors, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
@@ -103,6 +103,33 @@ export function EmptyState({ icon, title, subtitle }: { icon: string; title: str
   );
 }
 
+export function AvatarBubble({
+  avatarUrl,
+  initial,
+  size = 30,
+  onPress,
+}: {
+  avatarUrl?: string | null;
+  initial: string;
+  size?: number;
+  onPress?: () => void;
+}) {
+  const inner = avatarUrl ? (
+    <Image
+      source={{ uri: avatarUrl }}
+      style={{ width: size, height: size, borderRadius: size / 2 }}
+    />
+  ) : (
+    <View style={[styles.avatarBubbleBg, { width: size, height: size, borderRadius: size / 2 }]}>
+      <Text style={[styles.avatarBubbleInitial, { fontSize: size * 0.4 }]}>{initial}</Text>
+    </View>
+  );
+  if (onPress) {
+    return <TouchableOpacity onPress={onPress} activeOpacity={0.8}>{inner}</TouchableOpacity>;
+  }
+  return inner;
+}
+
 export function ErrorBanner({ message, onDismiss }: { message: string; onDismiss: () => void }) {
   return (
     <TouchableOpacity style={styles.errorBanner} onPress={onDismiss}>
@@ -136,4 +163,6 @@ const styles = StyleSheet.create({
   emptySubtitle: { fontSize: FontSize.sm, color: Colors.warmMid, textAlign: "center", lineHeight: 20 },
   errorBanner: { backgroundColor: Colors.accent, padding: Spacing.sm, margin: Spacing.md, borderRadius: Radius.sm },
   errorText: { color: Colors.cream, fontSize: FontSize.xs, textAlign: "center" },
+  avatarBubbleBg: { backgroundColor: Colors.green, alignItems: "center", justifyContent: "center" },
+  avatarBubbleInitial: { fontFamily: FontFamily.sansMedium, color: Colors.cream },
 });

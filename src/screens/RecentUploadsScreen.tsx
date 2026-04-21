@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, Image, ActivityIndicator } from "react-native";
+import { View, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, Image, ActivityIndicator, RefreshControl } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { api } from "../services/api";
@@ -14,10 +14,11 @@ export default function RecentUploadsScreen() {
   const navigation = useNavigation<any>();
   const { addToQueue, queue, error, clearError } = useStore();
 
-  const [videos, setVideos]       = useState<BrowseVideo[]>([]);
-  const [loading, setLoading]     = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [addingId, setAddingId]   = useState<string | null>(null);
+  const [videos, setVideos]           = useState<BrowseVideo[]>([]);
+  const [loading, setLoading]         = useState(false);
+  const [refreshing, setRefreshing]   = useState(false);
+  const [loadError, setLoadError]     = useState<string | null>(null);
+  const [addingId, setAddingId]       = useState<string | null>(null);
   const [removeTarget, setRemoveTarget] = useState<{ entryId: string; title: string } | null>(null);
 
   const queueEntryByVideoId = React.useMemo(() => {
@@ -28,21 +29,22 @@ export default function RecentUploadsScreen() {
     return map;
   }, [queue]);
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      setLoadError(null);
-      try {
-        const vids = await api.getRecentUploads(7);
-        setVideos(vids);
-      } catch (e: any) {
-        setLoadError(e?.message ?? "Failed to load recent uploads");
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, []);
+  const loadVideos = async (forceRefresh = false) => {
+    if (forceRefresh) setRefreshing(true);
+    else setLoading(true);
+    setLoadError(null);
+    try {
+      const vids = await api.getRecentUploads(7, forceRefresh);
+      setVideos(vids);
+    } catch (e: any) {
+      setLoadError(e?.message ?? "Failed to load recent uploads");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => { loadVideos(); }, []);
 
   const handleAdd = async (video: BrowseVideo) => {
     setAddingId(video.ytVideoId);
@@ -79,6 +81,13 @@ export default function RecentUploadsScreen() {
         <FlatList
           data={videos}
           keyExtractor={item => item.ytVideoId}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => loadVideos(true)}
+              tintColor={Colors.accent}
+            />
+          }
           renderItem={({ item }) => {
             const entryId = queueEntryByVideoId[item.ytVideoId];
             const inQueue = !!entryId;
