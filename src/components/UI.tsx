@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
-  View, Text, TouchableOpacity, ActivityIndicator, Image,
+  View, Text, TouchableOpacity, ActivityIndicator, Image, Animated,
   StyleSheet, ViewStyle, TextStyle,
 } from "react-native";
 import { Colors, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
@@ -130,6 +130,27 @@ export function AvatarBubble({
   return inner;
 }
 
+export function Toast({ message, visible }: { message: string; visible: boolean }) {
+  const opacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (visible) {
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+        Animated.delay(3000),
+        Animated.timing(opacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+      ]).start();
+    }
+  }, [visible]);
+
+  if (!visible) return null;
+  return (
+    <Animated.View style={[styles.toast, { opacity }]}>
+      <SansText style={styles.toastText}>{message}</SansText>
+    </Animated.View>
+  );
+}
+
 export function ErrorBanner({ message, onDismiss }: { message: string; onDismiss: () => void }) {
   return (
     <TouchableOpacity style={styles.errorBanner} onPress={onDismiss}>
@@ -165,4 +186,11 @@ const styles = StyleSheet.create({
   errorText: { color: Colors.cream, fontSize: FontSize.xs, textAlign: "center" },
   avatarBubbleBg: { backgroundColor: Colors.green, alignItems: "center", justifyContent: "center" },
   avatarBubbleInitial: { fontFamily: FontFamily.sansMedium, color: Colors.cream },
+  toast: {
+    position: "absolute", bottom: 32, left: Spacing.lg, right: Spacing.lg,
+    backgroundColor: Colors.ink, borderRadius: Radius.md,
+    paddingVertical: Spacing.sm + 2, paddingHorizontal: Spacing.md,
+    zIndex: 99,
+  },
+  toastText: { color: Colors.cream, fontSize: FontSize.xs, textAlign: "center", lineHeight: 18 },
 });

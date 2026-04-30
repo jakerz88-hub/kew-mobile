@@ -54,6 +54,32 @@ export interface BrowseVideo {
   inQueue: boolean;
 }
 
+export interface Playlist {
+  id: string;
+  title: string;
+  thumbnailUrl: string | null;
+  videoCount: number;
+}
+
+export interface PlaylistVideo {
+  ytVideoId: string;
+  ytChannelId: string;
+  title: string;
+  channelTitle: string;
+  thumbnailUrl: string | null;
+  durationSecs: number | null;
+}
+
+export interface PlaylistVideosResult {
+  videos: PlaylistVideo[];
+  skippedCount: number;
+}
+
+export interface ImportResult {
+  importedCount: number;
+  alreadyQueuedCount: number;
+}
+
 export interface SkipResult {
   skipsRemaining: number;
   skipsMax: number;

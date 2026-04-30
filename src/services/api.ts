@@ -1,6 +1,6 @@
 import { supabase } from "./supabase";
 import Constants from "expo-constants";
-import type { Queue, BrowseVideo, Channel, User, SkipResult } from "../types";
+import type { Queue, BrowseVideo, Channel, User, SkipResult, Playlist, PlaylistVideosResult, ImportResult } from "../types";
 
 const BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL as string;
 
@@ -129,6 +129,21 @@ export const api = {
     return request("/v1/profile/username", {
       method: "PATCH",
       body: JSON.stringify({ username }),
+    });
+  },
+
+  getPlaylists(): Promise<Playlist[]> {
+    return request("/v1/playlists");
+  },
+
+  getPlaylistVideos(playlistId: string): Promise<PlaylistVideosResult> {
+    return request(`/v1/playlists/${playlistId}/videos`);
+  },
+
+  importToQueue(ytVideoIds: string[]): Promise<ImportResult> {
+    return request("/v1/queue/import", {
+      method: "POST",
+      body: JSON.stringify({ yt_video_ids: ytVideoIds }),
     });
   },
 };

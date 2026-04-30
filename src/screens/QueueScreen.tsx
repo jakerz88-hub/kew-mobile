@@ -83,6 +83,14 @@ export default function QueueScreen() {
               </TouchableOpacity>
             )}
 
+            <TouchableOpacity
+              style={styles.importBtn}
+              onPress={() => navigation.navigate("PlaylistList")}
+              activeOpacity={0.7}
+            >
+              <SansText style={styles.importBtnText}>+ Import from YouTube playlist</SansText>
+            </TouchableOpacity>
+
             {pendingEntries.length > 0 && (
               <SansText style={styles.upNextLabel}>{current ? "Queued Up" : "Up Next"}</SansText>
             )}
@@ -254,4 +262,6 @@ const styles = StyleSheet.create({
   sheetActionText: { color: "white", fontSize: FontSize.sm, fontFamily: FontFamily.sansMedium },
   sheetCancelBtn: { borderRadius: Radius.pill, borderWidth: 1.5, borderColor: Colors.divider, paddingVertical: Spacing.sm + 2, alignItems: "center" },
   sheetCancelText: { color: Colors.warmMid, fontSize: FontSize.sm, fontFamily: FontFamily.sansMedium },
+  importBtn: { marginHorizontal: Spacing.md, marginBottom: Spacing.sm, paddingVertical: Spacing.sm, borderRadius: Radius.pill, borderWidth: 1.5, borderColor: Colors.divider, alignItems: "center" },
+  importBtnText: { color: Colors.warmMid, fontSize: FontSize.sm, fontFamily: FontFamily.sansMedium },
 });
