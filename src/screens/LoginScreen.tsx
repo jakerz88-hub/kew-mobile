@@ -49,21 +49,37 @@ export default function LoginScreen() {
         const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
         if (result.type === "success" && result.url) {
           const params = new URLSearchParams(result.url.split("#")[1] ?? result.url.split("?")[1] ?? "");
-          const accessToken         = params.get("access_token");
-          const refreshToken        = params.get("refresh_token");
-          const providerToken       = params.get("provider_token");
+          const accessToken          = params.get("access_token");
+          const refreshToken         = params.get("refresh_token");
+          const providerToken        = params.get("provider_token");
           const providerRefreshToken = params.get("provider_refresh_token");
+          const expiresAt            = params.get("expires_at");
           if (accessToken) {
             await supabase.auth.setSession({
               access_token:  accessToken,
               refresh_token: refreshToken ?? "",
             });
-            // Save Google provider token as YouTube access token
+            // Save the Google provider token as the YouTube access token.
+            // This must be awaited so the token is in the database before
+            // onAuthStateChange → fetchUser() returns — otherwise hasYouTube
+            // would be false on the first profile fetch.
             if (providerToken) {
-              api.saveYouTubeToken({
+              // Fetch the Google email for duplicate-account detection
+              let googleEmail: string | undefined;
+              try {
+                const info = await fetch(
+                  `https://www.googleapis.com/oauth2/v1/userinfo?access_token=${providerToken}`
+                ).then((r) => r.json());
+                googleEmail = info.email ?? undefined;
+              } catch { /* non-fatal */ }
+
+              await api.saveYouTubeToken({
                 access_token:  providerToken,
                 refresh_token: providerRefreshToken ?? undefined,
-              }).catch(() => {});
+                expires_at:    expiresAt ? Number(expiresAt) : undefined,
+                google_email:  googleEmail,
+              }).catch(console.warn);
+              api.syncSubscriptions().catch(() => {});
             }
           } else {
             setError("No token in callback URL.");
