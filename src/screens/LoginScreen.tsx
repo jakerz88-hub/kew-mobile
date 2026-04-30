@@ -41,20 +41,55 @@ export default function LoginScreen() {
         const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
         if (result.type === "success" && result.url) {
           // Implicit flow — tokens are in the URL hash fragment
-          const fragment = result.url.split("#")[1] ?? result.url.split("?")[1] ?? "";
-          const params = new URLSearchParams(fragment);
-          const accessToken         = params.get("access_token");
-          const refreshToken        = params.get("refresh_token");
-          const providerToken       = params.get("provider_token");
+          const params = new URLSearchParams(result.url.split("#")[1] ?? result.url.split("?")[1] ?? "");
+          const accessToken          = params.get("access_token");
+          const refreshToken         = params.get("refresh_token");
+          const providerToken        = params.get("provider_token");
           const providerRefreshToken = params.get("provider_refresh_token");
-          const expiresAt           = params.get("expires_at");
-          const errorCode           = params.get("error_code") ?? params.get("error");
+          const expiresAt            = params.get("expires_at");
 
-          // DEBUG — show exactly what came back so we can diagnose
-          const keys = fragment ? Array.from(params.keys()).join(", ") || "(none)" : "(empty fragment)";
-          setError(`DEBUG — result type: success\nparams: ${keys}\naccess_token: ${accessToken ? "yes" : "NO"}\nprovider_token: ${providerToken ? "yes" : "NO"}\nerror: ${errorCode ?? "none"}`);
-          return;
+          if (accessToken && providerToken) {
+            const BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL as string;
 
+            // Save YouTube token BEFORE setSession so fetchUser() sees hasYouTube: true
+            try {
+              await fetch(`${BASE_URL}/v1/profile/youtube-token`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({
+                  access_token:  providerToken,
+                  refresh_token: providerRefreshToken ?? undefined,
+                  expires_at:    expiresAt ? Number(expiresAt) : undefined,
+                }),
+              });
+            } catch (e) {
+              console.warn("YouTube token save error:", e);
+            }
+
+            // Establish the Supabase session — triggers onAuthStateChange → fetchUser
+            await supabase.auth.setSession({
+              access_token:  accessToken,
+              refresh_token: refreshToken ?? "",
+            });
+
+            // Sync subscriptions in the background
+            fetch(`${BASE_URL}/v1/channels/sync`, {
+              method: "POST",
+              headers: { "Authorization": `Bearer ${accessToken}` },
+            }).catch(() => {});
+
+          } else if (accessToken && !providerToken) {
+            // Signed in but no YouTube token — still log them in
+            await supabase.auth.setSession({
+              access_token:  accessToken,
+              refresh_token: refreshToken ?? "",
+            });
+          } else {
+            setError("No token in callback URL.");
+          }
         } else {
           setError("Auth result: " + result.type);
         }
