@@ -4,7 +4,6 @@ import * as WebBrowser from "expo-web-browser";
 import * as AuthSession from "expo-auth-session";
 import Constants from "expo-constants";
 import { supabase } from "../services/supabase";
-import { api } from "../services/api";
 import { Colors, FontFamily, FontSize, Spacing } from "../types/theme";
 import { KewLogo, SansText } from "../components/UI";
 import { LogoMark } from "../components/TabIcons";
@@ -49,18 +48,54 @@ export default function LoginScreen() {
           const providerRefreshToken = params.get("provider_refresh_token");
           const expiresAt           = params.get("expires_at");
           if (accessToken) {
+            if (!providerToken) {
+              // provider_token (Google/YouTube access token) is missing.
+              // This means Supabase did not forward it — check that the Google
+              // provider is configured to return the access token in Supabase
+              // Auth → Providers → Google.
+              setError("YouTube permission was not returned. Please try again.");
+              return;
+            }
+
+            // Save the YouTube token BEFORE calling setSession().
+            // setSession() fires onAuthStateChange → SIGNED_IN → fetchUser() in App.tsx.
+            // If we wait until after that to save the token, fetchUser() races the
+            // save and returns hasYouTube: false. Use accessToken from the URL
+            // directly so we don't depend on getSession() reading AsyncStorage.
+            const BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL as string;
+            try {
+              const saveResp = await fetch(`${BASE_URL}/v1/profile/youtube-token`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({
+                  access_token:  providerToken,
+                  refresh_token: providerRefreshToken ?? undefined,
+                  expires_at:    expiresAt ? Number(expiresAt) : undefined,
+                }),
+              });
+              if (!saveResp.ok) {
+                const body = await saveResp.json().catch(() => ({}));
+                console.warn("YouTube token save failed:", saveResp.status, body);
+              }
+            } catch (e) {
+              console.warn("YouTube token save error:", e);
+            }
+
+            // Now establish the Supabase session. fetchUser() will fire after this
+            // and will find hasYouTube: true since the token is already saved.
             await supabase.auth.setSession({
               access_token:  accessToken,
               refresh_token: refreshToken ?? "",
             });
-            if (providerToken) {
-              await api.saveYouTubeToken({
-                access_token:  providerToken,
-                refresh_token: providerRefreshToken ?? undefined,
-                expires_at:    expiresAt ? Number(expiresAt) : undefined,
-              }).catch(console.warn);
-              api.syncSubscriptions().catch(console.warn);
-            }
+
+            // Sync subscriptions in the background after session is live.
+            fetch(`${BASE_URL}/v1/channels/sync`, {
+              method: "POST",
+              headers: { "Authorization": `Bearer ${accessToken}` },
+            }).catch(() => {});
           } else {
             setError("No token in callback URL.");
           }
