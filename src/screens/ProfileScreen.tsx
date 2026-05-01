@@ -502,11 +502,11 @@ export default function ProfileScreen() {
         <View style={styles.card}>
           <View style={styles.cardRow}>
             <SansText style={styles.cardLabel}>YouTube</SansText>
-            {user?.hasYouTube ? (
+            {user?.hasYoutube ? (
               <SansText style={styles.ytConnectedBadge}>Connected</SansText>
             ) : null}
           </View>
-          {user?.hasYouTube ? (
+          {user?.hasYoutube ? (
             <View style={{ gap: 6 }}>
               <TouchableOpacity
                 style={styles.ytConnectBtn}

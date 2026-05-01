@@ -173,7 +173,7 @@ export default function BrowseScreen() {
   // ══════════════════════════════════════════════════════════════
   // YOUTUBE NOT CONNECTED GATE
   // ══════════════════════════════════════════════════════════════
-  if (!user?.hasYouTube) {
+  if (!user?.hasYoutube) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>

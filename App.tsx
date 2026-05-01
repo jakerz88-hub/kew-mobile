@@ -160,7 +160,7 @@ export default function App() {
     AsyncStorage.getItem(ONBOARDING_KEY).then((val) => {
       if (val === "true") {
         setOnboardingDone(true);
-      } else if (user.hasYouTube) {
+      } else if (user.hasYoutube) {
         // Existing user — mark onboarding done so they don't see it
         AsyncStorage.setItem(ONBOARDING_KEY, "true");
         setOnboardingDone(true);

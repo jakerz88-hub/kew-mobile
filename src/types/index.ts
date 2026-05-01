@@ -1,9 +1,21 @@
+export interface KewQueue {
+  id: string;
+  name: string;
+  emoji: string | null;
+  position: number;
+  isMain: boolean;
+  videoCount: number;
+}
+
 export interface User {
   id: string;
   displayName: string | null;
   avatarUrl: string | null;
   skipsRemaining: number;
   skipsMax: number;
+  plan: "free" | "pro";
+  hasYoutube: boolean;
+  activeQueueId: string | null;
 }
 
 export interface Channel {
@@ -41,6 +53,8 @@ export interface Queue {
   entries: QueueEntry[];
   total: number;
   current: QueueEntry | null;
+  queueId: string | null;
+  queueName: string | null;
 }
 
 export interface BrowseVideo {
