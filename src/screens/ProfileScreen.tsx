@@ -11,6 +11,8 @@ import { connectYouTube } from "../utils/youtubeConnect";
 import { SansText, SerifText, Divider, SkipCounter, Toast, ErrorBanner } from "../components/UI";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { useTheme, type ThemeId } from "../contexts/ThemeContext";
+import { MiniWeekChart } from "./InsightsScreen";
+import type { Insights } from "../types";
 
 type PremiumTheme = {
   id: ThemeId;
@@ -50,6 +52,7 @@ export default function ProfileScreen() {
   const [profileError, setProfileError] = useState<string | null>(null);
   const [toastMsg, setToastMsg] = useState("");
   const [toastVisible, setToastVisible] = useState(false);
+  const [insightsPreview, setInsightsPreview] = useState<Insights | null>(null);
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
@@ -62,6 +65,12 @@ export default function ProfileScreen() {
       setEmail(data.session?.user?.email ?? null);
     });
   }, []);
+
+  // Load insights preview for the collapsed card (Pro only)
+  useEffect(() => {
+    if (user?.plan !== "pro") { setInsightsPreview(null); return; }
+    api.getInsights("week").then(setInsightsPreview).catch(() => setInsightsPreview(null));
+  }, [user?.plan]);
 
   const displayName = user?.displayName;
   const initial = displayName?.charAt(0).toUpperCase() ?? "?";
@@ -442,6 +451,51 @@ export default function ProfileScreen() {
           </View>
         )}
 
+        {/* Insights & Limits */}
+        {user?.plan === "pro" ? (
+          <TouchableOpacity
+            style={styles.insightsCard}
+            onPress={() => navigation.navigate("Insights")}
+            activeOpacity={0.8}
+          >
+            <View style={styles.cardRow}>
+              <SansText style={styles.cardLabel}>Insights & Limits</SansText>
+              <Feather name="chevron-right" size={15} color={colors.warmMid} />
+            </View>
+            {insightsPreview ? (
+              <>
+                <View style={{ marginTop: Spacing.xs }}>
+                  <MiniWeekChart breakdown={insightsPreview.dailyBreakdown} colors={colors} />
+                </View>
+                <SansText style={styles.insightsSentence}>
+                  {insightsPreview.insightSentence}
+                </SansText>
+              </>
+            ) : (
+              <SansText style={styles.cardHint}>Loading your week…</SansText>
+            )}
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={styles.insightsCard}
+            onPress={() => navigation.navigate("Insights")}
+            activeOpacity={0.8}
+          >
+            <View style={styles.cardRow}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <SansText style={styles.cardLabel}>Insights & Limits</SansText>
+                <View style={styles.proPill}>
+                  <SansText style={styles.proPillText}>Kew Pro</SansText>
+                </View>
+              </View>
+              <Feather name="chevron-right" size={15} color={colors.warmMid} />
+            </View>
+            <SansText style={styles.cardHint}>
+              Track watch time, completion rate, and personal limits with Kew Pro.
+            </SansText>
+          </TouchableOpacity>
+        )}
+
         {/* Appearance card */}
         <View style={styles.themeCard}>
           {/* Mode toggle */}
@@ -624,6 +678,10 @@ function makeStyles(c: ColorPalette) {
     saveBtnDisabled: { opacity: 0.5 },
     saveBtnText:     { fontSize: FontSize.sm, color: c.cream, fontFamily: FontFamily.sansMedium },
     card:            { backgroundColor: c.cardBg, borderWidth: 1, borderColor: c.divider, borderRadius: Radius.md, padding: Spacing.md, gap: Spacing.xs, marginBottom: Spacing.md, maxWidth: 400, width: "100%", alignSelf: "center" },
+    insightsCard:    { backgroundColor: c.cardBg, borderWidth: 1, borderColor: c.divider, borderRadius: Radius.md, padding: Spacing.md, gap: Spacing.xs, marginBottom: Spacing.md, maxWidth: 400, width: "100%", alignSelf: "center" },
+    insightsSentence:{ fontSize: FontSize.xs, color: c.warmMid, lineHeight: 17, marginTop: Spacing.xs, fontStyle: "italic" },
+    proPill:         { paddingHorizontal: 7, paddingVertical: 2, borderRadius: Radius.pill, backgroundColor: "#C49A28" },
+    proPillText:     { fontSize: 9, color: "white", fontFamily: FontFamily.sansMedium, letterSpacing: 0.4 },
     cardRow:         { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
     cardLabel:       { fontSize: FontSize.sm, color: c.ink, fontFamily: FontFamily.sansMedium },
     cardHint:        { fontSize: FontSize.xxs, color: c.warmMid, lineHeight: 16, fontStyle: "italic" },

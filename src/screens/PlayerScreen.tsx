@@ -59,6 +59,10 @@ export default function PlayerScreen() {
   const [removing,      setRemoving]        = useState(false);
   const [actionEntry,   setActionEntry]     = useState<typeof upcomingEntries[0] | null>(null);
 
+  // ── Watch event + limit tracking ──
+  const startedRef = useRef<string | null>(null);
+  const [limitHit, setLimitHit] = useState<{ title: string; body: string } | null>(null);
+
   // Keep queue in sync whenever this screen comes into focus
   useFocusEffect(useCallback(() => { fetchQueue(); }, []));
 
@@ -74,33 +78,87 @@ export default function PlayerScreen() {
     return () => clearInterval(interval);
   }, [current?.id, playing]);
 
+  // Limit check: before starting a new video, see if any soft limit would be exceeded.
+  // Pro-only — non-Pro users can't set limits, so this is a no-op for them.
+  useEffect(() => {
+    if (!current || user?.plan !== "pro") return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const l = await api.getLimits();
+        if (cancelled || !l) return;
+        let hit: { title: string; body: string } | null = null;
+        if (l.dailyVideos != null && l.todayVideos >= l.dailyVideos) {
+          hit = { title: "Daily video limit reached",
+                  body: `You've watched ${l.todayVideos} videos today, your personal limit. Reward yourself by taking a break!` };
+        } else if (l.dailyMinutes != null && l.todayMinutes >= l.dailyMinutes) {
+          hit = { title: "Daily watch time reached",
+                  body: `You've hit your personal limit of ${l.dailyMinutes} minutes today. Reward yourself by taking a break!` };
+        } else if (l.consecutiveVideos != null && l.consecutiveVideosNow >= l.consecutiveVideos) {
+          hit = { title: "Time for a break",
+                  body: `You've watched ${l.consecutiveVideosNow} videos in a row, your personal limit. Reward yourself by taking a break!` };
+        }
+        if (hit) {
+          setLimitHit(hit);
+          setPlaying(false);
+        }
+      } catch { /* swallow — limits are best-effort */ }
+    })();
+    return () => { cancelled = true; };
+  }, [current?.id, user?.plan]);
+
+  const recordEvent = useCallback(async (eventType: "started" | "completed" | "skipped", watchSeconds: number) => {
+    if (!current) return;
+    try {
+      await api.recordWatchEvent({
+        ytVideoId: current.video.ytVideoId,
+        queueId:   user?.activeQueueId ?? null,
+        eventType,
+        watchSeconds: Math.max(0, Math.floor(watchSeconds)),
+      });
+    } catch { /* best-effort — never block playback */ }
+  }, [current, user?.activeQueueId]);
+
   const onStateChange = useCallback(async (state: string) => {
-    if (state === "playing") setPlaying(true);
+    if (state === "playing") {
+      setPlaying(true);
+      // Fire 'started' once per video — first time it plays.
+      if (current && startedRef.current !== current.id) {
+        startedRef.current = current.id;
+        recordEvent("started", 0);
+      }
+    }
     if (state === "paused")  setPlaying(false);
     if (state === "ended" && current) {
       const watchedSecs = current.video.durationSecs ?? 0;
+      await recordEvent("completed", watchedSecs);
       await updateProgress(current.id, watchedSecs);
       await fetchQueue();
       navigation.replace("Completion", { watchedSecs });
     }
-  }, [current]);
+  }, [current, recordEvent]);
 
   const handleMarkDone = useCallback(async () => {
     if (!current) return;
     setMarkingDone(true);
-    const watchedSecs = current.video.durationSecs ?? 0;
+    const playerSecs = await playerRef.current?.getCurrentTime().catch(() => null);
+    const watchedSecs = playerSecs != null ? Math.floor(playerSecs) : (current.video.durationSecs ?? 0);
     try {
-      await updateProgress(current.id, watchedSecs);
+      await recordEvent("completed", watchedSecs);
+      await updateProgress(current.id, current.video.durationSecs ?? watchedSecs);
       await fetchQueue();
       navigation.replace("Completion", { watchedSecs });
     } finally {
       setMarkingDone(false);
       setShowDoneModal(false);
     }
-  }, [current]);
+  }, [current, recordEvent]);
 
   const handleSkipConfirm = async () => {
     setShowSkipModal(false);
+    const playerSecs = await playerRef.current?.getCurrentTime().catch(() => null);
+    const watchedSecs = playerSecs != null ? Math.floor(playerSecs) : 0;
+    await recordEvent("skipped", watchedSecs);
     await skipCurrent();
     navigation.goBack();
   };
@@ -317,6 +375,30 @@ export default function PlayerScreen() {
               </TouchableOpacity>
               <TouchableOpacity style={[styles.modalBtn, styles.modalBtnConfirm]} onPress={handleSkipConfirm}>
                 <SansText style={styles.modalBtnConfirmText}>Skip this video</SansText>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Personal limit reached modal (Pro) */}
+      <Modal visible={!!limitHit} transparent animationType="fade" onRequestClose={() => { setLimitHit(null); setPlaying(true); }}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <SerifText style={styles.modalTitle}>{limitHit?.title ?? ""}</SerifText>
+            <SansText style={styles.modalBody}>{limitHit?.body ?? ""}</SansText>
+            <View style={styles.modalBtns}>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalBtnCancel]}
+                onPress={() => { setLimitHit(null); navigation.goBack(); }}
+              >
+                <SansText style={styles.modalBtnCancelText}>Take a break</SansText>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalBtnConfirm]}
+                onPress={() => { setLimitHit(null); setPlaying(true); }}
+              >
+                <SansText style={styles.modalBtnConfirmText}>Keep watching</SansText>
               </TouchableOpacity>
             </View>
           </View>

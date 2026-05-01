@@ -1,8 +1,8 @@
 import { supabase } from "./supabase";
 import Constants from "expo-constants";
-import type { Queue, BrowseVideo, Channel, User, SkipResult, Playlist, PlaylistVideosResult, ImportResult, KewQueue } from "../types";
+import type { Queue, BrowseVideo, Channel, User, SkipResult, Playlist, PlaylistVideosResult, ImportResult, KewQueue, Insights, InsightsPeriod, Intentionality, WatchLimits, WatchEventType } from "../types";
 
-const BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL as string;
+const BASE_URL = (process.env.EXPO_PUBLIC_API_BASE_URL || Constants.expoConfig?.extra?.API_BASE_URL) as string;
 
 // Convert snake_case keys to camelCase recursively
 function toCamel(s: string): string {
@@ -209,5 +209,51 @@ export const api = {
 
   searchYouTube(q: string): Promise<BrowseVideo[]> {
     return request(`/v1/explore/search?q=${encodeURIComponent(q)}`);
+  },
+
+  // ── Insights & Limits ──────────────────────────────────────────────────────
+
+  getInsights(period: InsightsPeriod = "week"): Promise<Insights> {
+    return request(`/v1/insights?period=${period}`);
+  },
+
+  getIntentionality(period: InsightsPeriod = "week"): Promise<Intentionality> {
+    return request(`/v1/insights/intentionality?period=${period}`);
+  },
+
+  getLimits(): Promise<WatchLimits> {
+    return request("/v1/limits");
+  },
+
+  updateLimits(params: {
+    dailyVideos: number | null;
+    dailyMinutes: number | null;
+    consecutiveVideos: number | null;
+  }): Promise<WatchLimits> {
+    return request("/v1/limits", {
+      method: "PUT",
+      body: JSON.stringify({
+        daily_videos:       params.dailyVideos,
+        daily_minutes:      params.dailyMinutes,
+        consecutive_videos: params.consecutiveVideos,
+      }),
+    });
+  },
+
+  recordWatchEvent(params: {
+    ytVideoId: string;
+    queueId?: string | null;
+    eventType: WatchEventType;
+    watchSeconds?: number;
+  }): Promise<{ message: string }> {
+    return request("/v1/watch-events", {
+      method: "POST",
+      body: JSON.stringify({
+        yt_video_id:   params.ytVideoId,
+        queue_id:      params.queueId ?? null,
+        event_type:    params.eventType,
+        watch_seconds: params.watchSeconds ?? 0,
+      }),
+    });
   },
 };

@@ -102,6 +102,56 @@ export interface SkipResult {
   nextEntry: QueueEntry | null;
 }
 
+// ── Insights & Limits ────────────────────────────────────────────────────────
+
+export type InsightsPeriod = "week" | "month" | "year";
+
+export type WatchEventType = "started" | "completed" | "skipped";
+
+export interface InsightsStats {
+  videosWatched: number;
+  watchTimeMinutes: number;
+  completionRate: number; // 0-100
+  skipsUsed: number;
+  daysOff: number;
+}
+
+export interface DailyMinutes {
+  date: string; // YYYY-MM-DD
+  minutes: number;
+}
+
+export interface Insights {
+  period: InsightsPeriod;
+  stats: InsightsStats;
+  prevPeriodComparison: InsightsStats;
+  dailyBreakdown: DailyMinutes[];
+  insightSentence: string;
+}
+
+export interface DailyLimitStatus {
+  date: string;
+  kept: boolean;
+}
+
+export interface Intentionality {
+  period: InsightsPeriod;
+  limitsKept: number;
+  limitsTotal: number;
+  limitStreak: number;
+  limitStreakBest: number;
+  dailyLimitStatus: DailyLimitStatus[];
+}
+
+export interface WatchLimits {
+  dailyVideos: number | null;
+  dailyMinutes: number | null;
+  consecutiveVideos: number | null;
+  todayVideos: number;
+  todayMinutes: number;
+  consecutiveVideosNow: number;
+}
+
 export function formatDuration(secs: number | null | undefined): string {
   if (!secs) return "-";
   const h = Math.floor(secs / 3600);

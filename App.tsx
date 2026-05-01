@@ -37,6 +37,7 @@ import ExploreScreen from "./src/screens/ExploreScreen";
 import HelpScreen from "./src/screens/HelpScreen";
 import AllQueuesScreen from "./src/screens/AllQueuesScreen";
 import NewQueueScreen from "./src/screens/NewQueueScreen";
+import InsightsScreen from "./src/screens/InsightsScreen";
 
 const ONBOARDING_KEY = "kew_onboarding_done";
 
@@ -102,6 +103,7 @@ function AppNavigator() {
       <Stack.Screen name="PlaylistVideoPicker"  component={PlaylistVideoPickerScreen} />
       <Stack.Screen name="AllQueues"            component={AllQueuesScreen} />
       <Stack.Screen name="NewQueue"             component={NewQueueScreen} />
+      <Stack.Screen name="Insights"             component={InsightsScreen} />
     </Stack.Navigator>
   );
 }
