@@ -183,7 +183,7 @@ export default function LoginScreen() {
           {Platform.OS === "ios" && (
             <AppleAuthentication.AppleAuthenticationButton
               buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE_OUTLINE}
               cornerRadius={999}
               style={styles.appleBtn}
               onPress={handleAppleSignIn}
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
   googleBtn: { backgroundColor: Colors.ink, borderRadius: 999, height: 52, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.sm },
   googleIcon: { fontFamily: FontFamily.serif, fontSize: FontSize.md, color: Colors.cream },
   googleBtnLabel: { fontFamily: FontFamily.sansMedium, fontSize: FontSize.sm, color: Colors.cream, letterSpacing: 0.3 },
-  appleBtn: { height: 52, width: "100%" },
+  appleBtn: { height: 46, width: "100%" },
   errorText: { color: Colors.accent, fontSize: FontSize.xs, textAlign: "center" },
   disclaimer: { fontSize: FontSize.xxs, color: Colors.queued, textAlign: "center", lineHeight: 16 },
 });

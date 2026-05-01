@@ -7,6 +7,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { api } from "../services/api";
+import { connectYouTube } from "../utils/youtubeConnect";
 import type { Channel, BrowseVideo, KewQueue } from "../types";
 import { formatDuration, timeAgo } from "../types";
 import {
@@ -43,6 +44,7 @@ export default function BrowseScreen() {
   const { fetchUser } = useStore();
   const [channels, setChannels]         = useState<Channel[]>([]);
   const [syncing, setSyncing]           = useState(false);
+  const [ytConnecting, setYtConnecting] = useState(false);
   const [loadError, setLoadError]       = useState<string | null>(null);
   const [ytError, setYtError]           = useState<string | null>(null);
   const [searchQuery, setSearchQuery]   = useState("");
@@ -97,6 +99,24 @@ export default function BrowseScreen() {
       setPanelLoading(false);
     }
   }, []);
+
+  const handleConnectYouTube = async () => {
+    setYtConnecting(true);
+    setYtError(null);
+    try {
+      const { success, error } = await connectYouTube();
+      if (!success) {
+        if (error) setYtError(error);
+        return;
+      }
+      await fetchUser();
+      // hasYoutube is now true — the gate render will disappear automatically
+    } catch (e: any) {
+      setYtError(e?.message ?? "Could not connect YouTube.");
+    } finally {
+      setYtConnecting(false);
+    }
+  };
 
   const handleRefresh = useCallback(async () => {
     setSyncing(true);
@@ -192,8 +212,23 @@ export default function BrowseScreen() {
         <View style={styles.emptyWithBtn}>
           <SerifText style={styles.emptyWithBtnTitle}>Connect YouTube to browse</SerifText>
           <SansText style={styles.emptyWithBtnSub}>
-            Sign out and sign back in with Google to connect your YouTube account.
+            Connect your YouTube account to browse your subscriptions and add videos to your queue.
           </SansText>
+          {ytError && (
+            <SansText style={{ fontSize: FontSize.xs, color: colors.accent, textAlign: "center" }}>
+              {ytError}
+            </SansText>
+          )}
+          <TouchableOpacity
+            style={[styles.syncBtn, ytConnecting && { opacity: 0.6 }]}
+            onPress={handleConnectYouTube}
+            disabled={ytConnecting}
+            activeOpacity={0.7}
+          >
+            <SansText style={styles.syncBtnText}>
+              {ytConnecting ? "Connecting…" : "Connect YouTube"}
+            </SansText>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );

@@ -6,6 +6,7 @@ import * as ImagePicker from "expo-image-picker";
 import { useStore } from "../store";
 import { supabase } from "../services/supabase";
 import { api } from "../services/api";
+import { connectYouTube } from "../utils/youtubeConnect";
 
 import { SansText, SerifText, Divider, SkipCounter, Toast, ErrorBanner } from "../components/UI";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
@@ -44,6 +45,7 @@ export default function ProfileScreen() {
   const checkTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [ytConnecting, setYtConnecting] = useState(false);
   const [ytDisconnecting, setYtDisconnecting] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [toastMsg, setToastMsg] = useState("");
@@ -248,6 +250,24 @@ export default function ProfileScreen() {
       setProfileError(e?.message ?? "Could not sync your YouTube account.");
     } finally {
       setSyncing(false);
+    }
+  };
+
+  const handleConnectYouTube = async () => {
+    setYtConnecting(true);
+    setProfileError(null);
+    try {
+      const { success, error } = await connectYouTube();
+      if (!success) {
+        if (error) setProfileError(error);
+        return;
+      }
+      await fetchUser();
+      showToast("YouTube connected");
+    } catch (e: any) {
+      setProfileError(e?.message ?? "Could not connect YouTube.");
+    } finally {
+      setYtConnecting(false);
     }
   };
 
@@ -531,9 +551,16 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             </View>
           ) : (
-            <SansText style={{ fontSize: FontSize.xs, color: colors.warmMid, marginTop: 4 }}>
-              Sign out and sign back in with Google to connect YouTube.
-            </SansText>
+            <TouchableOpacity
+              style={[styles.ytConnectBtn, ytConnecting && { opacity: 0.6 }]}
+              onPress={handleConnectYouTube}
+              disabled={ytConnecting}
+              activeOpacity={0.7}
+            >
+              <SansText style={styles.ytConnectBtnText}>
+                {ytConnecting ? "Connecting…" : "Connect YouTube"}
+              </SansText>
+            </TouchableOpacity>
           )}
         </View>
 
