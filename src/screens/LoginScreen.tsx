@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import {
-  View, Text, TextInput, StyleSheet, SafeAreaView,
+  View, Text, TextInput, StyleSheet, SafeAreaView, ScrollView,
   TouchableOpacity, ActivityIndicator, Platform, KeyboardAvoidingView,
 } from "react-native";
 import * as WebBrowser from "expo-web-browser";
@@ -212,7 +212,12 @@ export default function LoginScreen() {
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <View style={styles.inner}>
+        <ScrollView
+          contentContainerStyle={styles.inner}
+          keyboardShouldPersistTaps="handled"
+          bounces={false}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.logoSection}>
             <View style={styles.logoLockup}>
               <LogoMark size={40} />
@@ -359,7 +364,7 @@ export default function LoginScreen() {
               </SansText>
             )}
           </View>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -367,7 +372,7 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   container:    { flex: 1, backgroundColor: Colors.cream },
-  inner:        { flex: 1, paddingHorizontal: Spacing.lg, justifyContent: "space-between", paddingVertical: Spacing.xl },
+  inner:        { flexGrow: 1, paddingHorizontal: Spacing.lg, justifyContent: "space-between", paddingVertical: Spacing.xl },
   logoSection:  { alignItems: "center", paddingTop: Spacing.xxl, gap: Spacing.md },
   logoLockup:   { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
   tagline:      { fontSize: FontSize.md, color: Colors.warmMid, textAlign: "center", lineHeight: 24, fontFamily: FontFamily.sansLight },
