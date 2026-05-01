@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { View, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, Image, ActivityIndicator, RefreshControl } from "react-native";
+import { View, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, Image, ActivityIndicator, RefreshControl, Platform } from "react-native";
 import { useIsTablet } from "../hooks/useIsTablet";
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
@@ -7,7 +7,9 @@ import { api } from "../services/api";
 import type { BrowseVideo } from "../types";
 import { SansText, SerifText, Divider, ThumbPlaceholder, EmptyState, ErrorBanner } from "../components/UI";
 import { QueueActionSheet } from "../components/QueueActionSheet";
+import { QueuePickerModal } from "../components/QueuePickerModal";
 import { useStore } from "../store";
+import { useAddToQueue } from "../hooks/useAddToQueue";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
 import { formatDuration, timeAgo } from "../types";
@@ -15,15 +17,15 @@ import { formatDuration, timeAgo } from "../types";
 export default function RecentUploadsScreen() {
   const navigation = useNavigation<any>();
   const isTablet = useIsTablet();
-  const { addToQueue, queue, error, clearError } = useStore();
+  const { queue, error, clearError } = useStore();
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId } = useAddToQueue();
 
   const [videos, setVideos]           = useState<BrowseVideo[]>([]);
   const [loading, setLoading]         = useState(false);
   const [refreshing, setRefreshing]   = useState(false);
   const [loadError, setLoadError]     = useState<string | null>(null);
-  const [addingId, setAddingId]       = useState<string | null>(null);
   const [removeTarget, setRemoveTarget] = useState<{ entryId: string; title: string } | null>(null);
 
   const queueEntryByVideoId = React.useMemo(() => {
@@ -51,16 +53,6 @@ export default function RecentUploadsScreen() {
 
   useEffect(() => { loadVideos(); }, []);
 
-  const handleAdd = async (video: BrowseVideo) => {
-    setAddingId(video.ytVideoId);
-    try {
-      await addToQueue(video.ytVideoId);
-    } catch {
-      // error shown via store
-    } finally {
-      setAddingId(null);
-    }
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -104,7 +96,7 @@ export default function RecentUploadsScreen() {
                   video={item}
                   inQueue={inQueue}
                   adding={addingId === item.ytVideoId}
-                  onAdd={() => handleAdd(item)}
+                  onAdd={() => handleAdd(item.ytVideoId)}
                   onRemove={inQueue && entryId ? () => setRemoveTarget({ entryId, title: item.title }) : undefined}
                   isGrid={isTablet}
                 />
@@ -130,6 +122,13 @@ export default function RecentUploadsScreen() {
         videoTitle={removeTarget?.title ?? ""}
         onClose={() => setRemoveTarget(null)}
       />
+
+      {Platform.OS !== "ios" && pickerVideoId && (
+        <QueuePickerModal
+          onSelect={(queueId) => { const vid = pickerVideoId; setPickerVideoId(null); doAddVideo(vid, queueId); }}
+          onDismiss={() => setPickerVideoId(null)}
+        />
+      )}
     </SafeAreaView>
   );
 }

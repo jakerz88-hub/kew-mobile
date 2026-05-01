@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
-import { View, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, Image, RefreshControl } from "react-native";
+import { View, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, Image, RefreshControl, Platform } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { useStore } from "../store";
@@ -7,6 +7,8 @@ import { api } from "../services/api";
 import type { BrowseVideo } from "../types";
 import { SansText, Divider, ThumbPlaceholder, EmptyState, ErrorBanner } from "../components/UI";
 import { QueueActionSheet } from "../components/QueueActionSheet";
+import { QueuePickerModal } from "../components/QueuePickerModal";
+import { useAddToQueue } from "../hooks/useAddToQueue";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
 import { formatDuration, timeAgo } from "../types";
@@ -23,15 +25,15 @@ export default function ChannelScreen() {
   // Stages: 0=2wk, 1=12wk, 2=36wk, 3=all history (exhausted)
   const STAGE_WEEKS = [2, 12, 36, 0] as const; // 0 = no limit
 
-  const { addToQueue, queue, error, clearError } = useStore();
+  const { queue, error, clearError } = useStore();
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const { handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId } = useAddToQueue();
 
   const [videos, setVideos]             = useState<BrowseVideo[]>([]);
   const [loading, setLoading]           = useState(false);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [loadError, setLoadError]       = useState<string | null>(null);
-  const [addingId, setAddingId]         = useState<string | null>(null);
   const [removeTarget, setRemoveTarget] = useState<{ entryId: string; title: string } | null>(null);
 
   // Build a map of ytVideoId → queue entry id for long-press remove
@@ -63,16 +65,6 @@ export default function ChannelScreen() {
 
   useEffect(() => { loadVideos(0); }, []);
 
-  const handleAdd = async (video: BrowseVideo) => {
-    setAddingId(video.ytVideoId);
-    try {
-      await addToQueue(video.ytVideoId);
-    } catch {
-      // error shown via store
-    } finally {
-      setAddingId(null);
-    }
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -109,7 +101,7 @@ export default function ChannelScreen() {
               video={item}
               inQueue={inQueue}
               adding={addingId === item.ytVideoId}
-              onAdd={() => handleAdd(item)}
+              onAdd={() => handleAdd(item.ytVideoId)}
               onRemove={inQueue && entryId ? () => setRemoveTarget({ entryId, title: item.title }) : undefined}
             />
           );
@@ -126,6 +118,13 @@ export default function ChannelScreen() {
         videoTitle={removeTarget?.title ?? ""}
         onClose={() => setRemoveTarget(null)}
       />
+
+      {Platform.OS !== "ios" && pickerVideoId && (
+        <QueuePickerModal
+          onSelect={(queueId) => { const vid = pickerVideoId; setPickerVideoId(null); doAddVideo(vid, queueId); }}
+          onDismiss={() => setPickerVideoId(null)}
+        />
+      )}
     </SafeAreaView>
   );
 }

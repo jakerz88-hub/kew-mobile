@@ -1,9 +1,11 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
-import { View, FlatList, StyleSheet, SafeAreaView, Image, RefreshControl, TouchableOpacity } from "react-native";
+import { View, FlatList, StyleSheet, SafeAreaView, Image, RefreshControl, TouchableOpacity, Platform } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { supabase } from "../services/supabase";
 import { useStore } from "../store";
 import { KewLogo, SansText, SerifText, Divider, ThumbPlaceholder, EmptyState, ErrorBanner, AvatarBubble } from "../components/UI";
+import { QueuePickerModal } from "../components/QueuePickerModal";
+import { useAddToQueue } from "../hooks/useAddToQueue";
 import { LogoMark } from "../components/TabIcons";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
@@ -22,11 +24,13 @@ export default function HistoryScreen() {
   const navigation = useNavigation<any>();
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
-  const { error, clearError, addToQueue, user } = useStore();
+  const { error, clearError, user } = useStore();
+  const { handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId } = useAddToQueue(
+    (ytVideoId) => setReaddedIds(prev => new Set([...prev, ytVideoId]))
+  );
   const [entries, setEntries] = useState<QueueEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [totalSecs, setTotal] = useState(0);
-  const [addingId, setAddingId]     = useState<string | null>(null);
   const [readdedIds, setReaddedIds] = useState<Set<string>>(new Set());
 
   const loadHistory = useCallback(async () => {
@@ -58,17 +62,7 @@ export default function HistoryScreen() {
 
   useEffect(() => { loadHistory(); }, []);
 
-  const handleReadd = async (entry: QueueEntry) => {
-    setAddingId(entry.video.ytVideoId);
-    try {
-      await addToQueue(entry.video.ytVideoId);
-      setReaddedIds(prev => new Set([...prev, entry.video.ytVideoId]));
-    } catch {
-      // error shown via store
-    } finally {
-      setAddingId(null);
-    }
-  };
+  const handleReadd = (entry: QueueEntry) => handleAdd(entry.video.ytVideoId);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -118,6 +112,13 @@ export default function HistoryScreen() {
         }
         contentContainerStyle={styles.listContent}
       />
+
+      {Platform.OS !== "ios" && pickerVideoId && (
+        <QueuePickerModal
+          onSelect={(queueId) => { const vid = pickerVideoId; setPickerVideoId(null); doAddVideo(vid, queueId); }}
+          onDismiss={() => setPickerVideoId(null)}
+        />
+      )}
     </SafeAreaView>
   );
 }

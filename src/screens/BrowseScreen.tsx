@@ -8,7 +8,7 @@ import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { api } from "../services/api";
 import { connectYouTube } from "../utils/youtubeConnect";
-import type { Channel, BrowseVideo, KewQueue } from "../types";
+import type { Channel, BrowseVideo } from "../types";
 import { formatDuration, timeAgo } from "../types";
 import {
   KewLogo, SansText, SerifText, Divider, ThumbPlaceholder,
@@ -20,6 +20,8 @@ import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/th
 import { useTheme } from "../contexts/ThemeContext";
 import { useIsTablet } from "../hooks/useIsTablet";
 import { useTooltip } from "../hooks/useTooltip";
+import { useAddToQueue } from "../hooks/useAddToQueue";
+import { QueuePickerModal } from "../components/QueuePickerModal";
 import TooltipOverlay, { TooltipAnchor } from "../components/TooltipOverlay";
 
 const CHANNEL_COL_WIDTH = 260;
@@ -39,7 +41,7 @@ export default function BrowseScreen() {
   const { colors } = useTheme();
   const styles  = useMemo(() => makePhoneStyles(colors), [colors]);
   const tStyles = useMemo(() => makeTabletStyles(colors), [colors]);
-  const { user, addToQueue, queue, queues, fetchQueues } = useStore();
+  const { user, queue } = useStore();
 
   const { fetchUser } = useStore();
   const [channels, setChannels]         = useState<Channel[]>([]);
@@ -54,10 +56,11 @@ export default function BrowseScreen() {
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
   const [panelVideos, setPanelVideos]   = useState<BrowseVideo[]>([]);
   const [panelLoading, setPanelLoading] = useState(false);
-  const [addingId, setAddingId]         = useState<string | null>(null);
 
-  // Queue picker (pro users, Android)
-  const [queuePickerVideoId, setQueuePickerVideoId] = useState<string | null>(null);
+  // Queue picker (shared hook — handles iOS ActionSheet + Android modal)
+  const { handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId } = useAddToQueue(
+    (ytVideoId) => setPanelVideos(v => v.map(x => x.ytVideoId === ytVideoId ? { ...x, inQueue: true } : x))
+  );
 
   // ── Tooltip journey ──
   const browseTip = useTooltip("browse", 2);
@@ -132,55 +135,13 @@ export default function BrowseScreen() {
     }
   }, [isTablet, selectedChannelId, loadPanelVideos]);
 
-  useEffect(() => { loadChannels(); loadRecentUploads(); fetchQueues(); }, []);
+  useEffect(() => { loadChannels(); loadRecentUploads(); }, []);
 
   // Load panel videos when tablet is ready or channel selection changes
   useEffect(() => {
     if (isTablet) loadPanelVideos(selectedChannelId);
   }, [isTablet, selectedChannelId]);
 
-  const doAddVideo = async (ytVideoId: string, queueId?: string) => {
-    setAddingId(ytVideoId);
-    try {
-      await addToQueue(ytVideoId, queueId);
-      setPanelVideos(v => v.map(x => x.ytVideoId === ytVideoId ? { ...x, inQueue: true } : x));
-    } catch {
-      // store surfaces the error
-    } finally {
-      setAddingId(null);
-    }
-  };
-
-  const handleAddVideo = (ytVideoId: string) => {
-    if (user?.plan !== "pro" || queues.length <= 1) {
-      // Free user or only one queue — add directly
-      doAddVideo(ytVideoId);
-      return;
-    }
-
-    // Pro user with multiple queues — show queue picker
-    if (Platform.OS === "ios") {
-      const { ActionSheetIOS } = require("react-native");
-      const options = [
-        ...queues.map(q => (q.emoji ? `${q.emoji} ${q.name}` : q.name) + ` · ${q.videoCount}`),
-        "+ New queue",
-        "Cancel",
-      ];
-      ActionSheetIOS.showActionSheetWithOptions(
-        { options, cancelButtonIndex: options.length - 1 },
-        (idx: number) => {
-          if (idx === options.length - 1) return; // Cancel
-          if (idx === queues.length) {
-            navigation.navigate("NewQueue");
-            return;
-          }
-          doAddVideo(ytVideoId, queues[idx].id);
-        }
-      );
-    } else {
-      setQueuePickerVideoId(ytVideoId);
-    }
-  };
 
   const filteredChannels = searchQuery.trim()
     ? channels.filter(ch => ch.title.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -375,7 +336,7 @@ export default function BrowseScreen() {
                       video={item}
                       inQueue={inQueue}
                       adding={addingId === item.ytVideoId}
-                      onAdd={handleAddVideo}
+                      onAdd={handleAdd}
                     />
                   );
                 }}
@@ -523,20 +484,10 @@ export default function BrowseScreen() {
       />
 
       {/* Android queue picker modal */}
-      {Platform.OS !== "ios" && queuePickerVideoId && (
+      {Platform.OS !== "ios" && pickerVideoId && (
         <QueuePickerModal
-          queues={queues}
-          colors={colors}
-          onSelect={(queueId) => {
-            const vid = queuePickerVideoId;
-            setQueuePickerVideoId(null);
-            doAddVideo(vid, queueId);
-          }}
-          onNewQueue={() => {
-            setQueuePickerVideoId(null);
-            navigation.navigate("NewQueue");
-          }}
-          onDismiss={() => setQueuePickerVideoId(null)}
+          onSelect={(queueId) => { const vid = pickerVideoId; setPickerVideoId(null); doAddVideo(vid, queueId); }}
+          onDismiss={() => setPickerVideoId(null)}
         />
       )}
     </SafeAreaView>
@@ -601,62 +552,6 @@ function ChannelRow({ channel, onPress }: { channel: Channel; onPress: () => voi
       <SansText style={styles.channelName} numberOfLines={1}>{channel.title}</SansText>
       <Feather name="chevron-right" size={16} color={colors.warmMid} />
     </TouchableOpacity>
-  );
-}
-
-// ── Queue picker modal (Android) ───────────────────────────────
-function QueuePickerModal({
-  queues, colors, onSelect, onNewQueue, onDismiss,
-}: {
-  queues: KewQueue[];
-  colors: ColorPalette;
-  onSelect: (queueId: string) => void;
-  onNewQueue: () => void;
-  onDismiss: () => void;
-}) {
-  return (
-    <Modal visible transparent animationType="fade" onRequestClose={onDismiss}>
-      <TouchableOpacity
-        style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" }}
-        activeOpacity={1}
-        onPress={onDismiss}
-      >
-        <View style={{ backgroundColor: colors.cardBg, borderTopLeftRadius: 16, borderTopRightRadius: 16, paddingBottom: 32 }}>
-          <View style={{ padding: Spacing.md, paddingBottom: Spacing.sm }}>
-            <SansText style={{ fontSize: FontSize.xs, color: colors.warmMid, fontFamily: FontFamily.sansMedium, textTransform: "uppercase", letterSpacing: 0.8 }}>
-              Add to queue
-            </SansText>
-          </View>
-          <View style={{ height: 1, backgroundColor: colors.divider }} />
-          <FlatList
-            data={queues}
-            keyExtractor={q => q.id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={{ flexDirection: "row", alignItems: "center", gap: Spacing.sm, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm + 2 }}
-                onPress={() => onSelect(item.id)}
-                activeOpacity={0.7}
-              >
-                <SansText style={{ fontSize: 18, width: 24 }}>{item.emoji ?? ""}</SansText>
-                <View style={{ flex: 1 }}>
-                  <SansText style={{ fontSize: FontSize.sm, color: colors.ink, fontFamily: FontFamily.sansMedium }}>{item.name}</SansText>
-                  <SansText style={{ fontSize: FontSize.xxs, color: colors.warmMid }}>{item.videoCount} video{item.videoCount !== 1 ? "s" : ""}</SansText>
-                </View>
-              </TouchableOpacity>
-            )}
-            ItemSeparatorComponent={() => <View style={{ height: 1, backgroundColor: colors.divider, marginLeft: 56 }} />}
-          />
-          <View style={{ height: 1, backgroundColor: colors.divider }} />
-          <TouchableOpacity
-            style={{ flexDirection: "row", alignItems: "center", gap: Spacing.sm, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm + 2 }}
-            onPress={onNewQueue}
-            activeOpacity={0.7}
-          >
-            <SansText style={{ fontSize: FontSize.sm, color: colors.accent, fontFamily: FontFamily.sansMedium }}>+ New queue</SansText>
-          </TouchableOpacity>
-        </View>
-      </TouchableOpacity>
-    </Modal>
   );
 }
 

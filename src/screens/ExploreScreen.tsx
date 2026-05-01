@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import {
   View, TextInput, FlatList, ScrollView, TouchableOpacity, StyleSheet,
-  SafeAreaView, Image, ActivityIndicator, Keyboard,
+  SafeAreaView, Image, ActivityIndicator, Keyboard, Platform,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -13,6 +13,8 @@ import {
 } from "../components/UI";
 import { LogoMark } from "../components/TabIcons";
 import { useStore } from "../store";
+import { useAddToQueue } from "../hooks/useAddToQueue";
+import { QueuePickerModal } from "../components/QueuePickerModal";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
 import { useTooltip } from "../hooks/useTooltip";
@@ -79,14 +81,16 @@ export default function ExploreScreen() {
   const navigation = useNavigation<any>();
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
-  const { user, queue, addToQueue } = useStore();
+  const { user, queue } = useStore();
+  const { handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId } = useAddToQueue(
+    (ytVideoId) => setAddedIds(prev => new Set([...prev, ytVideoId]))
+  );
 
   const [query, setQuery]                   = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
   const [results, setResults]               = useState<BrowseVideo[]>([]);
   const [searching, setSearching]           = useState(false);
   const [searchError, setSearchError]       = useState<string | null>(null);
-  const [addingId, setAddingId]             = useState<string | null>(null);
   const [addedIds, setAddedIds]             = useState<Set<string>>(new Set());
   const [recentSearches, setRecentSearches] = useState<RecentEntry[]>([]);
   const [surpriseMode, setSurpriseMode]     = useState(false);
@@ -164,17 +168,7 @@ export default function ExploreScreen() {
     }
   }, []);
 
-  const handleAddToQueue = async (video: BrowseVideo) => {
-    setAddingId(video.ytVideoId);
-    try {
-      await addToQueue(video.ytVideoId);
-      setAddedIds(prev => new Set([...prev, video.ytVideoId]));
-    } catch {
-      // error surfaced by store
-    } finally {
-      setAddingId(null);
-    }
-  };
+  const handleAddToQueue = (video: BrowseVideo) => handleAdd(video.ytVideoId);
 
   const isInQueue = (ytVideoId: string) =>
     addedIds.has(ytVideoId) ||
@@ -543,6 +537,13 @@ export default function ExploreScreen() {
         onNext={exploreTip.advance}
         onDismiss={exploreTip.dismiss}
       />
+
+      {Platform.OS !== "ios" && pickerVideoId && (
+        <QueuePickerModal
+          onSelect={(queueId) => { const vid = pickerVideoId; setPickerVideoId(null); doAddVideo(vid, queueId); }}
+          onDismiss={() => setPickerVideoId(null)}
+        />
+      )}
     </SafeAreaView>
   );
 }
