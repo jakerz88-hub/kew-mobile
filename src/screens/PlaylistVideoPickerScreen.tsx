@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
   View, FlatList, TouchableOpacity, StyleSheet,
-  SafeAreaView, Image, ActivityIndicator,
+  SafeAreaView, Image, ActivityIndicator, Alert,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
@@ -87,7 +87,15 @@ export default function PlaylistVideoPickerScreen() {
         setTimeout(() => navigation.goBack(), 3800);
       }
     } catch (e: any) {
-      showToast(e?.message ?? "Import failed. Please try again.");
+      if (e?.code === "queue_limit_reached") {
+        Alert.alert(
+          "Queue limit reached",
+          "Free accounts can hold up to 25 videos in their queue.",
+          [{ text: "OK" }],
+        );
+      } else {
+        showToast(e?.message ?? "Import failed. Please try again.");
+      }
     } finally {
       setImporting(false);
     }
