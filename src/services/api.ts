@@ -39,6 +39,14 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   if (!res.ok) {
     const errorBody = await res.json().catch(() => ({ detail: res.statusText }));
+    if (errorBody?.detail === "queue_limit_reached") {
+      const limit = errorBody.limit ?? 25;
+      const err: Error & { code?: string } = new Error(
+        `Queue limit reached. Free accounts can hold up to ${limit} videos.`,
+      );
+      err.code = "queue_limit_reached";
+      throw err;
+    }
     throw new Error(`${res.status}: ${errorBody.detail || "Request failed"}`);
   }
 

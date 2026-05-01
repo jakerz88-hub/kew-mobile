@@ -126,7 +126,12 @@ export const useStore = create<AppState>((set, get) => ({
       }
       await get().fetchQueue();
     } catch (e: any) {
-      set({ error: e.message });
+      // Don't surface queue_limit_reached as a generic error banner —
+      // useAddToQueue handles it with a dedicated Alert. Other errors
+      // still get the banner.
+      if (e?.code !== "queue_limit_reached") {
+        set({ error: e.message });
+      }
       throw e;
     }
   },

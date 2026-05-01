@@ -16,7 +16,7 @@ import { useStore } from "../store";
  */
 export function useAddToQueue(onAdded?: (ytVideoId: string) => void) {
   const navigation = useNavigation<any>();
-  const { user, queues, addToQueue, fetchQueues, clearError } = useStore();
+  const { user, queues, addToQueue, fetchQueues } = useStore();
 
   const [addingId, setAddingId]         = useState<string | null>(null);
   const [pickerVideoId, setPickerVideoId] = useState<string | null>(null);
@@ -34,8 +34,7 @@ export function useAddToQueue(onAdded?: (ytVideoId: string) => void) {
       await addToQueue(ytVideoId, queueId);
       onAdded?.(ytVideoId);
     } catch (e: any) {
-      if (typeof e?.message === "string" && e.message.includes("queue_limit_reached")) {
-        clearError();
+      if (e?.code === "queue_limit_reached") {
         Alert.alert(
           "Queue limit reached",
           "Free accounts can hold up to 25 videos in their queue.",
