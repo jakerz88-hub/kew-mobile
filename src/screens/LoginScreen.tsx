@@ -1,5 +1,8 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ActivityIndicator, Platform } from "react-native";
+import React, { useState, useRef } from "react";
+import {
+  View, Text, TextInput, StyleSheet, SafeAreaView,
+  TouchableOpacity, ActivityIndicator, Platform, KeyboardAvoidingView,
+} from "react-native";
 import * as WebBrowser from "expo-web-browser";
 import * as AuthSession from "expo-auth-session";
 import * as AppleAuthentication from "expo-apple-authentication";
@@ -11,17 +14,28 @@ import { LogoMark } from "../components/TabIcons";
 
 WebBrowser.maybeCompleteAuthSession();
 
-export default function LoginScreen() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState<string | null>(null);
+// Email OTP flow state
+type EmailStep = "idle" | "enter_email" | "enter_code";
 
+export default function LoginScreen() {
+  // Google / Apple loading
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState<string | null>(null);
+
+  // Email OTP flow
+  const [emailStep, setEmailStep]     = useState<EmailStep>("idle");
+  const [emailInput, setEmailInput]   = useState("");
+  const [codeInput, setCodeInput]     = useState("");
+  const [emailLoading, setEmailLoading] = useState(false);
+  const codeInputRef = useRef<TextInput>(null);
+
+  const anyLoading = loading || emailLoading;
+
+  // ── Google ────────────────────────────────────────────────────
   const handleGoogleSignIn = async () => {
     setLoading(true);
     setError(null);
     try {
-      // In Expo Go (dev or published), use the EAS project URL so the redirect
-      // works for all testers, not just the local machine.
-      // In a standalone build, use the kew:// custom scheme.
       const EAS_PROJECT_ID = "d7d74b72-c5d5-4f5a-95b2-1deacc44b4d4";
       const redirectTo = Constants.appOwnership === "expo"
         ? `exp://u.expo.dev/${EAS_PROJECT_ID}/--/auth/callback`
@@ -53,8 +67,7 @@ export default function LoginScreen() {
             const BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL as string;
 
             // Save YouTube token BEFORE setSession so fetchUser() sees hasYoutube: true.
-            // If this fails, surface the error and bail — the token in the URL is one-time
-            // so there's no point logging in without it. User can retry.
+            // If this fails, surface the error and bail — the token in the URL is one-time.
             const ytResp = await fetch(`${BASE_URL}/v1/profile/youtube-token`, {
               method: "POST",
               headers: {
@@ -85,7 +98,6 @@ export default function LoginScreen() {
             }).catch(() => {});
 
           } else if (accessToken && !providerToken) {
-            // Signed in but no YouTube token — still log them in
             await supabase.auth.setSession({
               access_token:  accessToken,
               refresh_token: refreshToken ?? "",
@@ -104,6 +116,7 @@ export default function LoginScreen() {
     }
   };
 
+  // ── Apple ─────────────────────────────────────────────────────
   const handleAppleSignIn = async () => {
     setLoading(true);
     setError(null);
@@ -130,10 +143,7 @@ export default function LoginScreen() {
         const displayName = [given, family].filter(Boolean).join(" ");
         await supabase.auth.updateUser({ data: { full_name: displayName } });
       }
-
-      // Navigation happens automatically via onAuthStateChange in App.tsx
     } catch (e: any) {
-      // User cancelled the sheet — ignore silently
       if (e.code === "ERR_REQUEST_CANCELED") return;
       setError(e.message || "Apple sign-in failed. Please try again.");
     } finally {
@@ -141,78 +151,261 @@ export default function LoginScreen() {
     }
   };
 
+  // ── Email OTP ─────────────────────────────────────────────────
+  // Magic links sent to the user's email break in Expo Go because the
+  // exp://u.expo.dev/... URL is intercepted as an EAS update check rather
+  // than routed back to the app. OTP codes work identically in Expo Go
+  // and standalone: no deep-link routing needed.
+  const handleSendCode = async () => {
+    const email = emailInput.trim();
+    if (!email) return;
+    setEmailLoading(true);
+    setError(null);
+    try {
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        email,
+        options: { shouldCreateUser: true },
+      });
+      if (otpError) throw otpError;
+      setEmailStep("enter_code");
+      // Auto-focus the code input after the step transition
+      setTimeout(() => codeInputRef.current?.focus(), 100);
+    } catch (e: any) {
+      setError(e.message || "Could not send code. Please try again.");
+    } finally {
+      setEmailLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    const email = emailInput.trim();
+    const token = codeInput.trim();
+    if (!email || token.length < 6) return;
+    setEmailLoading(true);
+    setError(null);
+    try {
+      const { error: verifyError } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type: "email",
+      });
+      if (verifyError) throw verifyError;
+      // Navigation happens automatically via onAuthStateChange in App.tsx
+    } catch (e: any) {
+      setError(e.message || "Invalid code. Please try again.");
+    } finally {
+      setEmailLoading(false);
+    }
+  };
+
+  const resetEmailFlow = () => {
+    setEmailStep("idle");
+    setEmailInput("");
+    setCodeInput("");
+    setError(null);
+  };
+
+  // ── Render ────────────────────────────────────────────────────
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.inner}>
-        <View style={styles.logoSection}>
-          <View style={styles.logoLockup}>
-            <LogoMark size={40} />
-            <KewLogo size={56} />
-          </View>
-          <SansText style={styles.tagline}>
-            Watch intentionally.{"\n"}No algorithm. No autoplay. No noise.
-          </SansText>
-        </View>
-
-        <View style={styles.howItWorks}>
-          {[
-            ["☰", "Build a queue from your favorite creators."],
-            ["▶", "Watch your curated videos, one at a time."],
-            ["→", "Earn skips by watching videos to the end."],
-          ].map(([icon, text]) => (
-            <View key={icon} style={styles.howItem}>
-              <Text style={styles.howIcon}>{icon}</Text>
-              <SansText style={styles.howText}>{text}</SansText>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <View style={styles.inner}>
+          <View style={styles.logoSection}>
+            <View style={styles.logoLockup}>
+              <LogoMark size={40} />
+              <KewLogo size={56} />
             </View>
-          ))}
-        </View>
+            <SansText style={styles.tagline}>
+              Watch intentionally.{"\n"}No algorithm. No autoplay. No noise.
+            </SansText>
+          </View>
 
-        <View style={styles.ctaSection}>
-          {error && <SansText style={styles.errorText}>{error}</SansText>}
-          <TouchableOpacity style={styles.googleBtn} onPress={handleGoogleSignIn} disabled={loading} activeOpacity={0.8}>
-            {loading
-              ? <ActivityIndicator color={Colors.cream} />
-              : (
-                <>
-                  <Text style={styles.googleIcon}>G</Text>
-                  <Text style={styles.googleBtnLabel}>Continue with Google</Text>
-                </>
-              )
-            }
-          </TouchableOpacity>
-          {Platform.OS === "ios" && (
-            <AppleAuthentication.AppleAuthenticationButton
-              buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE_OUTLINE}
-              cornerRadius={999}
-              style={styles.appleBtn}
-              onPress={handleAppleSignIn}
-            />
-          )}
-          <SansText style={styles.disclaimer}>
-            Kew uses your Google account to read your YouTube subscriptions. We never post on your behalf.
-          </SansText>
+          <View style={styles.howItWorks}>
+            {[
+              ["☰", "Build a queue from your favorite creators."],
+              ["▶", "Watch your curated videos, one at a time."],
+              ["→", "Earn skips by watching videos to the end."],
+            ].map(([icon, text]) => (
+              <View key={icon} style={styles.howItem}>
+                <Text style={styles.howIcon}>{icon}</Text>
+                <SansText style={styles.howText}>{text}</SansText>
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.ctaSection}>
+            {error && <SansText style={styles.errorText}>{error}</SansText>}
+
+            {/* Google — primary */}
+            <TouchableOpacity
+              style={styles.googleBtn}
+              onPress={handleGoogleSignIn}
+              disabled={anyLoading}
+              activeOpacity={0.8}
+            >
+              {loading
+                ? <ActivityIndicator color={Colors.cream} />
+                : (
+                  <>
+                    <Text style={styles.googleIcon}>G</Text>
+                    <Text style={styles.googleBtnLabel}>Continue with Google</Text>
+                  </>
+                )
+              }
+            </TouchableOpacity>
+
+            {/* Apple — secondary, iOS only */}
+            {Platform.OS === "ios" && (
+              <AppleAuthentication.AppleAuthenticationButton
+                buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE_OUTLINE}
+                cornerRadius={999}
+                style={styles.appleBtn}
+                onPress={handleAppleSignIn}
+              />
+            )}
+
+            {/* Email — tertiary */}
+            {emailStep === "idle" && (
+              <TouchableOpacity
+                onPress={() => { setError(null); setEmailStep("enter_email"); }}
+                disabled={anyLoading}
+                activeOpacity={0.6}
+                style={styles.emailToggle}
+              >
+                <SansText style={styles.emailToggleText}>or continue with email</SansText>
+              </TouchableOpacity>
+            )}
+
+            {emailStep === "enter_email" && (
+              <View style={styles.emailForm}>
+                <TextInput
+                  style={styles.emailInput}
+                  value={emailInput}
+                  onChangeText={setEmailInput}
+                  placeholder="your@email.com"
+                  placeholderTextColor={Colors.warmMid}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoFocus
+                  onSubmitEditing={handleSendCode}
+                  returnKeyType="send"
+                  editable={!emailLoading}
+                />
+                <TouchableOpacity
+                  style={[styles.emailSubmitBtn, (emailLoading || !emailInput.trim()) && styles.emailSubmitBtnDisabled]}
+                  onPress={handleSendCode}
+                  disabled={emailLoading || !emailInput.trim()}
+                  activeOpacity={0.8}
+                >
+                  {emailLoading
+                    ? <ActivityIndicator color={Colors.cream} size="small" />
+                    : <SansText style={styles.emailSubmitBtnText}>Send code</SansText>
+                  }
+                </TouchableOpacity>
+                <TouchableOpacity onPress={resetEmailFlow} activeOpacity={0.6} style={styles.emailCancelBtn}>
+                  <SansText style={styles.emailCancelText}>Cancel</SansText>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {emailStep === "enter_code" && (
+              <View style={styles.emailForm}>
+                <SansText style={styles.emailSentHint}>
+                  Code sent to {emailInput}
+                </SansText>
+                <TextInput
+                  ref={codeInputRef}
+                  style={[styles.emailInput, styles.codeInput]}
+                  value={codeInput}
+                  onChangeText={setCodeInput}
+                  placeholder="000000"
+                  placeholderTextColor={Colors.warmMid}
+                  keyboardType="number-pad"
+                  maxLength={6}
+                  onSubmitEditing={handleVerifyCode}
+                  returnKeyType="done"
+                  editable={!emailLoading}
+                />
+                <TouchableOpacity
+                  style={[styles.emailSubmitBtn, (emailLoading || codeInput.trim().length < 6) && styles.emailSubmitBtnDisabled]}
+                  onPress={handleVerifyCode}
+                  disabled={emailLoading || codeInput.trim().length < 6}
+                  activeOpacity={0.8}
+                >
+                  {emailLoading
+                    ? <ActivityIndicator color={Colors.cream} size="small" />
+                    : <SansText style={styles.emailSubmitBtnText}>Sign in</SansText>
+                  }
+                </TouchableOpacity>
+                <View style={styles.emailFooterRow}>
+                  <TouchableOpacity onPress={handleSendCode} disabled={emailLoading} activeOpacity={0.6}>
+                    <SansText style={styles.emailCancelText}>Resend code</SansText>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={resetEmailFlow} disabled={emailLoading} activeOpacity={0.6}>
+                    <SansText style={styles.emailCancelText}>Cancel</SansText>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
+            {emailStep === "idle" && (
+              <SansText style={styles.disclaimer}>
+                Kew uses your Google account to read your YouTube subscriptions. We never post on your behalf.
+              </SansText>
+            )}
+          </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.cream },
-  inner: { flex: 1, paddingHorizontal: Spacing.lg, justifyContent: "space-between", paddingVertical: Spacing.xl },
-  logoSection: { alignItems: "center", paddingTop: Spacing.xxl, gap: Spacing.md },
-  logoLockup: { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
-  tagline: { fontSize: FontSize.md, color: Colors.warmMid, textAlign: "center", lineHeight: 24, fontFamily: FontFamily.sansLight },
-  howItWorks: { gap: Spacing.lg, paddingHorizontal: Spacing.sm },
-  howItem: { flexDirection: "row", alignItems: "flex-start", gap: Spacing.md },
-  howIcon: { fontSize: 18, width: 28, textAlign: "center", marginTop: 1 },
-  howText: { flex: 1, fontSize: FontSize.sm, color: Colors.warmMid, lineHeight: 20 },
-  ctaSection: { gap: Spacing.md },
-  googleBtn: { backgroundColor: Colors.ink, borderRadius: 999, height: 52, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.sm },
-  googleIcon: { fontFamily: FontFamily.serif, fontSize: FontSize.md, color: Colors.cream },
+  container:    { flex: 1, backgroundColor: Colors.cream },
+  inner:        { flex: 1, paddingHorizontal: Spacing.lg, justifyContent: "space-between", paddingVertical: Spacing.xl },
+  logoSection:  { alignItems: "center", paddingTop: Spacing.xxl, gap: Spacing.md },
+  logoLockup:   { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
+  tagline:      { fontSize: FontSize.md, color: Colors.warmMid, textAlign: "center", lineHeight: 24, fontFamily: FontFamily.sansLight },
+  howItWorks:   { gap: Spacing.lg, paddingHorizontal: Spacing.sm },
+  howItem:      { flexDirection: "row", alignItems: "flex-start", gap: Spacing.md },
+  howIcon:      { fontSize: 18, width: 28, textAlign: "center", marginTop: 1 },
+  howText:      { flex: 1, fontSize: FontSize.sm, color: Colors.warmMid, lineHeight: 20 },
+  ctaSection:   { gap: Spacing.md },
+
+  // Google
+  googleBtn:      { backgroundColor: Colors.ink, borderRadius: 999, height: 52, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.sm },
+  googleIcon:     { fontFamily: FontFamily.serif, fontSize: FontSize.md, color: Colors.cream },
   googleBtnLabel: { fontFamily: FontFamily.sansMedium, fontSize: FontSize.sm, color: Colors.cream, letterSpacing: 0.3 },
+
+  // Apple
   appleBtn: { height: 46, width: "100%" },
-  errorText: { color: Colors.accent, fontSize: FontSize.xs, textAlign: "center" },
-  disclaimer: { fontSize: FontSize.xxs, color: Colors.queued, textAlign: "center", lineHeight: 16 },
+
+  // Email toggle link
+  emailToggle:     { alignItems: "center", paddingVertical: 2 },
+  emailToggleText: { fontSize: FontSize.xs, color: Colors.warmMid, fontFamily: FontFamily.sans },
+
+  // Email form (shared by enter_email and enter_code steps)
+  emailForm:     { gap: Spacing.sm },
+  emailSentHint: { fontSize: FontSize.xs, color: Colors.warmMid, textAlign: "center" },
+  emailInput:    {
+    height: 46, borderWidth: 1.5, borderColor: Colors.warmMid, borderRadius: 999,
+    paddingHorizontal: Spacing.md, fontSize: FontSize.sm, fontFamily: FontFamily.sans,
+    color: Colors.ink, backgroundColor: Colors.cream, textAlign: "left",
+  },
+  codeInput:     { textAlign: "center", letterSpacing: 6, fontSize: FontSize.md },
+  emailSubmitBtn:         { backgroundColor: Colors.ink, borderRadius: 999, height: 46, alignItems: "center", justifyContent: "center" },
+  emailSubmitBtnDisabled: { opacity: 0.45 },
+  emailSubmitBtnText:     { fontFamily: FontFamily.sansMedium, fontSize: FontSize.sm, color: Colors.cream, letterSpacing: 0.3 },
+  emailFooterRow:  { flexDirection: "row", justifyContent: "space-between" },
+  emailCancelBtn:  { alignItems: "center" },
+  emailCancelText: { fontSize: FontSize.xs, color: Colors.warmMid },
+
+  // Shared
+  errorText:   { color: Colors.accent, fontSize: FontSize.xs, textAlign: "center" },
+  disclaimer:  { fontSize: FontSize.xxs, color: Colors.queued, textAlign: "center", lineHeight: 16 },
 });
