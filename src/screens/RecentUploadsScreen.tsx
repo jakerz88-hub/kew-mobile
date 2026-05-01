@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { View, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, Image, ActivityIndicator, RefreshControl } from "react-native";
+import { useIsTablet } from "../hooks/useIsTablet";
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { api } from "../services/api";
@@ -7,12 +8,16 @@ import type { BrowseVideo } from "../types";
 import { SansText, SerifText, Divider, ThumbPlaceholder, EmptyState, ErrorBanner } from "../components/UI";
 import { QueueActionSheet } from "../components/QueueActionSheet";
 import { useStore } from "../store";
-import { Colors, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
+import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
+import { useTheme } from "../contexts/ThemeContext";
 import { formatDuration, timeAgo } from "../types";
 
 export default function RecentUploadsScreen() {
   const navigation = useNavigation<any>();
+  const isTablet = useIsTablet();
   const { addToQueue, queue, error, clearError } = useStore();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   const [videos, setVideos]           = useState<BrowseVideo[]>([]);
   const [loading, setLoading]         = useState(false);
@@ -61,11 +66,10 @@ export default function RecentUploadsScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-          <Feather name="arrow-left" size={16} color={Colors.accent} />
-          <SansText style={styles.backLabel}>Browse</SansText>
+          <Feather name="arrow-left" size={20} color={colors.warmMid} />
         </TouchableOpacity>
         <SerifText style={styles.headerTitle}>Latest Uploads</SerifText>
-        <View style={{ width: 80 }} />
+        <View style={{ flex: 1 }} />
       </View>
       <Divider />
 
@@ -74,31 +78,37 @@ export default function RecentUploadsScreen() {
 
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator color={Colors.accent} size="large" />
+          <ActivityIndicator color={colors.accent} size="large" />
           <SansText style={styles.loadingText}>Fetching from all your channels…</SansText>
         </View>
       ) : (
         <FlatList
+          key={isTablet ? "2col" : "1col"}
+          numColumns={isTablet ? 2 : 1}
           data={videos}
           keyExtractor={item => item.ytVideoId}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
               onRefresh={() => loadVideos(true)}
-              tintColor={Colors.accent}
+              tintColor={colors.accent}
             />
           }
+          columnWrapperStyle={isTablet ? styles.gridRow : undefined}
           renderItem={({ item }) => {
             const entryId = queueEntryByVideoId[item.ytVideoId];
             const inQueue = !!entryId;
             return (
-              <VideoCard
-                video={item}
-                inQueue={inQueue}
-                adding={addingId === item.ytVideoId}
-                onAdd={() => handleAdd(item)}
-                onRemove={inQueue && entryId ? () => setRemoveTarget({ entryId, title: item.title }) : undefined}
-              />
+              <View style={isTablet ? styles.gridItem : undefined}>
+                <VideoCard
+                  video={item}
+                  inQueue={inQueue}
+                  adding={addingId === item.ytVideoId}
+                  onAdd={() => handleAdd(item)}
+                  onRemove={inQueue && entryId ? () => setRemoveTarget({ entryId, title: item.title }) : undefined}
+                  isGrid={isTablet}
+                />
+              </View>
             );
           }}
           ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
@@ -118,23 +128,25 @@ export default function RecentUploadsScreen() {
         visible={!!removeTarget}
         entryId={removeTarget?.entryId ?? ""}
         videoTitle={removeTarget?.title ?? ""}
-        showMoveToEnd={false}
         onClose={() => setRemoveTarget(null)}
       />
     </SafeAreaView>
   );
 }
 
-function VideoCard({ video, inQueue, adding, onAdd, onRemove }: {
+function VideoCard({ video, inQueue, adding, onAdd, onRemove, isGrid }: {
   video: BrowseVideo;
   inQueue: boolean;
   adding: boolean;
   onAdd: () => void;
   onRemove?: () => void;
+  isGrid?: boolean;
 }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
-    <View style={styles.card}>
-      <View style={styles.thumbContainer}>
+    <View style={[styles.card, isGrid && styles.cardGrid]}>
+      <View style={isGrid ? styles.thumbGrid : styles.thumbContainer}>
         {video.thumbnailUrl
           ? <Image source={{ uri: video.thumbnailUrl }} style={StyleSheet.absoluteFill} resizeMode="cover" />
           : <ThumbPlaceholder seed={video.ytVideoId} style={StyleSheet.absoluteFill} />
@@ -166,27 +178,33 @@ function VideoCard({ video, inQueue, adding, onAdd, onRemove }: {
   );
 }
 
-const styles = StyleSheet.create({
-  container:       { flex: 1, backgroundColor: Colors.cream },
-  header:          { flexDirection: "row", alignItems: "center", paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm },
-  backBtn:         { flexDirection: "row", alignItems: "center", gap: 4, minWidth: 80 },
-  backLabel:       { fontSize: FontSize.sm, color: Colors.accent, fontFamily: FontFamily.sansMedium },
-  headerTitle:     { flex: 1, fontSize: FontSize.md, color: Colors.ink, textAlign: "center" },
-  loadingContainer:{ flex: 1, alignItems: "center", justifyContent: "center", gap: 16 },
-  loadingText:     { fontSize: FontSize.sm, color: Colors.warmMid, textAlign: "center" },
-  resultCount:     { paddingHorizontal: Spacing.md, paddingTop: Spacing.sm, paddingBottom: Spacing.xs, fontSize: FontSize.xs, color: Colors.warmMid },
-  listContent:     { paddingBottom: 80, paddingTop: Spacing.sm },
-  card:            { marginHorizontal: Spacing.md, backgroundColor: Colors.cardBg, borderWidth: 1, borderColor: Colors.divider, borderRadius: Radius.md, overflow: "hidden" },
-  thumbContainer:  { width: "100%", height: 120, position: "relative" },
-  durationBadge:   { position: "absolute", bottom: 8, right: 8, backgroundColor: "rgba(26,23,20,0.75)", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  durationText:    { color: "white", fontSize: FontSize.xxs },
-  cardBody:        { flexDirection: "row", alignItems: "flex-start", padding: Spacing.sm, gap: Spacing.sm },
-  cardText:        { flex: 1, minWidth: 0 },
-  cardChannel:     { fontSize: FontSize.xxs, color: Colors.warmMid, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2, fontFamily: FontFamily.sansMedium },
-  cardTitle:       { fontSize: FontSize.sm, color: Colors.ink, lineHeight: 18, marginBottom: 4 },
-  cardMeta:        { fontSize: FontSize.xxs, color: Colors.queued },
-  addBtn:          { width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: Colors.accent, alignItems: "center", justifyContent: "center", flexShrink: 0 },
-  addBtnAdded:     { backgroundColor: Colors.green, borderColor: Colors.green },
-  addBtnText:      { fontSize: FontSize.lg, color: Colors.accent, lineHeight: 24, marginTop: -2 },
-  addBtnTextAdded: { color: "white", fontSize: FontSize.sm, marginTop: 0 },
-});
+function makeStyles(c: ColorPalette) {
+  return StyleSheet.create({
+    container:       { flex: 1, backgroundColor: c.cream },
+    header:          { flexDirection: "row", alignItems: "center", paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm },
+    backBtn:         { flex: 1 },
+    headerTitle:     { fontSize: FontSize.md, color: c.ink, textAlign: "center" },
+    loadingContainer:{ flex: 1, alignItems: "center", justifyContent: "center", gap: 16 },
+    loadingText:     { fontSize: FontSize.sm, color: c.warmMid, textAlign: "center" },
+    resultCount:     { paddingHorizontal: Spacing.md, paddingTop: Spacing.sm, paddingBottom: Spacing.xs, fontSize: FontSize.xs, color: c.warmMid },
+    listContent:     { paddingBottom: 80, paddingTop: Spacing.sm },
+    card:            { marginHorizontal: Spacing.md, backgroundColor: c.cardBg, borderWidth: 1, borderColor: c.divider, borderRadius: Radius.md, overflow: "hidden" },
+    cardGrid:        { marginHorizontal: 0 },
+    thumbContainer:  { width: "100%", height: 120, position: "relative" },
+    thumbGrid:       { width: "100%", aspectRatio: 16 / 9, position: "relative" },
+    durationBadge:   { position: "absolute", bottom: 8, right: 8, backgroundColor: "rgba(26,23,20,0.75)", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+    durationText:    { color: "white", fontSize: FontSize.xxs },
+    cardBody:        { flexDirection: "row", alignItems: "flex-start", padding: Spacing.sm, gap: Spacing.sm },
+    cardText:        { flex: 1, minWidth: 0 },
+    cardChannel:     { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2, fontFamily: FontFamily.sansMedium },
+    cardTitle:       { fontSize: FontSize.sm, color: c.ink, lineHeight: 18, marginBottom: 4 },
+    cardMeta:        { fontSize: FontSize.xxs, color: c.queued },
+    addBtn:          { width: 34, height: 34, borderRadius: 17, backgroundColor: c.accent, alignItems: "center", justifyContent: "center", flexShrink: 0 },
+    addBtnAdded:     { backgroundColor: c.green },
+    addBtnText:      { fontSize: FontSize.lg, color: "white", lineHeight: 24, marginTop: -2 },
+    addBtnTextAdded: { color: "white", fontSize: FontSize.sm, marginTop: 0 },
+    // Tablet grid layout
+    gridRow:         { gap: 12, paddingHorizontal: Spacing.md },
+    gridItem:        { flex: 1 },
+  });
+}

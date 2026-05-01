@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { View, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, Image, RefreshControl } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
@@ -7,7 +7,8 @@ import { api } from "../services/api";
 import type { BrowseVideo } from "../types";
 import { SansText, Divider, ThumbPlaceholder, EmptyState, ErrorBanner } from "../components/UI";
 import { QueueActionSheet } from "../components/QueueActionSheet";
-import { Colors, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
+import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
+import { useTheme } from "../contexts/ThemeContext";
 import { formatDuration, timeAgo } from "../types";
 
 export default function ChannelScreen() {
@@ -23,6 +24,9 @@ export default function ChannelScreen() {
   const STAGE_WEEKS = [2, 12, 36, 0] as const; // 0 = no limit
 
   const { addToQueue, queue, error, clearError } = useStore();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const [videos, setVideos]             = useState<BrowseVideo[]>([]);
   const [loading, setLoading]           = useState(false);
   const [loadingOlder, setLoadingOlder] = useState(false);
@@ -75,8 +79,7 @@ export default function ChannelScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
-          <Feather name="arrow-left" size={16} color={Colors.accent} />
-          <SansText style={styles.backLabel}>Browse</SansText>
+          <Feather name="arrow-left" size={20} color={colors.warmMid} />
         </TouchableOpacity>
         <View style={styles.channelInfo}>
           {thumbnailUrl
@@ -87,7 +90,7 @@ export default function ChannelScreen() {
           }
           <SansText style={styles.channelName} numberOfLines={1}>{channelTitle}</SansText>
         </View>
-        <View style={{ width: 80 }} />
+        <View style={{ flex: 1 }} />
       </View>
       <Divider />
 
@@ -97,7 +100,7 @@ export default function ChannelScreen() {
       <FlatList
         data={videos}
         keyExtractor={item => item.ytVideoId}
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={() => loadVideos(0)} tintColor={Colors.accent} />}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={() => loadVideos(0)} tintColor={colors.accent} />}
         renderItem={({ item }) => {
           const entryId = queueEntryByVideoId[item.ytVideoId];
           const inQueue = !!entryId;
@@ -121,7 +124,6 @@ export default function ChannelScreen() {
         visible={!!removeTarget}
         entryId={removeTarget?.entryId ?? ""}
         videoTitle={removeTarget?.title ?? ""}
-        showMoveToEnd={false}
         onClose={() => setRemoveTarget(null)}
       />
     </SafeAreaView>
@@ -131,6 +133,8 @@ export default function ChannelScreen() {
 const STAGE_LABELS = ["2 weeks", "3 months", "9 months", "all time"] as const;
 
 function LoadMoreButton({ label, loading, onPress }: { label: string; loading: boolean; onPress: () => void }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <TouchableOpacity style={styles.loadOlderBtn} onPress={onPress} disabled={loading} activeOpacity={0.7}>
       <SansText style={styles.loadOlderText}>{loading ? "Loading…" : label}</SansText>
@@ -139,6 +143,8 @@ function LoadMoreButton({ label, loading, onPress }: { label: string; loading: b
 }
 
 function EmptyChannelState({ stage, loadingOlder, onLoadOlder }: { stage: number; loadingOlder: boolean; onLoadOlder: () => void }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const checked = STAGE_LABELS[stage];
   const isExhausted = stage >= 3;
   return (
@@ -160,6 +166,8 @@ function EmptyChannelState({ stage, loadingOlder, onLoadOlder }: { stage: number
 }
 
 function LoadMoreFooter({ stage, loadingOlder, onLoadOlder }: { stage: number; loadingOlder: boolean; onLoadOlder: () => void }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const isExhausted = stage >= 3;
   return (
     <View style={styles.footerContainer}>
@@ -182,6 +190,8 @@ function VideoCard({ video, inQueue, adding, onAdd, onRemove }: {
   onAdd: () => void;
   onRemove?: () => void;
 }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.card}>
       <View style={styles.thumbContainer}>
@@ -215,32 +225,33 @@ function VideoCard({ video, inQueue, adding, onAdd, onRemove }: {
   );
 }
 
-const styles = StyleSheet.create({
-  container:      { flex: 1, backgroundColor: Colors.cream },
-  header:         { flexDirection: "row", alignItems: "center", paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm },
-  backBtn:        { flexDirection: "row", alignItems: "center", gap: 4, minWidth: 80 },
-  backLabel:      { fontSize: FontSize.sm, color: Colors.accent, fontFamily: FontFamily.sansMedium },
-  channelInfo:    { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.sm },
-  avatar:         { width: 28, height: 28, borderRadius: 14, backgroundColor: Colors.divider },
-  avatarFallback: { width: 28, height: 28, borderRadius: 14, backgroundColor: Colors.green, alignItems: "center", justifyContent: "center" },
-  avatarChar:     { color: "white", fontSize: FontSize.xxs, fontFamily: FontFamily.sansMedium },
-  channelName:    { fontSize: FontSize.sm, color: Colors.ink, fontFamily: FontFamily.sansMedium, maxWidth: 180 },
-  listContent:    { paddingBottom: 80, paddingTop: Spacing.sm },
-  card:           { marginHorizontal: Spacing.md, backgroundColor: Colors.cardBg, borderWidth: 1, borderColor: Colors.divider, borderRadius: Radius.md, overflow: "hidden" },
-  thumbContainer: { width: "100%", height: 120, position: "relative" },
-  durationBadge:  { position: "absolute", bottom: 8, right: 8, backgroundColor: "rgba(26,23,20,0.75)", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  durationText:   { color: "white", fontSize: FontSize.xxs },
-  cardBody:       { flexDirection: "row", alignItems: "flex-start", padding: Spacing.sm, gap: Spacing.sm },
-  cardText:       { flex: 1, minWidth: 0 },
-  cardTitle:      { fontSize: FontSize.sm, color: Colors.ink, lineHeight: 18, marginBottom: 4 },
-  cardMeta:       { fontSize: FontSize.xxs, color: Colors.queued },
-  addBtn:            { width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: Colors.accent, alignItems: "center", justifyContent: "center", flexShrink: 0 },
-  addBtnAdded:       { backgroundColor: Colors.green, borderColor: Colors.green },
-  addBtnText:        { fontSize: FontSize.lg, color: Colors.accent, lineHeight: 24, marginTop: -2 },
-  addBtnTextAdded:   { color: "white", fontSize: FontSize.sm, marginTop: 0 },
-  emptyContainer:  { alignItems: "center", paddingHorizontal: Spacing.md },
-  footerContainer: { alignItems: "center", paddingVertical: Spacing.lg },
-  loadOlderBtn:    { marginTop: Spacing.md, paddingHorizontal: Spacing.xl, paddingVertical: Spacing.sm, borderRadius: Radius.pill, borderWidth: 1.5, borderColor: Colors.accent },
-  loadOlderText:   { fontSize: FontSize.sm, color: Colors.accent, fontFamily: FontFamily.sansMedium },
-  exhaustedText:   { fontSize: FontSize.sm, color: Colors.warmMid, fontFamily: FontFamily.sansMedium },
-});
+function makeStyles(c: ColorPalette) {
+  return StyleSheet.create({
+    container:      { flex: 1, backgroundColor: c.cream },
+    header:         { flexDirection: "row", alignItems: "center", paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm },
+    backBtn:        { flex: 1 },
+    channelInfo:    { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.sm },
+    avatar:         { width: 28, height: 28, borderRadius: 14, backgroundColor: c.divider },
+    avatarFallback: { width: 28, height: 28, borderRadius: 14, backgroundColor: c.green, alignItems: "center", justifyContent: "center" },
+    avatarChar:     { color: "white", fontSize: FontSize.xxs, fontFamily: FontFamily.sansMedium },
+    channelName:    { fontSize: FontSize.sm, color: c.ink, fontFamily: FontFamily.sansMedium, maxWidth: 180 },
+    listContent:    { paddingBottom: 80, paddingTop: Spacing.sm },
+    card:           { marginHorizontal: Spacing.md, backgroundColor: c.cardBg, borderWidth: 1, borderColor: c.divider, borderRadius: Radius.md, overflow: "hidden" },
+    thumbContainer: { width: "100%", height: 120, position: "relative" },
+    durationBadge:  { position: "absolute", bottom: 8, right: 8, backgroundColor: "rgba(26,23,20,0.75)", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+    durationText:   { color: "white", fontSize: FontSize.xxs },
+    cardBody:       { flexDirection: "row", alignItems: "flex-start", padding: Spacing.sm, gap: Spacing.sm },
+    cardText:       { flex: 1, minWidth: 0 },
+    cardTitle:      { fontSize: FontSize.sm, color: c.ink, lineHeight: 18, marginBottom: 4 },
+    cardMeta:       { fontSize: FontSize.xxs, color: c.queued },
+    addBtn:            { width: 34, height: 34, borderRadius: 17, backgroundColor: c.accent, alignItems: "center", justifyContent: "center", flexShrink: 0 },
+    addBtnAdded:       { backgroundColor: c.green },
+    addBtnText:        { fontSize: FontSize.lg, color: "white", lineHeight: 24, marginTop: -2 },
+    addBtnTextAdded:   { color: "white", fontSize: FontSize.sm, marginTop: 0 },
+    emptyContainer:  { alignItems: "center", paddingHorizontal: Spacing.md },
+    footerContainer: { alignItems: "center", paddingVertical: Spacing.lg },
+    loadOlderBtn:    { marginTop: Spacing.md, paddingHorizontal: Spacing.xl, paddingVertical: Spacing.sm, borderRadius: Radius.pill, borderWidth: 1.5, borderColor: c.accent },
+    loadOlderText:   { fontSize: FontSize.sm, color: c.accent, fontFamily: FontFamily.sansMedium },
+    exhaustedText:   { fontSize: FontSize.sm, color: c.warmMid, fontFamily: FontFamily.sansMedium },
+  });
+}

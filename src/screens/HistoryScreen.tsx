@@ -1,11 +1,12 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { View, FlatList, StyleSheet, SafeAreaView, Image, RefreshControl, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { supabase } from "../services/supabase";
 import { useStore } from "../store";
 import { KewLogo, SansText, SerifText, Divider, ThumbPlaceholder, EmptyState, ErrorBanner, AvatarBubble } from "../components/UI";
 import { LogoMark } from "../components/TabIcons";
-import { Colors, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
+import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
+import { useTheme } from "../contexts/ThemeContext";
 import { formatDuration, timeAgo } from "../types";
 import type { QueueEntry } from "../types";
 
@@ -19,11 +20,13 @@ function keysToCamel<T>(obj: any): T {
 
 export default function HistoryScreen() {
   const navigation = useNavigation<any>();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { error, clearError, addToQueue, user } = useStore();
   const [entries, setEntries] = useState<QueueEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [totalSecs, setTotal] = useState(0);
-  const [addingId, setAddingId]   = useState<string | null>(null);
+  const [addingId, setAddingId]     = useState<string | null>(null);
   const [readdedIds, setReaddedIds] = useState<Set<string>>(new Set());
 
   const loadHistory = useCallback(async () => {
@@ -88,7 +91,7 @@ export default function HistoryScreen() {
       <FlatList
         data={entries}
         keyExtractor={item => item.id}
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={loadHistory} tintColor={Colors.accent} />}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={loadHistory} tintColor={colors.accent} />}
         ListHeaderComponent={
           <View style={styles.pageHeader}>
             <SerifText style={styles.pageTitle}>Your Watch History</SerifText>
@@ -125,6 +128,8 @@ function HistoryItem({ entry, readded, adding, onReadd }: {
   adding: boolean;
   onReadd: () => void;
 }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.item}>
       <View style={styles.thumb}>
@@ -166,28 +171,28 @@ function _formatTotalTime(secs: number): string {
   return `${h}h ${m}m`;
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.cream },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm },
-  pageHeader: { padding: Spacing.md, paddingBottom: Spacing.sm },
-  pageTitle: { fontSize: FontSize.lg },
-  pageSubtitle: { fontSize: FontSize.xs, color: Colors.warmMid, marginTop: 2 },
-  item: { flexDirection: "row", alignItems: "center", paddingVertical: Spacing.sm + 2, paddingHorizontal: Spacing.md, gap: Spacing.sm },
-  thumb: { width: 88, height: 56, borderRadius: Radius.sm, overflow: "hidden", backgroundColor: Colors.divider, flexShrink: 0, position: "relative" },
-  thumbImg: { borderRadius: Radius.sm },
-  completedBadge: { position: "absolute", bottom: 4, right: 4, width: 18, height: 18, borderRadius: 9, backgroundColor: Colors.green, alignItems: "center", justifyContent: "center" },
-  completedTick: { color: "white", fontSize: 9, fontFamily: FontFamily.sansMedium },
-  info: { flex: 1, minWidth: 0 },
-  channel: { fontSize: FontSize.xxs, color: Colors.warmMid, textTransform: "uppercase", letterSpacing: 0.5, fontFamily: FontFamily.sansMedium, marginBottom: 2 },
-  title: { fontSize: FontSize.sm, color: Colors.ink, lineHeight: 18 },
-  meta: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 3 },
-  metaText: { fontSize: FontSize.xxs, color: Colors.queued },
-  metaDot: { fontSize: FontSize.xxs, color: Colors.queued },
-  readdBtn: { width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: Colors.accent, alignItems: "center", justifyContent: "center", flexShrink: 0 },
-  readdBtnDone: { backgroundColor: Colors.green, borderColor: Colors.green },
-  readdBtnText: { fontSize: FontSize.lg, color: Colors.accent, lineHeight: 24, marginTop: -2 },
-  readdBtnTextDone: { color: "white", fontSize: FontSize.sm, marginTop: 0 },
-  listContent: { paddingBottom: 80 },
-  avatarBubble: { width: 30, height: 30, borderRadius: 15, backgroundColor: Colors.green, alignItems: "center", justifyContent: "center" },
-  avatarBubbleText: { color: Colors.cream, fontSize: FontSize.xs, fontFamily: FontFamily.sansMedium },
-});
+function makeStyles(c: ColorPalette) {
+  return StyleSheet.create({
+    container:       { flex: 1, backgroundColor: c.cream },
+    header:          { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm },
+    pageHeader:      { padding: Spacing.md, paddingBottom: Spacing.sm },
+    pageTitle:       { fontSize: FontSize.lg },
+    pageSubtitle:    { fontSize: FontSize.xs, color: c.warmMid, marginTop: 2 },
+    item:            { flexDirection: "row", alignItems: "center", paddingVertical: Spacing.sm + 2, paddingHorizontal: Spacing.md, gap: Spacing.sm },
+    thumb:           { width: 88, height: 56, borderRadius: Radius.sm, overflow: "hidden", backgroundColor: c.divider, flexShrink: 0, position: "relative" },
+    thumbImg:        { borderRadius: Radius.sm },
+    completedBadge:  { position: "absolute", bottom: 4, right: 4, width: 18, height: 18, borderRadius: 9, backgroundColor: c.green, alignItems: "center", justifyContent: "center" },
+    completedTick:   { color: "white", fontSize: 9, fontFamily: FontFamily.sansMedium },
+    info:            { flex: 1, minWidth: 0 },
+    channel:         { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 0.5, fontFamily: FontFamily.sansMedium, marginBottom: 2 },
+    title:           { fontSize: FontSize.sm, color: c.ink, lineHeight: 18 },
+    meta:            { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 3 },
+    metaText:        { fontSize: FontSize.xxs, color: c.queued },
+    metaDot:         { fontSize: FontSize.xxs, color: c.queued },
+    readdBtn:        { width: 34, height: 34, borderRadius: 17, borderWidth: 1.5, borderColor: c.accent, alignItems: "center", justifyContent: "center", flexShrink: 0 },
+    readdBtnDone:    { backgroundColor: c.green, borderColor: c.green },
+    readdBtnText:    { fontSize: FontSize.lg, color: c.accent, lineHeight: 24, marginTop: -2 },
+    readdBtnTextDone:{ color: "white", fontSize: FontSize.sm, marginTop: 0 },
+    listContent:     { paddingBottom: 80 },
+  });
+}

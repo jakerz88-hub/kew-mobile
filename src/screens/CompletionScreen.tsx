@@ -1,20 +1,25 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { View, StyleSheet, SafeAreaView, TouchableOpacity } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { useStore } from "../store";
-import { SerifText, SansText } from "../components/UI";
-import { Colors, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
+import { SerifText, SansText, ThumbPlaceholder } from "../components/UI";
+import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
+import { useTheme } from "../contexts/ThemeContext";
 import { formatDuration } from "../types";
 
 export default function CompletionScreen() {
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const { queue, user, fetchUser } = useStore();
+  const [userLoaded, setUserLoaded] = useState(false);
 
-  useEffect(() => { fetchUser(); }, []);
+  useEffect(() => { fetchUser().then(() => setUserLoaded(true)); }, []);
 
-  const completed = queue?.entries.find(e => e.status === "completed");
+  const watchedSecs: number = route.params?.watchedSecs ?? 0;
   const nextEntry = queue?.entries.find(e => e.status === "pending");
-  const watchedSecs = completed?.video.durationSecs ?? 0;
+  const earnedSkip = userLoaded && user != null && user.skipsRemaining < user.skipsMax;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -24,9 +29,11 @@ export default function CompletionScreen() {
             <SerifText style={styles.checkIcon}>✓</SerifText>
           </View>
           <SerifText style={styles.heroTitle}>Complete!</SerifText>
-          <SansText style={styles.heroSub} numberOfLines={3}>
-            You earned 1 skip!
-          </SansText>
+          {earnedSkip && (
+            <SansText style={styles.heroSub} numberOfLines={3}>
+              You earned 1 skip!
+            </SansText>
+          )}
         </View>
 
         <View style={styles.statsRow}>
@@ -40,7 +47,7 @@ export default function CompletionScreen() {
             <SansText style={styles.nextLabel}>Up Next - Ready</SansText>
             <TouchableOpacity style={styles.nextCard} onPress={() => navigation.replace("Player")} activeOpacity={0.85}>
               <View style={styles.nextThumbArea}>
-                <View style={styles.nextThumbPlaceholder} />
+                <ThumbPlaceholder seed={nextEntry.video.ytVideoId} style={StyleSheet.absoluteFillObject} />
                 <View style={styles.readyTag}>
                   <SansText style={styles.readyTagText}>Ready to watch the next one?</SansText>
                 </View>
@@ -70,6 +77,8 @@ export default function CompletionScreen() {
 }
 
 function StatCard({ value, label }: { value: string; label: string }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.statCard}>
       <SerifText style={styles.statValue}>{value}</SerifText>
@@ -78,33 +87,35 @@ function StatCard({ value, label }: { value: string; label: string }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.cream },
-  inner: { flex: 1, padding: Spacing.md, gap: Spacing.lg, justifyContent: "center" },
-  heroSection: { alignItems: "center", gap: Spacing.sm },
-  checkCircle: { width: 68, height: 68, borderRadius: 34, backgroundColor: Colors.green, alignItems: "center", justifyContent: "center" },
-  checkIcon: { fontSize: 28, color: "white" },
-  heroTitle: { fontSize: FontSize.xxl },
-  heroSub: { fontSize: FontSize.sm, color: Colors.warmMid, textAlign: "center", lineHeight: 20, maxWidth: 260 },
-  statsRow: { flexDirection: "row", gap: Spacing.sm },
-  statCard: { flex: 1, backgroundColor: Colors.cardBg, borderWidth: 1, borderColor: Colors.divider, borderRadius: Radius.md, padding: Spacing.md, alignItems: "center" },
-  statValue: { fontSize: FontSize.xl },
-  statLabel: { fontSize: FontSize.xxs, color: Colors.warmMid, textTransform: "uppercase", letterSpacing: 0.5, marginTop: 2 },
-  nextSection: { gap: Spacing.sm },
-  nextLabel: { fontSize: FontSize.xxs, color: Colors.warmMid, textTransform: "uppercase", letterSpacing: 1, fontFamily: FontFamily.sansMedium },
-  nextCard: { backgroundColor: Colors.ink, borderRadius: Radius.lg, overflow: "hidden" },
-  nextThumbArea: { height: 120, justifyContent: "center", alignItems: "center", position: "relative" },
-  nextThumbPlaceholder: { ...StyleSheet.absoluteFillObject, backgroundColor: "#4A3728" },
-  readyTag: { position: "absolute", top: 8, left: 8, backgroundColor: Colors.green, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 },
-  readyTagText: { color: "white", fontSize: FontSize.xxs, fontFamily: FontFamily.sansMedium, letterSpacing: 0.5 },
-  nextPlayBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: Colors.accent, alignItems: "center", justifyContent: "center", paddingLeft: 3 },
-  nextPlayIcon: { color: "white", fontSize: 18 },
-  nextInfo: { padding: Spacing.sm + 2 },
-  nextChannel: { color: "rgba(255,255,255,0.45)", fontSize: FontSize.xxs, textTransform: "uppercase", letterSpacing: 0.5 },
-  nextTitle: { color: "white", fontSize: FontSize.md, lineHeight: 22, marginTop: 3 },
-  emptyNext: { alignItems: "center", gap: Spacing.xs },
-  emptyNextText: { fontSize: FontSize.lg, color: Colors.ink },
-  emptyNextSub: { fontSize: FontSize.sm, color: Colors.warmMid },
-  backToQueue: { alignItems: "center", paddingVertical: Spacing.sm },
-  backToQueueText: { fontSize: FontSize.sm, color: Colors.warmMid, borderBottomWidth: 1, borderBottomColor: Colors.divider, paddingBottom: 2 },
-});
+function makeStyles(c: ColorPalette) {
+  return StyleSheet.create({
+    container:    { flex: 1, backgroundColor: c.cream },
+    inner:        { flex: 1, padding: Spacing.md, gap: Spacing.lg, justifyContent: "center" },
+    heroSection:  { alignItems: "center", gap: Spacing.sm },
+    checkCircle:  { width: 68, height: 68, borderRadius: 34, backgroundColor: c.green, alignItems: "center", justifyContent: "center" },
+    checkIcon:    { fontSize: 28, color: "white" },
+    heroTitle:    { fontSize: FontSize.xxl },
+    heroSub:      { fontSize: FontSize.sm, color: c.warmMid, textAlign: "center", lineHeight: 20, maxWidth: 260 },
+    statsRow:     { flexDirection: "row", gap: Spacing.sm },
+    statCard:     { flex: 1, backgroundColor: c.cardBg, borderWidth: 1, borderColor: c.divider, borderRadius: Radius.md, padding: Spacing.md, alignItems: "center" },
+    statValue:    { fontSize: FontSize.xl },
+    statLabel:    { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 0.5, marginTop: 2 },
+    nextSection:  { gap: Spacing.sm },
+    nextLabel:    { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 1, fontFamily: FontFamily.sansMedium },
+    // "Up Next" card — intentionally always dark (immersive cinema surface)
+    nextCard:     { backgroundColor: "#1A1714", borderRadius: Radius.lg, overflow: "hidden" },
+    nextThumbArea:{ height: 120, justifyContent: "center", alignItems: "center", position: "relative" },
+    readyTag:     { position: "absolute", top: 8, left: 8, backgroundColor: c.green, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 },
+    readyTagText: { color: "white", fontSize: FontSize.xxs, fontFamily: FontFamily.sansMedium, letterSpacing: 0.5 },
+    nextPlayBtn:  { width: 48, height: 48, borderRadius: 24, backgroundColor: c.accent, alignItems: "center", justifyContent: "center", paddingLeft: 3 },
+    nextPlayIcon: { color: "white", fontSize: 18 },
+    nextInfo:     { padding: Spacing.sm + 2 },
+    nextChannel:  { color: "rgba(255,255,255,0.45)", fontSize: FontSize.xxs, textTransform: "uppercase", letterSpacing: 0.5 },
+    nextTitle:    { color: "white", fontSize: FontSize.md, lineHeight: 22, marginTop: 3 },
+    emptyNext:    { alignItems: "center", gap: Spacing.xs },
+    emptyNextText:{ fontSize: FontSize.lg, color: c.ink },
+    emptyNextSub: { fontSize: FontSize.sm, color: c.warmMid },
+    backToQueue:  { alignItems: "center", paddingVertical: Spacing.sm },
+    backToQueueText: { fontSize: FontSize.sm, color: c.warmMid, borderBottomWidth: 1, borderBottomColor: c.divider, paddingBottom: 2 },
+  });
+}

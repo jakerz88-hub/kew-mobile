@@ -39,7 +39,7 @@ export default function BrowseScreen() {
   const { colors } = useTheme();
   const styles  = useMemo(() => makePhoneStyles(colors), [colors]);
   const tStyles = useMemo(() => makeTabletStyles(colors), [colors]);
-  const { user, addToQueue, queue, queues } = useStore();
+  const { user, addToQueue, queue, queues, fetchQueues } = useStore();
 
   const { fetchUser } = useStore();
   const [channels, setChannels]         = useState<Channel[]>([]);
@@ -132,7 +132,7 @@ export default function BrowseScreen() {
     }
   }, [isTablet, selectedChannelId, loadPanelVideos]);
 
-  useEffect(() => { loadChannels(); loadRecentUploads(); }, []);
+  useEffect(() => { loadChannels(); loadRecentUploads(); fetchQueues(); }, []);
 
   // Load panel videos when tablet is ready or channel selection changes
   useEffect(() => {

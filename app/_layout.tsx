@@ -3,10 +3,6 @@ import { View, ActivityIndicator } from "react-native";
 import { Tabs, useRouter, useSegments } from "expo-router";
 import {
   useFonts,
-  PlayfairDisplay_700Bold,
-  PlayfairDisplay_400Regular,
-} from "@expo-google-fonts/playfair-display";
-import {
   DMSans_400Regular,
   DMSans_500Medium,
   DMSans_300Light,
@@ -25,8 +21,6 @@ export default function RootLayout() {
   const { fetchUser, fetchQueue } = useStore();
 
   const [fontsLoaded] = useFonts({
-    PlayfairDisplay_700Bold,
-    PlayfairDisplay_400Regular,
     DMSans_400Regular,
     DMSans_500Medium,
     DMSans_300Light,

@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { View, StyleSheet, SafeAreaView, TouchableOpacity } from "react-native";
+import { View, Image, StyleSheet, SafeAreaView, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useStore } from "../store";
 import { SerifText, SansText } from "../components/UI";
@@ -40,7 +40,10 @@ export default function CompletionScreen() {
             <SansText style={styles.nextLabel}>Up Next - Ready</SansText>
             <TouchableOpacity style={styles.nextCard} onPress={() => navigation.replace("Player")} activeOpacity={0.85}>
               <View style={styles.nextThumbArea}>
-                <View style={styles.nextThumbPlaceholder} />
+                {nextEntry.video.thumbnailUrl
+                  ? <Image source={{ uri: nextEntry.video.thumbnailUrl }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+                  : <View style={styles.nextThumbPlaceholder} />
+                }
                 <View style={styles.readyTag}>
                   <SansText style={styles.readyTagText}>Ready to watch</SansText>
                 </View>

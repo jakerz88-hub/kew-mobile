@@ -1,19 +1,30 @@
 import { create } from "zustand";
-import type { Queue, User } from "../types";
+import type { Queue, User, KewQueue } from "../types";
 import { api } from "../services/api";
 
 interface AppState {
   user: User | null;
   queue: Queue | null;
+  queues: KewQueue[];
+  activeQueueId: string | null;
   isLoadingQueue: boolean;
   isLoadingUser: boolean;
+  isLoadingQueues: boolean;
   error: string | null;
   fetchUser: () => Promise<void>;
   fetchQueue: () => Promise<void>;
-  addToQueue: (ytVideoId: string) => Promise<void>;
+  fetchQueues: () => Promise<void>;
+  setActiveQueue: (id: string) => Promise<void>;
+  createQueue: (name: string, emoji: string | null) => Promise<KewQueue>;
+  updateQueue: (id: string, name?: string, emoji?: string | null) => Promise<void>;
+  pinQueue: (id: string, pinned: boolean) => Promise<void>;
+  deleteQueue: (id: string) => Promise<void>;
+  addToQueue: (ytVideoId: string, queueId?: string) => Promise<void>;
   removeFromQueue: (entryId: string) => Promise<void>;
+  moveToQueue: (entryId: string, targetQueueId: string) => Promise<void>;
   moveToEnd: (entryId: string) => Promise<void>;
   shuffleQueue: () => Promise<void>;
+  reorderQueue: (entryId: string, newPosition: number, useSkip: boolean) => Promise<{ skipsRemaining: number; skipsMax: number }>;
   updateProgress: (entryId: string, progressSecs: number) => Promise<void>;
   skipCurrent: () => Promise<void>;
   clearError: () => void;
@@ -22,8 +33,11 @@ interface AppState {
 export const useStore = create<AppState>((set, get) => ({
   user: null,
   queue: null,
+  queues: [],
+  activeQueueId: null,
   isLoadingQueue: false,
   isLoadingUser: false,
+  isLoadingQueues: false,
   error: null,
 
   clearError: () => set({ error: null }),
@@ -32,7 +46,12 @@ export const useStore = create<AppState>((set, get) => ({
     set({ isLoadingUser: true });
     try {
       const user = await api.getProfile();
-      set({ user, isLoadingUser: false });
+      // Initialize activeQueueId from user profile if not already set
+      set(s => ({
+        user,
+        isLoadingUser: false,
+        activeQueueId: s.activeQueueId ?? user.activeQueueId,
+      }));
     } catch (e: any) {
       set({ error: e.message, isLoadingUser: false });
     }
@@ -41,16 +60,63 @@ export const useStore = create<AppState>((set, get) => ({
   fetchQueue: async () => {
     set({ isLoadingQueue: true });
     try {
-      const queue = await api.getQueue();
+      const queue = await api.getQueue(get().activeQueueId ?? undefined);
       set({ queue, isLoadingQueue: false });
     } catch (e: any) {
       set({ error: e.message, isLoadingQueue: false });
     }
   },
 
-  addToQueue: async (ytVideoId: string) => {
+  fetchQueues: async () => {
+    set({ isLoadingQueues: true });
     try {
-      await api.addToQueue(ytVideoId);
+      const queues = await api.listQueues();
+      set({ queues, isLoadingQueues: false });
+    } catch (e: any) {
+      set({ isLoadingQueues: false });
+    }
+  },
+
+  setActiveQueue: async (id: string) => {
+    set({ activeQueueId: id });
+    api.activateQueue(id).catch(() => { /* fire-and-forget */ });
+    await get().fetchQueue();
+  },
+
+  createQueue: async (name: string, emoji: string | null) => {
+    const queue = await api.createQueue({ name, emoji });
+    await get().fetchQueues();
+    return queue;
+  },
+
+  updateQueue: async (id: string, name?: string, emoji?: string | null) => {
+    await api.updateQueue(id, { name, emoji });
+    await get().fetchQueues();
+  },
+
+  pinQueue: async (id: string, pinned: boolean) => {
+    try {
+      const updated = await api.updateQueue(id, { pinned });
+      set(s => ({ queues: s.queues.map(q => q.id === id ? updated : q) }));
+    } catch (e: any) {
+      set({ error: e.message });
+      throw e;
+    }
+  },
+
+  deleteQueue: async (id: string) => {
+    await api.deleteQueue(id);
+    // If we deleted the active queue, reset to null so fetchQueues/fetchQueue pick up main
+    if (get().activeQueueId === id) {
+      set({ activeQueueId: null });
+    }
+    await get().fetchQueues();
+    await get().fetchQueue();
+  },
+
+  addToQueue: async (ytVideoId: string, queueId?: string) => {
+    try {
+      await api.addToQueue(ytVideoId, queueId);
       await get().fetchQueue();
     } catch (e: any) {
       set({ error: e.message });
@@ -61,7 +127,40 @@ export const useStore = create<AppState>((set, get) => ({
   removeFromQueue: async (entryId: string) => {
     try {
       await api.removeFromQueue(entryId);
-      await get().fetchQueue();
+      set(s => {
+        if (!s.queue) return {};
+        const wasWatching = s.queue.current?.id === entryId;
+        const newEntries = s.queue.entries.filter(e => e.id !== entryId);
+        let newCurrent = wasWatching ? null : s.queue.current;
+        let finalEntries = newEntries;
+        if (wasWatching && newEntries.length > 0) {
+          finalEntries = newEntries.map((e, i) => i === 0 ? { ...e, status: "watching" as const } : e);
+          newCurrent = finalEntries[0];
+        }
+        return { queue: { ...s.queue, entries: finalEntries, total: finalEntries.length, current: newCurrent } };
+      });
+    } catch (e: any) {
+      set({ error: e.message });
+      throw e;
+    }
+  },
+
+  moveToQueue: async (entryId: string, targetQueueId: string) => {
+    try {
+      await api.moveToQueue(entryId, targetQueueId);
+      // Remove the entry from the current queue's local state
+      set(s => {
+        if (!s.queue) return {};
+        const wasWatching = s.queue.current?.id === entryId;
+        const newEntries = s.queue.entries.filter(e => e.id !== entryId);
+        let newCurrent = wasWatching ? null : s.queue.current;
+        let finalEntries = newEntries;
+        if (wasWatching && newEntries.length > 0) {
+          finalEntries = newEntries.map((e, i) => i === 0 ? { ...e, status: "watching" as const } : e);
+          newCurrent = finalEntries[0];
+        }
+        return { queue: { ...s.queue, entries: finalEntries, total: finalEntries.length, current: newCurrent } };
+      });
     } catch (e: any) {
       set({ error: e.message });
       throw e;
@@ -71,7 +170,27 @@ export const useStore = create<AppState>((set, get) => ({
   moveToEnd: async (entryId: string) => {
     try {
       await api.moveToEnd(entryId);
-      await get().fetchQueue();
+      set(s => {
+        if (!s.queue) return {};
+        const wasWatching = s.queue.current?.id === entryId;
+        const entry = s.queue.entries.find(e => e.id === entryId);
+        if (!entry) return {};
+        const withoutEntry = s.queue.entries.filter(e => e.id !== entryId);
+        const movedEntry = { ...entry, status: "pending" as const };
+        let finalEntries: typeof withoutEntry;
+        let newCurrent = wasWatching ? null : s.queue.current;
+        if (wasWatching && withoutEntry.length > 0) {
+          finalEntries = [
+            { ...withoutEntry[0], status: "watching" as const },
+            ...withoutEntry.slice(1),
+            movedEntry,
+          ];
+          newCurrent = finalEntries[0];
+        } else {
+          finalEntries = [...withoutEntry, movedEntry];
+        }
+        return { queue: { ...s.queue, entries: finalEntries, current: newCurrent } };
+      });
     } catch (e: any) {
       set({ error: e.message });
       throw e;
@@ -82,6 +201,31 @@ export const useStore = create<AppState>((set, get) => ({
     try {
       await api.shuffleQueue();
       await get().fetchQueue();
+    } catch (e: any) {
+      set({ error: e.message });
+      throw e;
+    }
+  },
+
+  reorderQueue: async (entryId: string, newPosition: number, useSkip: boolean) => {
+    try {
+      const result = await api.reorderQueue(entryId, newPosition, useSkip);
+      set(s => {
+        if (!s.queue) return {};
+        const watching = s.queue.entries.filter(e => e.status === "watching");
+        const pending = s.queue.entries.filter(e => e.status === "pending");
+        const entry = pending.find(e => e.id === entryId);
+        if (!entry) return {};
+        const pendingWithout = pending.filter(e => e.id !== entryId);
+        const insertAt = Math.max(0, Math.min(pendingWithout.length, newPosition - 1));
+        const newPending = [...pendingWithout.slice(0, insertAt), entry, ...pendingWithout.slice(insertAt)];
+        const newEntries = [...watching, ...newPending];
+        const newUser = useSkip && s.user
+          ? { ...s.user, skipsRemaining: result.skipsRemaining, skipsMax: result.skipsMax }
+          : s.user;
+        return { queue: { ...s.queue, entries: newEntries }, user: newUser };
+      });
+      return result;
     } catch (e: any) {
       set({ error: e.message });
       throw e;
@@ -104,12 +248,22 @@ export const useStore = create<AppState>((set, get) => ({
     }
     try {
       const result = await api.skipCurrent();
-      set((state) => ({
-        user: state.user
-          ? { ...state.user, skipsRemaining: result.skipsRemaining }
-          : null,
-      }));
-      await get().fetchQueue();
+      set(s => {
+        if (!s.queue) return {};
+        const entries = s.queue.entries;
+        const movedEntry = entries.find(e => e.id === result.movedEntryId);
+        const rest = entries.filter(e => e.id !== result.movedEntryId);
+        const updatedRest = result.nextEntry
+          ? rest.map(e => e.id === result.nextEntry!.id ? { ...e, status: "watching" as const } : e)
+          : rest;
+        const newEntries = movedEntry
+          ? [...updatedRest, { ...movedEntry, status: "pending" as const, watchProgressSecs: 0 }]
+          : updatedRest;
+        return {
+          queue: { ...s.queue, entries: newEntries, current: result.nextEntry ?? null },
+          user: s.user ? { ...s.user, skipsRemaining: result.skipsRemaining, skipsMax: result.skipsMax } : null,
+        };
+      });
     } catch (e: any) {
       set({ error: e.message });
     }

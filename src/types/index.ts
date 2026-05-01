@@ -5,6 +5,7 @@ export interface KewQueue {
   position: number;
   isMain: boolean;
   videoCount: number;
+  pinned: boolean;
 }
 
 export interface User {

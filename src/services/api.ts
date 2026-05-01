@@ -1,6 +1,6 @@
 import { supabase } from "./supabase";
 import Constants from "expo-constants";
-import type { Queue, BrowseVideo, Channel, User, SkipResult, Playlist, PlaylistVideosResult, ImportResult } from "../types";
+import type { Queue, BrowseVideo, Channel, User, SkipResult, Playlist, PlaylistVideosResult, ImportResult, KewQueue } from "../types";
 
 const BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL as string;
 
@@ -55,11 +55,16 @@ export const api = {
     access_token: string;
     refresh_token?: string;
     expires_at?: number;
+    google_email?: string;
   }): Promise<{ message: string }> {
     return request("/v1/profile/youtube-token", {
       method: "POST",
       body: JSON.stringify(params),
     });
+  },
+
+  disconnectYouTube(): Promise<{ message: string }> {
+    return request("/v1/profile/youtube-disconnect", { method: "POST" });
   },
 
   listChannels(): Promise<Channel[]> {
@@ -91,14 +96,40 @@ export const api = {
     });
   },
 
-  getQueue(): Promise<Queue> {
-    return request("/v1/queue");
+  listQueues(): Promise<KewQueue[]> {
+    return request("/v1/queues");
   },
 
-  addToQueue(ytVideoId: string): Promise<{ message: string }> {
+  createQueue(params: { name: string; emoji?: string | null }): Promise<KewQueue> {
+    return request("/v1/queues", {
+      method: "POST",
+      body: JSON.stringify({ name: params.name, emoji: params.emoji ?? null }),
+    });
+  },
+
+  updateQueue(id: string, params: { name?: string; emoji?: string | null; pinned?: boolean }): Promise<KewQueue> {
+    return request(`/v1/queues/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(params),
+    });
+  },
+
+  deleteQueue(id: string): Promise<void> {
+    return request(`/v1/queues/${id}`, { method: "DELETE" });
+  },
+
+  activateQueue(id: string): Promise<{ activeQueueId: string }> {
+    return request(`/v1/queues/${id}/activate`, { method: "PATCH" });
+  },
+
+  getQueue(queueId?: string): Promise<Queue> {
+    return request("/v1/queue" + (queueId ? "?queue_id=" + queueId : ""));
+  },
+
+  addToQueue(ytVideoId: string, queueId?: string): Promise<{ message: string }> {
     return request("/v1/queue/add", {
       method: "POST",
-      body: JSON.stringify({ yt_video_id: ytVideoId }),
+      body: JSON.stringify({ yt_video_id: ytVideoId, ...(queueId ? { queue_id: queueId } : {}) }),
     });
   },
 
@@ -117,12 +148,30 @@ export const api = {
     return request(`/v1/queue/${entryId}/move-to-end`, { method: "POST" });
   },
 
+  moveToQueue(entryId: string, targetQueueId: string): Promise<{ message: string }> {
+    return request(`/v1/queue/${entryId}/move`, {
+      method: "POST",
+      body: JSON.stringify({ target_queue_id: targetQueueId }),
+    });
+  },
+
   shuffleQueue(): Promise<{ message: string }> {
     return request("/v1/queue/shuffle", { method: "POST" });
   },
 
+  reorderQueue(entryId: string, newPosition: number, useSkip: boolean): Promise<{ skipsRemaining: number; skipsMax: number }> {
+    return request("/v1/queue/reorder", {
+      method: "PATCH",
+      body: JSON.stringify({ entry_id: entryId, new_position: newPosition, use_skip: useSkip }),
+    });
+  },
+
   skipCurrent(): Promise<SkipResult> {
     return request("/v1/queue/skip", { method: "POST" });
+  },
+
+  checkUsername(username: string): Promise<{ available: boolean }> {
+    return request(`/v1/profile/check-username?username=${encodeURIComponent(username)}`);
   },
 
   updateUsername(username: string): Promise<{ message: string }> {
@@ -130,6 +179,10 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ username }),
     });
+  },
+
+  deleteAccount(): Promise<{ message: string }> {
+    return request("/v1/profile", { method: "DELETE" });
   },
 
   getPlaylists(): Promise<Playlist[]> {
@@ -140,10 +193,21 @@ export const api = {
     return request(`/v1/playlists/${playlistId}/videos`);
   },
 
-  importToQueue(ytVideoIds: string[]): Promise<ImportResult> {
+  importToQueue(ytVideoIds: string[], queueId?: string): Promise<ImportResult> {
     return request("/v1/queue/import", {
       method: "POST",
-      body: JSON.stringify({ yt_video_ids: ytVideoIds }),
+      body: JSON.stringify({ yt_video_ids: ytVideoIds, ...(queueId ? { queue_id: queueId } : {}) }),
     });
+  },
+
+  shareQueue(queueId?: string): Promise<{ shareToken: string }> {
+    return request("/v1/queue/share", {
+      method: "POST",
+      body: JSON.stringify(queueId ? { queue_id: queueId } : {}),
+    });
+  },
+
+  searchYouTube(q: string): Promise<BrowseVideo[]> {
+    return request(`/v1/explore/search?q=${encodeURIComponent(q)}`);
   },
 };

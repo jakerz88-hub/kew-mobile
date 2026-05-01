@@ -12,9 +12,10 @@ export const Colors = {
 } as const;
 
 export const FontFamily = {
-  serif:      "PlayfairDisplay_700Bold",
-  serifLight: "PlayfairDisplay_400Regular",
+  serif:      "DMSans_500Medium",
+  serifLight: "DMSans_400Regular",
   sans:       "DMSans_400Regular",
+  sansRegular: "DMSans_400Regular",
   sansMedium: "DMSans_500Medium",
   sansLight:  "DMSans_300Light",
 } as const;

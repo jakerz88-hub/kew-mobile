@@ -1,14 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import { Feather, Ionicons } from "@expo/vector-icons";
-
-// Graded colors for the header logo mark — from the approved light-mode design
-const MARK_COLORS = {
-  triangle: "#C4552A", // orange
-  line1:    "#1A1714", // ink (darkest)
-  line2:    "#7A6E66", // mid warm gray
-  line3:    "#B8AFA8", // light warm gray
-};
+import { useTheme } from "../contexts/ThemeContext";
 
 interface LogoMarkProps {
   /** Pass a single color for unicolor (tab icon). Omit to use the graded palette. */
@@ -19,9 +12,11 @@ interface LogoMarkProps {
 /**
  * Scalable Kew logo mark: right-pointing triangle + three decreasing lines.
  * When `color` is provided (tab bar), all elements share that color.
- * When omitted (screen header), each element uses the approved graded palette.
+ * When omitted (screen header), each element uses the theme-aware graded palette.
  */
 export function LogoMark({ color, size = 20 }: LogoMarkProps) {
+  const { colors } = useTheme();
+
   const scale  = size / 20;
   const triH   = Math.round(10 * scale);
   const triW   = Math.round(11 * scale);
@@ -33,10 +28,12 @@ export function LogoMark({ color, size = 20 }: LogoMarkProps) {
   const gap          = Math.round(visualGap - iconRightPad); // typically negative
   const totalH = triH * 2;
 
-  const triColor   = color ?? MARK_COLORS.triangle;
-  const lineColor1 = color ?? MARK_COLORS.line1;
-  const lineColor2 = color ?? MARK_COLORS.line2;
-  const lineColor3 = color ?? MARK_COLORS.line3;
+  // When `color` is provided (tab icon, unicolor), use it for all elements.
+  // When omitted (header), use theme-aware graded palette.
+  const triColor   = color ?? colors.accent;
+  const lineColor1 = color ?? colors.ink;
+  const lineColor2 = color ?? colors.warmMid;
+  const lineColor3 = color ?? colors.queued;
 
   return (
     <View style={{ flexDirection: "row", alignItems: "center", height: totalH }}>
@@ -62,50 +59,12 @@ export function BrowseTabIcon({ color }: { color: string }) {
   return <Feather name="search" size={22} color={color} />;
 }
 
+/** Explore tab icon — compass */
+export function ExploreTabIcon({ color }: { color: string }) {
+  return <Feather name="compass" size={22} color={color} />;
+}
+
 /** History tab icon — clock */
 export function HistoryTabIcon({ color }: { color: string }) {
   return <Feather name="clock" size={22} color={color} />;
-}
-
-/**
- * Profile tab icon — avatar bubble:
- * outer circle with a small person (head + shoulders) clipped inside.
- * Built from Views so no extra SVG dependency is needed.
- */
-export function ProfileTabIcon({ color }: { color: string }) {
-  return (
-    <View
-      style={{
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-        borderWidth: 2,
-        borderColor: color,
-        overflow: "hidden",
-        alignItems: "center",
-        justifyContent: "flex-start",
-      }}
-    >
-      {/* Head */}
-      <View
-        style={{
-          width: 9,
-          height: 9,
-          borderRadius: 4.5,
-          backgroundColor: color,
-          marginTop: 3,
-        }}
-      />
-      {/* Shoulders — wide oval clipped by overflow:hidden on the outer circle */}
-      <View
-        style={{
-          width: 18,
-          height: 14,
-          borderRadius: 9,
-          backgroundColor: color,
-          marginTop: 1,
-        }}
-      />
-    </View>
-  );
 }

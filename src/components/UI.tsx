@@ -1,32 +1,36 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useMemo } from "react";
 import {
   View, Text, TouchableOpacity, ActivityIndicator, Image, Animated,
   StyleSheet, ViewStyle, TextStyle,
 } from "react-native";
-import { Colors, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
+import { Colors, ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
+import { useTheme } from "../contexts/ThemeContext";
 
 export function SerifText({ style, children, ...props }: { style?: TextStyle; children: React.ReactNode; [k: string]: any }) {
+  const { colors } = useTheme();
   return (
-    <Text style={[{ fontFamily: FontFamily.serif, color: Colors.ink }, style]} {...props}>
+    <Text style={[{ fontFamily: FontFamily.serif, color: colors.ink }, style]} {...props}>
       {children}
     </Text>
   );
 }
 
 export function SansText({ style, children, ...props }: { style?: TextStyle; children: React.ReactNode; [k: string]: any }) {
+  const { colors } = useTheme();
   return (
-    <Text style={[{ fontFamily: FontFamily.sans, color: Colors.ink }, style]} {...props}>
+    <Text style={[{ fontFamily: FontFamily.sans, color: colors.ink }, style]} {...props}>
       {children}
     </Text>
   );
 }
 
 export function KewLogo({ size = 28 }: { size?: number }) {
+  const { colors } = useTheme();
   return (
     <Text style={{ fontFamily: FontFamily.serif, fontSize: size }}>
-      <Text style={{ color: Colors.accent }}>K</Text>
-      <Text style={{ color: Colors.warmMid }}>e</Text>
-      <Text style={{ color: Colors.ink }}>w</Text>
+      <Text style={{ color: colors.accent }}>K</Text>
+      <Text style={{ color: colors.warmMid }}>e</Text>
+      <Text style={{ color: colors.ink }}>w</Text>
     </Text>
   );
 }
@@ -34,42 +38,62 @@ export function KewLogo({ size = 28 }: { size?: number }) {
 interface ButtonProps {
   label: string;
   onPress: () => void;
-  variant?: "primary" | "ghost";
+  variant?: "primary" | "ghost" | "destructive";
   loading?: boolean;
   disabled?: boolean;
   style?: ViewStyle;
 }
 
 export function Button({ label, onPress, variant = "primary", loading, disabled, style }: ButtonProps) {
-  const isPrimary = variant === "primary";
+  const { colors } = useTheme();
+
+  const bgColor =
+    variant === "primary"     ? colors.accent :
+    variant === "destructive" ? colors.ink    :
+    "transparent";
+
+  const textColor =
+    variant === "primary"     ? colors.buttonText :
+    variant === "destructive" ? colors.cream      :
+    colors.accent;
+
+  const borderStyle =
+    variant === "ghost"
+      ? { borderWidth: 1.5, borderColor: colors.accent }
+      : undefined;
+
   return (
     <TouchableOpacity
       onPress={onPress}
       disabled={disabled || loading}
       activeOpacity={0.75}
       style={[
-        styles.button,
-        isPrimary ? styles.buttonPrimary : styles.buttonGhost,
-        (disabled || loading) && styles.buttonDisabled,
+        staticStyles.button,
+        { backgroundColor: bgColor },
+        borderStyle,
+        (disabled || loading) && staticStyles.buttonDisabled,
         style,
       ]}
     >
       {loading
-        ? <ActivityIndicator color={isPrimary ? Colors.cream : Colors.accent} size="small" />
-        : <Text style={[styles.buttonLabel, !isPrimary && styles.buttonLabelGhost]}>{label}</Text>
+        ? <ActivityIndicator color={textColor} size="small" />
+        : <Text style={[staticStyles.buttonLabel, { color: textColor }]}>{label}</Text>
       }
     </TouchableOpacity>
   );
 }
 
 export function Divider({ style }: { style?: ViewStyle }) {
-  return <View style={[styles.divider, style]} />;
+  const { colors } = useTheme();
+  return <View style={[staticStyles.divider, { backgroundColor: colors.divider }, style]} />;
 }
 
-export function ChannelDot({ title, size = 26, color = Colors.green }: { title: string; size?: number; color?: string }) {
+export function ChannelDot({ title, size = 26, color }: { title: string; size?: number; color?: string }) {
+  const { colors } = useTheme();
+  const bg = color ?? colors.green;
   return (
-    <View style={[styles.channelDot, { width: size, height: size, backgroundColor: color }]}>
-      <Text style={[styles.channelDotText, { fontSize: size * 0.38 }]}>
+    <View style={[staticStyles.channelDot, { width: size, height: size, backgroundColor: bg }]}>
+      <Text style={[staticStyles.channelDotText, { fontSize: size * 0.38 }]}>
         {title.charAt(0).toUpperCase()}
       </Text>
     </View>
@@ -86,19 +110,29 @@ export function ThumbPlaceholder({ seed, style }: { seed: string; style?: ViewSt
 }
 
 export function SkipCounter({ remaining, max }: { remaining: number; max: number }) {
+  const { colors } = useTheme();
   return (
-    <View style={styles.skipCounter}>
-      <Text style={styles.skipCounterText}>{remaining} of {max} skips remaining</Text>
+    <View style={staticStyles.skipCounter}>
+      {Array.from({ length: max }).map((_, i) => (
+        <View
+          key={i}
+          style={[
+            staticStyles.skipDot,
+            { backgroundColor: i >= max - remaining ? colors.accent : colors.divider },
+          ]}
+        />
+      ))}
     </View>
   );
 }
 
 export function EmptyState({ icon, title, subtitle }: { icon: string; title: string; subtitle?: string }) {
+  const { colors } = useTheme();
   return (
-    <View style={styles.emptyState}>
-      <Text style={styles.emptyIcon}>{icon}</Text>
-      <SerifText style={styles.emptyTitle}>{title}</SerifText>
-      {subtitle && <SansText style={styles.emptySubtitle}>{subtitle}</SansText>}
+    <View style={staticStyles.emptyState}>
+      <Text style={staticStyles.emptyIcon}>{icon}</Text>
+      <SerifText style={staticStyles.emptyTitle}>{title}</SerifText>
+      {subtitle && <SansText style={[staticStyles.emptySubtitle, { color: colors.warmMid }]}>{subtitle}</SansText>}
     </View>
   );
 }
@@ -114,14 +148,15 @@ export function AvatarBubble({
   size?: number;
   onPress?: () => void;
 }) {
+  const { colors } = useTheme();
   const inner = avatarUrl ? (
     <Image
       source={{ uri: avatarUrl }}
       style={{ width: size, height: size, borderRadius: size / 2 }}
     />
   ) : (
-    <View style={[styles.avatarBubbleBg, { width: size, height: size, borderRadius: size / 2 }]}>
-      <Text style={[styles.avatarBubbleInitial, { fontSize: size * 0.4 }]}>{initial}</Text>
+    <View style={[staticStyles.avatarBubbleBg, { width: size, height: size, borderRadius: size / 2, backgroundColor: colors.green }]}>
+      <Text style={[staticStyles.avatarBubbleInitial, { fontSize: size * 0.4, color: colors.buttonText }]}>{initial}</Text>
     </View>
   );
   if (onPress) {
@@ -144,53 +179,51 @@ export function Toast({ message, visible }: { message: string; visible: boolean 
   }, [visible]);
 
   if (!visible) return null;
+  // Toast is intentionally always dark — it's a floating overlay, not a surface
   return (
-    <Animated.View style={[styles.toast, { opacity }]}>
-      <SansText style={styles.toastText}>{message}</SansText>
+    <Animated.View style={[staticStyles.toast, { opacity }]}>
+      <SansText style={staticStyles.toastText}>{message}</SansText>
     </Animated.View>
   );
 }
 
 export function ErrorBanner({ message, onDismiss }: { message: string; onDismiss: () => void }) {
+  const { colors } = useTheme();
   return (
-    <TouchableOpacity style={styles.errorBanner} onPress={onDismiss}>
-      <SansText style={styles.errorText}>{message}</SansText>
+    <TouchableOpacity style={[staticStyles.errorBanner, { backgroundColor: colors.accent }]} onPress={onDismiss}>
+      <SansText style={[staticStyles.errorText, { color: colors.buttonText }]}>{message}</SansText>
     </TouchableOpacity>
   );
 }
 
-const styles = StyleSheet.create({
+// ── Static styles (layout only — no color values) ─────────────────────────
+const staticStyles = StyleSheet.create({
   button: {
     height: 48, borderRadius: Radius.pill,
     alignItems: "center", justifyContent: "center",
     paddingHorizontal: Spacing.lg,
   },
-  buttonPrimary: { backgroundColor: Colors.accent },
-  buttonGhost: { backgroundColor: "transparent", borderWidth: 1.5, borderColor: Colors.accent },
   buttonDisabled: { opacity: 0.5 },
-  buttonLabel: { fontFamily: FontFamily.sansMedium, fontSize: FontSize.sm, color: Colors.cream, letterSpacing: 0.3 },
-  buttonLabelGhost: { color: Colors.accent },
-  divider: { height: 1, backgroundColor: Colors.divider, marginHorizontal: Spacing.md },
+  buttonLabel: { fontFamily: FontFamily.sansMedium, fontSize: FontSize.sm, letterSpacing: 0.3 },
+  divider: { height: 1, marginHorizontal: Spacing.md },
   channelDot: { borderRadius: Radius.pill, alignItems: "center", justifyContent: "center" },
   channelDotText: { fontFamily: FontFamily.sansMedium, color: "white", fontWeight: "700" },
-  skipCounter: {
-    paddingHorizontal: Spacing.sm, paddingVertical: 3,
-    borderRadius: Radius.pill, backgroundColor: Colors.divider, alignSelf: "flex-start",
-  },
-  skipCounterText: { fontFamily: FontFamily.sans, fontSize: FontSize.xxs, color: Colors.warmMid },
-  emptyState: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: Spacing.xl, paddingVertical: Spacing.xxl },
-  emptyIcon: { fontSize: 40, marginBottom: Spacing.md },
-  emptyTitle: { fontSize: FontSize.lg, textAlign: "center", marginBottom: Spacing.sm },
-  emptySubtitle: { fontSize: FontSize.sm, color: Colors.warmMid, textAlign: "center", lineHeight: 20 },
-  errorBanner: { backgroundColor: Colors.accent, padding: Spacing.sm, margin: Spacing.md, borderRadius: Radius.sm },
-  errorText: { color: Colors.cream, fontSize: FontSize.xs, textAlign: "center" },
-  avatarBubbleBg: { backgroundColor: Colors.green, alignItems: "center", justifyContent: "center" },
-  avatarBubbleInitial: { fontFamily: FontFamily.sansMedium, color: Colors.cream },
+  skipCounter: { flexDirection: "row", gap: 4, alignItems: "center" },
+  skipDot:     { width: 10, height: 10, borderRadius: 5 },
+  emptyState:    { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: Spacing.xl, paddingVertical: Spacing.xxl },
+  emptyIcon:     { fontSize: 40, marginBottom: Spacing.md },
+  emptyTitle:    { fontSize: FontSize.lg, textAlign: "center", marginBottom: Spacing.sm },
+  emptySubtitle: { fontSize: FontSize.sm, textAlign: "center", lineHeight: 20 },
+  errorBanner:   { padding: Spacing.sm, margin: Spacing.md, borderRadius: Radius.sm },
+  errorText:     { fontSize: FontSize.xs, textAlign: "center" },
+  avatarBubbleBg:      { alignItems: "center", justifyContent: "center" },
+  avatarBubbleInitial: { fontFamily: FontFamily.sansMedium },
+  // Toast stays intentionally dark in both modes
   toast: {
     position: "absolute", bottom: 32, left: Spacing.lg, right: Spacing.lg,
-    backgroundColor: Colors.ink, borderRadius: Radius.md,
+    backgroundColor: "#1A1714", borderRadius: Radius.md,
     paddingVertical: Spacing.sm + 2, paddingHorizontal: Spacing.md,
     zIndex: 99,
   },
-  toastText: { color: Colors.cream, fontSize: FontSize.xs, textAlign: "center", lineHeight: 18 },
+  toastText: { color: "#F5F0E8", fontSize: FontSize.xs, textAlign: "center", lineHeight: 18 },
 });
