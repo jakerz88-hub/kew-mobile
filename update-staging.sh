@@ -46,8 +46,23 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY="$(read_env EXPO_PUBLIC_SUPABASE_ANON_KEY)"
 
 # Sanity check: anon key must decode to staging project ref. Catches the
 # case where someone pastes the prod key into eas.json by mistake.
+# Use python3 throughout — it handles unpadded base64url that JWTs use.
 EXPECTED_REF=$(echo "$EXPO_PUBLIC_SUPABASE_URL" | sed -E 's|https://([a-z0-9]+)\.supabase\.co.*|\1|')
-PAYLOAD_REF=$(echo "$EXPO_PUBLIC_SUPABASE_ANON_KEY" | cut -d. -f2 | base64 -D 2>/dev/null | python3 -c "import sys, json; print(json.loads(sys.stdin.read()).get('ref',''))" 2>/dev/null || echo "")
+PAYLOAD_REF=$(python3 -c "
+import base64, json, sys
+key = '$EXPO_PUBLIC_SUPABASE_ANON_KEY'
+parts = key.split('.')
+if len(parts) < 2:
+    print('')
+    sys.exit(0)
+seg = parts[1]
+seg += '=' * ((4 - len(seg) % 4) % 4)
+try:
+    payload = json.loads(base64.urlsafe_b64decode(seg).decode())
+    print(payload.get('ref', ''))
+except Exception:
+    print('')
+")
 if [[ "$PAYLOAD_REF" != "$EXPECTED_REF" ]]; then
   echo "ERROR: anon key in eas.json decodes to project ref '$PAYLOAD_REF'"
   echo "       but EXPO_PUBLIC_SUPABASE_URL points at '$EXPECTED_REF'."
