@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ActivityIndicator, Platform } from "react-native";
 import * as WebBrowser from "expo-web-browser";
 import * as AuthSession from "expo-auth-session";
+import * as AppleAuthentication from "expo-apple-authentication";
 import Constants from "expo-constants";
 import { supabase } from "../services/supabase";
 import { Colors, FontFamily, FontSize, Spacing } from "../types/theme";
@@ -51,7 +52,7 @@ export default function LoginScreen() {
           if (accessToken && providerToken) {
             const BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL as string;
 
-            // Save YouTube token BEFORE setSession so fetchUser() sees hasYouTube: true.
+            // Save YouTube token BEFORE setSession so fetchUser() sees hasYoutube: true.
             // If this fails, surface the error and bail — the token in the URL is one-time
             // so there's no point logging in without it. User can retry.
             const ytResp = await fetch(`${BASE_URL}/v1/profile/youtube-token`, {
@@ -103,6 +104,43 @@ export default function LoginScreen() {
     }
   };
 
+  const handleAppleSignIn = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      if (!credential.identityToken) throw new Error("No identity token from Apple.");
+
+      const { error: authError } = await supabase.auth.signInWithIdToken({
+        provider: "apple",
+        token: credential.identityToken,
+      });
+      if (authError) throw authError;
+
+      // fullName is only provided on the very first sign-in. Save it while we have it.
+      const given  = credential.fullName?.givenName;
+      const family = credential.fullName?.familyName;
+      if (given || family) {
+        const displayName = [given, family].filter(Boolean).join(" ");
+        await supabase.auth.updateUser({ data: { full_name: displayName } });
+      }
+
+      // Navigation happens automatically via onAuthStateChange in App.tsx
+    } catch (e: any) {
+      // User cancelled the sheet — ignore silently
+      if (e.code === "ERR_REQUEST_CANCELED") return;
+      setError(e.message || "Apple sign-in failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.inner}>
@@ -142,6 +180,15 @@ export default function LoginScreen() {
               )
             }
           </TouchableOpacity>
+          {Platform.OS === "ios" && (
+            <AppleAuthentication.AppleAuthenticationButton
+              buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+              cornerRadius={999}
+              style={styles.appleBtn}
+              onPress={handleAppleSignIn}
+            />
+          )}
           <SansText style={styles.disclaimer}>
             Kew uses your Google account to read your YouTube subscriptions. We never post on your behalf.
           </SansText>
@@ -165,6 +212,7 @@ const styles = StyleSheet.create({
   googleBtn: { backgroundColor: Colors.ink, borderRadius: 999, height: 52, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.sm },
   googleIcon: { fontFamily: FontFamily.serif, fontSize: FontSize.md, color: Colors.cream },
   googleBtnLabel: { fontFamily: FontFamily.sansMedium, fontSize: FontSize.sm, color: Colors.cream, letterSpacing: 0.3 },
+  appleBtn: { height: 52, width: "100%" },
   errorText: { color: Colors.accent, fontSize: FontSize.xs, textAlign: "center" },
   disclaimer: { fontSize: FontSize.xxs, color: Colors.queued, textAlign: "center", lineHeight: 16 },
 });
