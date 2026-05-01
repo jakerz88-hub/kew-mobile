@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Platform } from "react-native";
+import { Platform, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useStore } from "../store";
 
@@ -16,7 +16,7 @@ import { useStore } from "../store";
  */
 export function useAddToQueue(onAdded?: (ytVideoId: string) => void) {
   const navigation = useNavigation<any>();
-  const { user, queues, addToQueue, fetchQueues } = useStore();
+  const { user, queues, addToQueue, fetchQueues, clearError } = useStore();
 
   const [addingId, setAddingId]         = useState<string | null>(null);
   const [pickerVideoId, setPickerVideoId] = useState<string | null>(null);
@@ -33,8 +33,16 @@ export function useAddToQueue(onAdded?: (ytVideoId: string) => void) {
     try {
       await addToQueue(ytVideoId, queueId);
       onAdded?.(ytVideoId);
-    } catch {
-      // Store surfaces the error banner.
+    } catch (e: any) {
+      if (typeof e?.message === "string" && e.message.includes("queue_limit_reached")) {
+        clearError();
+        Alert.alert(
+          "Queue limit reached",
+          "Free accounts can hold up to 25 videos in their queue.",
+          [{ text: "OK" }],
+        );
+      }
+      // Other errors: store surfaces the banner.
     } finally {
       setAddingId(null);
     }

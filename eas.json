@@ -6,6 +6,16 @@
     "preview": {
       "distribution": "internal"
     },
+    "staging": {
+      "distribution": "internal",
+      "channel": "staging",
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://kew-backend-staging.up.railway.app",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://axfqrmjjqnklftpomaao.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZnFybWpqcW5rbGZ0cG9tYWFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc2Mjk1NzcsImV4cCI6MjA5MzIwNTU3N30.OfvDrXpvhON9Z2ghWhIGPX2p_Sf6CUWtJHAWlSjzPDY",
+        "NPM_CONFIG_LEGACY_PEER_DEPS": "true"
+      }
+    },
     "production": {}
   },
   "submit": {

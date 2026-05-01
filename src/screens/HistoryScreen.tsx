@@ -33,17 +33,26 @@ export default function HistoryScreen() {
   const [totalSecs, setTotal] = useState(0);
   const [readdedIds, setReaddedIds] = useState<Set<string>>(new Set());
 
+  const isFree = (user?.plan ?? "free") === "free";
+
   const loadHistory = useCallback(async () => {
     setLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const { data } = await supabase
+      let query = supabase
         .from("queue")
         .select("*, video:videos(*)")
         .eq("user_id", session.user.id)
-        .eq("status", "completed")
+        .eq("status", "completed");
+
+      if (isFree) {
+        const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+        query = query.gte("completed_at", cutoff);
+      }
+
+      const { data } = await query
         .order("completed_at", { ascending: false })
         .limit(100);
 
@@ -58,7 +67,7 @@ export default function HistoryScreen() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isFree]);
 
   useEffect(() => { loadHistory(); }, []);
 
@@ -108,6 +117,13 @@ export default function HistoryScreen() {
         ListEmptyComponent={
           !loading ? (
             <EmptyState icon="↻" title="Nothing watched yet" subtitle="Videos you finish will appear here. Go watch something!" />
+          ) : null
+        }
+        ListFooterComponent={
+          isFree && entries.length > 0 ? (
+            <SansText style={styles.freeNote}>
+              Showing the last 30 days. Upgrade to Kew Pro for full history.
+            </SansText>
           ) : null
         }
         contentContainerStyle={styles.listContent}
@@ -195,5 +211,6 @@ function makeStyles(c: ColorPalette) {
     readdBtnText:    { fontSize: FontSize.lg, color: c.accent, lineHeight: 24, marginTop: -2 },
     readdBtnTextDone:{ color: "white", fontSize: FontSize.sm, marginTop: 0 },
     listContent:     { paddingBottom: 80 },
+    freeNote:        { fontSize: 12, color: c.warmMid, textAlign: "center", paddingVertical: Spacing.md },
   });
 }
