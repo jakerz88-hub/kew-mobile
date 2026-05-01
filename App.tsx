@@ -1,29 +1,28 @@
 import "react-native-url-polyfill/auto";
 import React, { useEffect, useRef, useState } from "react";
 import { AppState, View, ActivityIndicator } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import {
   useFonts,
-  PlayfairDisplay_700Bold,
-  PlayfairDisplay_400Regular,
-} from "@expo-google-fonts/playfair-display";
-import {
   DMSans_400Regular,
+  DMSans_400Regular_Italic,
   DMSans_500Medium,
-  DMSans_300Light,
 } from "@expo-google-fonts/dm-sans";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "./src/services/supabase";
 import { api } from "./src/services/api";
 import { useStore } from "./src/store";
 import { Colors } from "./src/types/theme";
-import { QueueTabIcon, BrowseTabIcon, HistoryTabIcon, LogoMark } from "./src/components/TabIcons";
+import { ThemeProvider, useTheme } from "./src/contexts/ThemeContext";
+import { QueueTabIcon, BrowseTabIcon, ExploreTabIcon, HistoryTabIcon, LogoMark } from "./src/components/TabIcons";
 import { KewLogo } from "./src/components/UI";
 
 // Screens
 import LoginScreen from "./src/screens/LoginScreen";
+import OnboardingScreen from "./src/screens/OnboardingScreen";
 import QueueScreen from "./src/screens/QueueScreen";
 import BrowseScreen from "./src/screens/BrowseScreen";
 import HistoryScreen from "./src/screens/HistoryScreen";
@@ -34,22 +33,29 @@ import ChannelScreen from "./src/screens/ChannelScreen";
 import RecentUploadsScreen from "./src/screens/RecentUploadsScreen";
 import PlaylistListScreen from "./src/screens/PlaylistListScreen";
 import PlaylistVideoPickerScreen from "./src/screens/PlaylistVideoPickerScreen";
+import ExploreScreen from "./src/screens/ExploreScreen";
+import HelpScreen from "./src/screens/HelpScreen";
+import AllQueuesScreen from "./src/screens/AllQueuesScreen";
+import NewQueueScreen from "./src/screens/NewQueueScreen";
+
+const ONBOARDING_KEY = "kew_onboarding_done";
 
 const Tab   = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 function TabNavigator() {
+  const { colors } = useTheme();
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: Colors.cardBg,
-          borderTopColor: Colors.divider,
+          backgroundColor: colors.cardBg,
+          borderTopColor: colors.divider,
           borderTopWidth: 1,
         },
-        tabBarActiveTintColor: Colors.accent,
-        tabBarInactiveTintColor: Colors.warmMid,
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.warmMid,
         tabBarLabelStyle: {
           fontFamily: "DMSans_500Medium",
           fontSize: 10,
@@ -69,6 +75,11 @@ function TabNavigator() {
         options={{ tabBarIcon: ({ color }) => <BrowseTabIcon color={color} /> }}
       />
       <Tab.Screen
+        name="Explore"
+        component={ExploreScreen}
+        options={{ tabBarIcon: ({ color }) => <ExploreTabIcon color={color} /> }}
+      />
+      <Tab.Screen
         name="History"
         component={HistoryScreen}
         options={{ tabBarIcon: ({ color }) => <HistoryTabIcon color={color} /> }}
@@ -86,22 +97,24 @@ function AppNavigator() {
       <Stack.Screen name="Channel"       component={ChannelScreen} />
       <Stack.Screen name="RecentUploads" component={RecentUploadsScreen} />
       <Stack.Screen name="Profile"              component={ProfileScreen} />
+      <Stack.Screen name="Help"                 component={HelpScreen} />
       <Stack.Screen name="PlaylistList"         component={PlaylistListScreen} />
       <Stack.Screen name="PlaylistVideoPicker"  component={PlaylistVideoPickerScreen} />
+      <Stack.Screen name="AllQueues"            component={AllQueuesScreen} />
+      <Stack.Screen name="NewQueue"             component={NewQueueScreen} />
     </Stack.Navigator>
   );
 }
 
 export default function App() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
-  const { fetchUser, fetchQueue } = useStore();
+  const [onboardingDone, setOnboardingDone] = useState<boolean | undefined>(undefined);
+  const { fetchUser, fetchQueue, fetchQueues, user } = useStore();
 
   const [fontsLoaded, fontError] = useFonts({
-    PlayfairDisplay_700Bold,
-    PlayfairDisplay_400Regular,
     DMSans_400Regular,
+    DMSans_400Regular_Italic,
     DMSans_500Medium,
-    DMSans_300Light,
   });
 
   // Re-sync subscriptions whenever the app comes back to the foreground
@@ -125,41 +138,49 @@ export default function App() {
       setSession(data.session);
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange(async (event, sess) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, sess) => {
       setSession(sess);
 
       if (sess && (event === "SIGNED_IN" || event === "INITIAL_SESSION")) {
-        // On fresh sign-in, save the YouTube OAuth token and sync subscriptions
-        if (event === "SIGNED_IN") {
-          try {
-            const providerToken        = sess.provider_token;
-            const providerRefreshToken = sess.provider_refresh_token;
-            const expiresAt            = sess.expires_at;
-
-            if (providerToken) {
-              await api.saveYouTubeToken({
-                access_token:  providerToken,
-                refresh_token: providerRefreshToken ?? undefined,
-                expires_at:    expiresAt,
-              });
-            }
-
-            api.syncSubscriptions().catch(console.warn);
-          } catch (e) {
-            console.warn("Post-signin setup error:", e);
-          }
-        }
-
-        // Always load user profile and queue when a valid session is present
+        // Fire-and-forget — do NOT await here. Supabase awaits all onAuthStateChange
+        // callbacks before resolving setSession(), and fetchUser() calls getSession()
+        // which tries to acquire the same internal lock — causing a deadlock.
         fetchUser();
         fetchQueue();
+        fetchQueues();
       }
     });
 
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  if ((!fontsLoaded && !fontError) || session === undefined) {
+  // Once user is loaded, check whether to skip onboarding
+  useEffect(() => {
+    if (!user) return;
+    AsyncStorage.getItem(ONBOARDING_KEY).then((val) => {
+      if (val === "true") {
+        setOnboardingDone(true);
+      } else if (user.hasYouTube) {
+        // Existing user — mark onboarding done so they don't see it
+        AsyncStorage.setItem(ONBOARDING_KEY, "true");
+        setOnboardingDone(true);
+      } else {
+        setOnboardingDone(false);
+      }
+    });
+  }, [user]);
+
+  const markOnboardingDone = () => {
+    AsyncStorage.setItem(ONBOARDING_KEY, "true");
+    setOnboardingDone(true);
+  };
+
+  const isLoading =
+    (!fontsLoaded && !fontError) ||
+    session === undefined ||
+    (session !== null && user !== null && onboardingDone === undefined);
+
+  if (isLoading) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: Colors.cream, gap: 32 }}>
         <View style={{ alignItems: "center", gap: 10 }}>
@@ -172,8 +193,31 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
-      {session ? <AppNavigator /> : <Stack.Navigator screenOptions={{ headerShown: false }}><Stack.Screen name="Login" component={LoginScreen} /></Stack.Navigator>}
-    </NavigationContainer>
+    <ThemeProvider>
+      <NavigationContainer>
+        {!session ? (
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="Login" component={LoginScreen} />
+          </Stack.Navigator>
+        ) : user === null ? (
+          // Session exists but user not yet loaded — show splash
+          <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: Colors.cream, gap: 32 }}>
+            <View style={{ alignItems: "center", gap: 10 }}>
+              <LogoMark size={44} />
+              <KewLogo size={44} />
+            </View>
+            <ActivityIndicator color={Colors.accent} size="small" />
+          </View>
+        ) : onboardingDone ? (
+          <AppNavigator />
+        ) : (
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="Onboarding">
+              {() => <OnboardingScreen onDone={markOnboardingDone} />}
+            </Stack.Screen>
+          </Stack.Navigator>
+        )}
+      </NavigationContainer>
+    </ThemeProvider>
   );
 }

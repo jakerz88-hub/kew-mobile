@@ -51,22 +51,24 @@ export default function LoginScreen() {
           if (accessToken && providerToken) {
             const BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL as string;
 
-            // Save YouTube token BEFORE setSession so fetchUser() sees hasYouTube: true
-            try {
-              await fetch(`${BASE_URL}/v1/profile/youtube-token`, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "Authorization": `Bearer ${accessToken}`,
-                },
-                body: JSON.stringify({
-                  access_token:  providerToken,
-                  refresh_token: providerRefreshToken ?? undefined,
-                  expires_at:    expiresAt ? Number(expiresAt) : undefined,
-                }),
-              });
-            } catch (e) {
-              console.warn("YouTube token save error:", e);
+            // Save YouTube token BEFORE setSession so fetchUser() sees hasYouTube: true.
+            // If this fails, surface the error and bail — the token in the URL is one-time
+            // so there's no point logging in without it. User can retry.
+            const ytResp = await fetch(`${BASE_URL}/v1/profile/youtube-token`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${accessToken}`,
+              },
+              body: JSON.stringify({
+                access_token:  providerToken,
+                refresh_token: providerRefreshToken ?? undefined,
+                expires_at:    expiresAt ? Number(expiresAt) : undefined,
+              }),
+            });
+            if (!ytResp.ok) {
+              const errText = await ytResp.text().catch(() => "");
+              throw new Error(`Could not connect YouTube (${ytResp.status}): ${errText}`);
             }
 
             // Establish the Supabase session — triggers onAuthStateChange → fetchUser
