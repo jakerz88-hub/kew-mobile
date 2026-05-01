@@ -79,6 +79,11 @@ export default function InsightsScreen() {
 
   useFocusEffect(useCallback(() => { loadAll(period); }, [period, loadAll]));
 
+  // Defensive: if a non-Pro user reaches this screen (e.g. via deep link), bounce them.
+  useEffect(() => {
+    if (user && !isPro) navigation.goBack();
+  }, [isPro, user, navigation]);
+
   // ── Limit toggles ──────────────────────────────────────────────────────────
 
   const saveLimits = async (next: { dailyVideos: number | null; dailyMinutes: number | null; consecutiveVideos: number | null }) => {
@@ -121,20 +126,7 @@ export default function InsightsScreen() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
-  if (!isPro) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <Header onBack={() => navigation.goBack()} colors={colors} />
-        <View style={styles.lockedBox}>
-          <View style={styles.lockedBadge}><SansText style={styles.lockedBadgeText}>Kew Pro</SansText></View>
-          <SerifText style={styles.lockedTitle}>Insights & Limits is a Pro feature.</SerifText>
-          <SansText style={styles.lockedBody}>
-            Track watch time, completion rate, and personal limits — and see how Kew is reshaping your video habit.
-          </SansText>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  if (!isPro) return null;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -540,12 +532,6 @@ function makeStyles(c: ColorPalette) {
     container:    { flex: 1, backgroundColor: c.cream },
     scroll:       { paddingHorizontal: Spacing.md, paddingVertical: Spacing.md, paddingBottom: 64, gap: Spacing.md },
     loadingBox:   { paddingVertical: Spacing.xl, alignItems: "center" },
-
-    lockedBox:    { padding: Spacing.lg, gap: Spacing.sm, alignItems: "center", marginTop: Spacing.xl },
-    lockedBadge:  { paddingHorizontal: 10, paddingVertical: 3, borderRadius: Radius.pill, backgroundColor: "#C49A28", marginBottom: Spacing.sm },
-    lockedBadgeText: { fontSize: 10, color: "white", fontFamily: FontFamily.sansMedium, letterSpacing: 0.5 },
-    lockedTitle:  { fontSize: FontSize.lg, color: c.ink, textAlign: "center" },
-    lockedBody:   { fontSize: FontSize.sm, color: c.warmMid, textAlign: "center", lineHeight: 20, paddingHorizontal: Spacing.md },
 
     // Period tabs
     tabRow:       { flexDirection: "row", backgroundColor: c.divider, borderRadius: Radius.pill, padding: 3 },

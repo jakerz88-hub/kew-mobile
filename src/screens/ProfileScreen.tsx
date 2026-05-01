@@ -446,8 +446,8 @@ export default function ProfileScreen() {
           </View>
         )}
 
-        {/* Insights & Limits */}
-        {user?.plan === "pro" ? (
+        {/* Insights & Limits — Pro only */}
+        {user?.plan === "pro" && (
           <TouchableOpacity
             style={styles.insightsCard}
             onPress={() => navigation.navigate("Insights")}
@@ -469,23 +469,6 @@ export default function ProfileScreen() {
             ) : (
               <SansText style={styles.cardHint}>Loading your week…</SansText>
             )}
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            style={styles.insightsCard}
-            onPress={() => navigation.navigate("Insights")}
-            activeOpacity={0.8}
-          >
-            <View style={styles.cardRow}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <SansText style={styles.cardLabel}>Insights & Limits</SansText>
-                <ProIcon />
-              </View>
-              <Feather name="chevron-right" size={15} color={colors.warmMid} />
-            </View>
-            <SansText style={styles.cardHint}>
-              Track watch time, completion rate, and personal limits with Kew Pro.
-            </SansText>
           </TouchableOpacity>
         )}
 
