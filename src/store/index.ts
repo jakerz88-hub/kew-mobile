@@ -117,6 +117,13 @@ export const useStore = create<AppState>((set, get) => ({
   addToQueue: async (ytVideoId: string, queueId?: string) => {
     try {
       await api.addToQueue(ytVideoId, queueId);
+      // Immediately update the chip count for the target queue.
+      const targetId = queueId ?? get().activeQueueId;
+      if (targetId) {
+        set(s => ({
+          queues: s.queues.map(q => q.id === targetId ? { ...q, videoCount: q.videoCount + 1 } : q),
+        }));
+      }
       await get().fetchQueue();
     } catch (e: any) {
       set({ error: e.message });
@@ -148,9 +155,15 @@ export const useStore = create<AppState>((set, get) => ({
   moveToQueue: async (entryId: string, targetQueueId: string) => {
     try {
       await api.moveToQueue(entryId, targetQueueId);
-      // Remove the entry from the current queue's local state
       set(s => {
-        if (!s.queue) return {};
+        // Optimistically update chip counts: source -1, target +1.
+        const sourceId = s.activeQueueId;
+        const updatedQueues = s.queues.map(q => {
+          if (q.id === sourceId)     return { ...q, videoCount: Math.max(0, q.videoCount - 1) };
+          if (q.id === targetQueueId) return { ...q, videoCount: q.videoCount + 1 };
+          return q;
+        });
+        if (!s.queue) return { queues: updatedQueues };
         const wasWatching = s.queue.current?.id === entryId;
         const newEntries = s.queue.entries.filter(e => e.id !== entryId);
         let newCurrent = wasWatching ? null : s.queue.current;
@@ -159,7 +172,10 @@ export const useStore = create<AppState>((set, get) => ({
           finalEntries = newEntries.map((e, i) => i === 0 ? { ...e, status: "watching" as const } : e);
           newCurrent = finalEntries[0];
         }
-        return { queue: { ...s.queue, entries: finalEntries, total: finalEntries.length, current: newCurrent } };
+        return {
+          queues: updatedQueues,
+          queue: { ...s.queue, entries: finalEntries, total: finalEntries.length, current: newCurrent },
+        };
       });
     } catch (e: any) {
       set({ error: e.message });

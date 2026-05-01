@@ -198,10 +198,18 @@ export default function QueueScreen() {
     }
   }, [activeQueueId, setActiveQueue, isTablet]);
 
-  // ── Reorder ──
+  // ── Reorder / move toasts ──
   const [isDragging, setIsDragging]             = useState(false);
   const [reorderToast, setReorderToast]         = useState("");
   const reorderToastTimer                        = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [moveToast, setMoveToast]               = useState("");
+  const moveToastTimer                           = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleMovedToQueue = useCallback((targetQueueName: string) => {
+    if (moveToastTimer.current) clearTimeout(moveToastTimer.current);
+    setMoveToast(`Moved to ${targetQueueName}`);
+    moveToastTimer.current = setTimeout(() => setMoveToast(""), 3000);
+  }, []);
   const [protectedModalEntry, setProtectedModalEntry] = useState<{ entry: QueueEntry; toIdx: number } | null>(null);
 
   const handleReorder = useCallback(async (entry: QueueEntry, toIdx: number, useSkip: boolean) => {
@@ -746,12 +754,22 @@ export default function QueueScreen() {
         </View>
       )}
 
+      {/* Move to queue toast */}
+      {!!moveToast && (
+        <View style={{ position: "absolute", bottom: 90, left: 0, right: 0, alignItems: "center", pointerEvents: "none" } as any}>
+          <View style={{ backgroundColor: "#1A1714", paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 }}>
+            <SansText style={{ fontSize: FontSize.xs, color: "white" }}>{moveToast}</SansText>
+          </View>
+        </View>
+      )}
+
       <QueueActionSheet
         visible={!!actionEntry}
         entryId={actionEntry?.id ?? ""}
         videoTitle={actionEntry?.video.title ?? ""}
         onClose={() => setActionEntry(null)}
         onRemoved={handleRemovedEntry}
+        onMoved={handleMovedToQueue}
       />
       <ShuffleConfirmSheet
         visible={showShuffleConfirm}

@@ -14,6 +14,7 @@ interface Props {
   onClose: () => void;
   onActionComplete?: () => void;
   onRemoved?: () => void;   // fires after a successful remove, before close
+  onMoved?: (targetQueueName: string) => void; // fires after a successful move
 }
 
 export function QueueActionSheet({
@@ -23,6 +24,7 @@ export function QueueActionSheet({
   onClose,
   onActionComplete,
   onRemoved,
+  onMoved,
 }: Props) {
   const { colors } = useTheme();
   const { removeFromQueue, moveToQueue, queues, activeQueueId, user } = useStore();
@@ -58,11 +60,13 @@ export function QueueActionSheet({
   };
 
   const handleMoveToQueue = async (targetQueueId: string) => {
+    const targetQueue = moveTargets.find(q => q.id === targetQueueId);
     setLoading(true);
     setErrorMsg(null);
     try {
       await moveToQueue(entryId, targetQueueId);
       handleClose();
+      onMoved?.(targetQueue?.name ?? "queue");
       onActionComplete?.();
     } catch (e: any) {
       setErrorMsg(e?.message ?? "Something went wrong. Please try again.");
