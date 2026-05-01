@@ -12,6 +12,7 @@ import { SansText, SerifText, Divider, SkipCounter, Toast, ErrorBanner } from ".
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { useTheme, type ThemeId } from "../contexts/ThemeContext";
 import { MiniWeekChart } from "./InsightsScreen";
+import { ProIcon } from "../components/ProIcon";
 import type { Insights } from "../types";
 
 type PremiumTheme = {
@@ -372,13 +373,6 @@ export default function ProfileScreen() {
                 <Feather name="camera" size={10} color="white" />
               </View>
             )}
-            {user?.plan === "pro" && (
-              <View style={styles.proBadgeWrap}>
-                <View style={styles.proBadge}>
-                  <SansText style={styles.proBadgeText}>Pro</SansText>
-                </View>
-              </View>
-            )}
           </TouchableOpacity>
 
           {/* Username */}
@@ -424,6 +418,7 @@ export default function ProfileScreen() {
               <SerifText style={styles.displayName}>
                 {displayName ?? "Set a username"}
               </SerifText>
+              {user?.plan === "pro" && <ProIcon />}
               {!displayName && (
                 <TouchableOpacity onPress={handleStartEdit} activeOpacity={0.7} style={styles.editIconBtn}>
                   <SansText style={styles.editIconText}>Set</SansText>
@@ -484,9 +479,7 @@ export default function ProfileScreen() {
             <View style={styles.cardRow}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                 <SansText style={styles.cardLabel}>Insights & Limits</SansText>
-                <View style={styles.proPill}>
-                  <SansText style={styles.proPillText}>Kew Pro</SansText>
-                </View>
+                <ProIcon />
               </View>
               <Feather name="chevron-right" size={15} color={colors.warmMid} />
             </View>
@@ -648,15 +641,12 @@ function makeStyles(c: ColorPalette) {
     backBtn:         { flex: 1, padding: 4 },
     content:         { flex: 1, paddingHorizontal: Spacing.md, paddingTop: Spacing.md },
     avatarSection:   { alignItems: "center", gap: Spacing.sm, marginBottom: Spacing.xl },
-    avatarWrapper:   { position: "relative", marginBottom: 14 },
+    avatarWrapper:   { position: "relative" },
     avatar:          { width: 80, height: 80, borderRadius: 40 },
     avatarFallback:  { backgroundColor: c.green, alignItems: "center", justifyContent: "center" },
     avatarInitial:   { color: "white", fontSize: 30, fontFamily: FontFamily.sansMedium },
     avatarOverlay:   { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: 40, backgroundColor: "rgba(0,0,0,0.45)", alignItems: "center", justifyContent: "center" },
     avatarEditBadge: { position: "absolute", bottom: 0, right: 0, width: 24, height: 24, borderRadius: 12, backgroundColor: c.accent, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: c.cream },
-    proBadgeWrap:    { position: "absolute", bottom: -11, left: 0, right: 0, alignItems: "center" },
-    proBadge:        { paddingHorizontal: 8, paddingVertical: 2.5, borderRadius: Radius.pill, backgroundColor: "#C49A28", borderWidth: 1.5, borderColor: c.cardBg },
-    proBadgeText:    { fontSize: 9, color: "white", fontFamily: FontFamily.sansMedium, letterSpacing: 0.4 },
     usernameRow:     { flexDirection: "row", alignItems: "center", gap: 8 },
     displayName:     { fontSize: FontSize.md, color: c.ink },
     editIconBtn:     { paddingHorizontal: 8, paddingVertical: 2, borderRadius: Radius.pill, borderWidth: 1, borderColor: c.divider },
@@ -680,8 +670,6 @@ function makeStyles(c: ColorPalette) {
     card:            { backgroundColor: c.cardBg, borderWidth: 1, borderColor: c.divider, borderRadius: Radius.md, padding: Spacing.md, gap: Spacing.xs, marginBottom: Spacing.md, maxWidth: 400, width: "100%", alignSelf: "center" },
     insightsCard:    { backgroundColor: c.cardBg, borderWidth: 1, borderColor: c.divider, borderRadius: Radius.md, padding: Spacing.md, gap: Spacing.xs, marginBottom: Spacing.md, maxWidth: 400, width: "100%", alignSelf: "center" },
     insightsSentence:{ fontSize: FontSize.xs, color: c.warmMid, lineHeight: 17, marginTop: Spacing.xs, fontStyle: "italic" },
-    proPill:         { paddingHorizontal: 7, paddingVertical: 2, borderRadius: Radius.pill, backgroundColor: "#C49A28" },
-    proPillText:     { fontSize: 9, color: "white", fontFamily: FontFamily.sansMedium, letterSpacing: 0.4 },
     cardRow:         { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
     cardLabel:       { fontSize: FontSize.sm, color: c.ink, fontFamily: FontFamily.sansMedium },
     cardHint:        { fontSize: FontSize.xxs, color: c.warmMid, lineHeight: 16, fontStyle: "italic" },
