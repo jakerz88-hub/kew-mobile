@@ -194,12 +194,12 @@ export default function BenefitsScreen() {
           <View style={styles.priceBlock}>
             {plan === "annual" ? (
               <>
-                <SerifText style={styles.priceMain}>$19.99/year</SerifText>
-                <SansText style={styles.priceSub}>$1.67/month, billed annually</SansText>
+                <SerifText style={styles.priceMain}>$27.99/year</SerifText>
+                <SansText style={styles.priceSub}>$2.33/month, billed annually</SansText>
               </>
             ) : (
               <>
-                <SerifText style={styles.priceMain}>$3.99/month</SerifText>
+                <SerifText style={styles.priceMain}>$2.99/month</SerifText>
                 <SansText style={styles.priceSub}>Billed monthly, cancel any time</SansText>
               </>
             )}
