@@ -2,7 +2,7 @@ import "react-native-url-polyfill/auto";
 import React, { useEffect, useRef, useState } from "react";
 import { AppState, View, ActivityIndicator } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, createNavigationContainerRef } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import {
@@ -19,6 +19,7 @@ import { Colors } from "./src/types/theme";
 import { ThemeProvider, useTheme } from "./src/contexts/ThemeContext";
 import { QueueTabIcon, BrowseTabIcon, ExploreTabIcon, HistoryTabIcon, LogoMark } from "./src/components/TabIcons";
 import { KewLogo } from "./src/components/UI";
+import { KewPlusSheet } from "./src/components/KewPlusSheet";
 
 // Screens
 import LoginScreen from "./src/screens/LoginScreen";
@@ -38,11 +39,29 @@ import HelpScreen from "./src/screens/HelpScreen";
 import AllQueuesScreen from "./src/screens/AllQueuesScreen";
 import NewQueueScreen from "./src/screens/NewQueueScreen";
 import InsightsScreen from "./src/screens/InsightsScreen";
+import BenefitsScreen from "./src/screens/BenefitsScreen";
 
 const ONBOARDING_KEY = "kew_onboarding_done";
 
 const Tab   = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+
+export const navigationRef = createNavigationContainerRef<any>();
+
+function GlobalKewPlusSheet() {
+  const { kewPlusUpsell, hideKewPlusUpsell } = useStore();
+  return (
+    <KewPlusSheet
+      visible={!!kewPlusUpsell}
+      onClose={hideKewPlusUpsell}
+      headline={kewPlusUpsell?.headline ?? ""}
+      body={kewPlusUpsell?.body ?? ""}
+      onExplore={() => {
+        if (navigationRef.isReady()) navigationRef.navigate("Benefits");
+      }}
+    />
+  );
+}
 
 function TabNavigator() {
   const { colors } = useTheme();
@@ -104,6 +123,7 @@ function AppNavigator() {
       <Stack.Screen name="AllQueues"            component={AllQueuesScreen} />
       <Stack.Screen name="NewQueue"             component={NewQueueScreen} />
       <Stack.Screen name="Insights"             component={InsightsScreen} />
+      <Stack.Screen name="Benefits"             component={BenefitsScreen} />
     </Stack.Navigator>
   );
 }
@@ -187,7 +207,7 @@ export default function App() {
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: Colors.cream, gap: 32 }}>
         <View style={{ alignItems: "center", gap: 10 }}>
           <LogoMark size={44} />
-          <KewLogo size={44} />
+          <KewLogo size={44} plus={false} />
         </View>
         <ActivityIndicator color={Colors.accent} size="small" />
       </View>
@@ -196,7 +216,7 @@ export default function App() {
 
   return (
     <ThemeProvider>
-      <NavigationContainer>
+      <NavigationContainer ref={navigationRef}>
         {!session ? (
           <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="Login" component={LoginScreen} />
@@ -206,7 +226,7 @@ export default function App() {
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: Colors.cream, gap: 32 }}>
             <View style={{ alignItems: "center", gap: 10 }}>
               <LogoMark size={44} />
-              <KewLogo size={44} />
+              <KewLogo size={44} plus={false} />
             </View>
             <ActivityIndicator color={Colors.accent} size="small" />
           </View>
@@ -219,6 +239,7 @@ export default function App() {
             </Stack.Screen>
           </Stack.Navigator>
         )}
+        <GlobalKewPlusSheet />
       </NavigationContainer>
     </ThemeProvider>
   );

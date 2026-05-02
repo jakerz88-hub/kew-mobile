@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { View, FlatList, StyleSheet, SafeAreaView, Image, RefreshControl, TouchableOpacity, Platform } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { Feather } from "@expo/vector-icons";
 import { supabase } from "../services/supabase";
 import { useStore } from "../store";
 import { KewLogo, SansText, SerifText, Divider, ThumbPlaceholder, EmptyState, ErrorBanner, AvatarBubble } from "../components/UI";
@@ -121,9 +122,23 @@ export default function HistoryScreen() {
         }
         ListFooterComponent={
           isFree && entries.length > 0 ? (
-            <SansText style={styles.freeNote}>
-              Showing the last 30 days. Upgrade to Kew Pro for full history.
-            </SansText>
+            <View style={styles.cutoffCard}>
+              <View style={styles.cutoffRow}>
+                <View style={styles.cutoffIconBox}>
+                  <Feather name="info" size={14} color={KEW_PLUS_GOLD} />
+                </View>
+                <SansText style={styles.cutoffText}>
+                  You're seeing the last 30 days. Kew+ unlocks your full watch history.
+                </SansText>
+              </View>
+              <TouchableOpacity
+                onPress={() => navigation.navigate("Benefits")}
+                activeOpacity={0.7}
+                style={styles.cutoffLink}
+              >
+                <SansText style={styles.cutoffLinkText}>Explore Kew+ ›</SansText>
+              </TouchableOpacity>
+            </View>
           ) : null
         }
         contentContainerStyle={styles.listContent}
@@ -188,6 +203,10 @@ function _formatTotalTime(secs: number): string {
   return `${h}h ${m}m`;
 }
 
+const KEW_PLUS_GOLD = "#C49A28";
+const KEW_PLUS_GOLD_TINT = "rgba(196,154,40,0.12)";
+const KEW_PLUS_GOLD_BORDER = "rgba(196,154,40,0.35)";
+
 function makeStyles(c: ColorPalette) {
   return StyleSheet.create({
     container:       { flex: 1, backgroundColor: c.cream },
@@ -211,6 +230,11 @@ function makeStyles(c: ColorPalette) {
     readdBtnText:    { fontSize: FontSize.lg, color: c.accent, lineHeight: 24, marginTop: -2 },
     readdBtnTextDone:{ color: "white", fontSize: FontSize.sm, marginTop: 0 },
     listContent:     { paddingBottom: 80 },
-    freeNote:        { fontSize: 12, color: c.warmMid, textAlign: "center", paddingVertical: Spacing.md },
+    cutoffCard:      { backgroundColor: c.cardBg, borderWidth: 0.5, borderColor: KEW_PLUS_GOLD_BORDER, borderRadius: Radius.md, padding: Spacing.md, marginHorizontal: Spacing.md, marginTop: Spacing.md, gap: Spacing.sm },
+    cutoffRow:       { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
+    cutoffIconBox:   { width: 28, height: 28, borderRadius: Radius.sm, backgroundColor: KEW_PLUS_GOLD_TINT, alignItems: "center", justifyContent: "center" },
+    cutoffText:      { flex: 1, fontSize: FontSize.xs, color: c.ink, lineHeight: 18 },
+    cutoffLink:      { alignSelf: "flex-start", paddingVertical: 2 },
+    cutoffLinkText:  { fontSize: FontSize.xs, color: KEW_PLUS_GOLD, fontFamily: FontFamily.sansMedium },
   });
 }

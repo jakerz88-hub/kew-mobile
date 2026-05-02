@@ -13,6 +13,7 @@ import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/th
 import { useTheme } from "../contexts/ThemeContext";
 import { useTooltip } from "../hooks/useTooltip";
 import TooltipOverlay, { TooltipAnchor } from "../components/TooltipOverlay";
+import { handleLastSkipUsed } from "../utils/kewPlusUpsell";
 import type { QueueEntry } from "../types";
 import { formatDuration, timeAgo } from "../types";
 
@@ -160,6 +161,12 @@ export default function PlayerScreen() {
     const watchedSecs = playerSecs != null ? Math.floor(playerSecs) : 0;
     await recordEvent("skipped", watchedSecs);
     await skipCurrent();
+    // After the store has updated skipsRemaining, check if the user just used
+    // their last skip — if so, count it (and surface the upsell every 5th).
+    const after = useStore.getState().user;
+    if (after?.plan !== "pro" && after?.skipsRemaining === 0) {
+      await handleLastSkipUsed();
+    }
     navigation.goBack();
   };
 

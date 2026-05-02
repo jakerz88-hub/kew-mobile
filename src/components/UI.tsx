@@ -5,6 +5,9 @@ import {
 } from "react-native";
 import { Colors, ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
+import { useStore } from "../store";
+
+const KEW_PLUS_GOLD = "#C49A28";
 
 export function SerifText({ style, children, ...props }: { style?: TextStyle; children: React.ReactNode; [k: string]: any }) {
   const { colors } = useTheme();
@@ -24,13 +27,16 @@ export function SansText({ style, children, ...props }: { style?: TextStyle; chi
   );
 }
 
-export function KewLogo({ size = 28 }: { size?: number }) {
+export function KewLogo({ size = 28, plus }: { size?: number; plus?: boolean }) {
   const { colors } = useTheme();
+  const user = useStore(s => s.user);
+  const showPlus = plus ?? user?.plan === "pro";
   return (
     <Text style={{ fontFamily: FontFamily.serif, fontSize: size }}>
       <Text style={{ color: colors.accent }}>K</Text>
       <Text style={{ color: colors.warmMid }}>e</Text>
       <Text style={{ color: colors.ink }}>w</Text>
+      {showPlus && <Text style={{ color: KEW_PLUS_GOLD }}>+</Text>}
     </Text>
   );
 }

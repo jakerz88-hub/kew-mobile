@@ -228,7 +228,7 @@ export default function AllQueuesScreen() {
             <SansText style={styles.newQueueBtnText}>+ New queue</SansText>
           </TouchableOpacity>
         ) : (
-          <SansText style={styles.proNote}>Multiple queues are a pro feature</SansText>
+          <SansText style={styles.proNote}>Multiple queues are a Kew+ feature</SansText>
         )}
       </View>
 

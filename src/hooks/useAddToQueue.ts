@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { Platform, Alert } from "react-native";
+import { Platform } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useStore } from "../store";
+import { handleQueueLimitReached } from "../utils/kewPlusUpsell";
 
 /**
  * Shared hook for "add to queue" across all screens.
@@ -35,11 +36,7 @@ export function useAddToQueue(onAdded?: (ytVideoId: string) => void) {
       onAdded?.(ytVideoId);
     } catch (e: any) {
       if (e?.code === "queue_limit_reached") {
-        Alert.alert(
-          "Queue limit reached",
-          "Free accounts can hold up to 25 videos in their queue.",
-          [{ text: "OK" }],
-        );
+        await handleQueueLimitReached();
       }
       // Other errors: store surfaces the banner.
     } finally {

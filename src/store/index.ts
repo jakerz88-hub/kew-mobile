@@ -2,6 +2,11 @@ import { create } from "zustand";
 import type { Queue, User, KewQueue } from "../types";
 import { api } from "../services/api";
 
+export interface KewPlusUpsell {
+  headline: string;
+  body: string;
+}
+
 interface AppState {
   user: User | null;
   queue: Queue | null;
@@ -11,6 +16,9 @@ interface AppState {
   isLoadingUser: boolean;
   isLoadingQueues: boolean;
   error: string | null;
+  kewPlusUpsell: KewPlusUpsell | null;
+  showKewPlusUpsell: (upsell: KewPlusUpsell) => void;
+  hideKewPlusUpsell: () => void;
   fetchUser: () => Promise<void>;
   fetchQueue: () => Promise<void>;
   fetchQueues: () => Promise<void>;
@@ -39,6 +47,10 @@ export const useStore = create<AppState>((set, get) => ({
   isLoadingUser: false,
   isLoadingQueues: false,
   error: null,
+  kewPlusUpsell: null,
+
+  showKewPlusUpsell: (upsell) => set({ kewPlusUpsell: upsell }),
+  hideKewPlusUpsell: () => set({ kewPlusUpsell: null }),
 
   clearError: () => set({ error: null }),
 

@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState, useMemo } from "react";
-import { View, TouchableOpacity, StyleSheet, SafeAreaView, Alert, TextInput, Image, ActivityIndicator } from "react-native";
+import { View, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Alert, TextInput, Image, ActivityIndicator } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useStore } from "../store";
 import { supabase } from "../services/supabase";
 import { api } from "../services/api";
@@ -11,9 +12,34 @@ import { connectYouTube } from "../utils/youtubeConnect";
 import { SansText, SerifText, Divider, SkipCounter, Toast, ErrorBanner } from "../components/UI";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { useTheme, type ThemeId } from "../contexts/ThemeContext";
-import { MiniWeekChart } from "./InsightsScreen";
+import { MiniWeekChart, formatMinutesShort } from "./InsightsScreen";
 import { ProIcon } from "../components/ProIcon";
 import type { Insights } from "../types";
+
+const KEW_PLUS_GOLD = "#C49A28";
+const KEW_PLUS_GOLD_BORDER = "rgba(196,154,40,0.35)";
+
+const KEW_PLUS_ROTATE_MSGS = [
+  "Upgrade to Kew+ to unlock watch insights",
+  "Upgrade to Kew+ to unlock multiple queues",
+  "Upgrade to Kew+ to unlock more skips",
+  "Upgrade to Kew+ to unlock personal watch limits",
+  "Upgrade to Kew+ to unlock higher queue limits",
+];
+
+const KEW_PLUS_ROTATE_INDEX_KEY = "kew_plus_rotate_index";
+const KEW_PLUS_ROTATE_DATE_KEY  = "kew_plus_rotate_date";
+
+function todayDateString(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function daysBetween(fromIso: string, toIso: string): number {
+  const a = Date.parse(fromIso + "T00:00:00Z");
+  const b = Date.parse(toIso   + "T00:00:00Z");
+  if (Number.isNaN(a) || Number.isNaN(b)) return Infinity;
+  return Math.floor((b - a) / 86400000);
+}
 
 type PremiumTheme = {
   id: ThemeId;
@@ -54,6 +80,7 @@ export default function ProfileScreen() {
   const [toastMsg, setToastMsg] = useState("");
   const [toastVisible, setToastVisible] = useState(false);
   const [insightsPreview, setInsightsPreview] = useState<Insights | null>(null);
+  const [kewPlusMsg, setKewPlusMsg] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
@@ -71,6 +98,38 @@ export default function ProfileScreen() {
   useEffect(() => {
     if (user?.plan !== "pro") { setInsightsPreview(null); return; }
     api.getInsights("week").then(setInsightsPreview).catch(() => setInsightsPreview(null));
+  }, [user?.plan]);
+
+  // Rotating Kew+ upsell message (free users only)
+  useEffect(() => {
+    if (user?.plan === "pro") { setKewPlusMsg(null); return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        const [savedIdxRaw, savedDate] = await Promise.all([
+          AsyncStorage.getItem(KEW_PLUS_ROTATE_INDEX_KEY),
+          AsyncStorage.getItem(KEW_PLUS_ROTATE_DATE_KEY),
+        ]);
+        const today = todayDateString();
+        let idx = parseInt(savedIdxRaw ?? "0", 10);
+        if (Number.isNaN(idx) || idx < 0) idx = 0;
+        const last = savedDate ?? "";
+        const days = last ? daysBetween(last, today) : Infinity;
+        if (days >= 3) {
+          idx = (idx + (last ? 1 : 0)) % KEW_PLUS_ROTATE_MSGS.length;
+          await AsyncStorage.multiSet([
+            [KEW_PLUS_ROTATE_INDEX_KEY, String(idx)],
+            [KEW_PLUS_ROTATE_DATE_KEY,  today],
+          ]);
+        }
+        if (!cancelled) {
+          setKewPlusMsg(KEW_PLUS_ROTATE_MSGS[idx % KEW_PLUS_ROTATE_MSGS.length]);
+        }
+      } catch {
+        if (!cancelled) setKewPlusMsg(KEW_PLUS_ROTATE_MSGS[0]);
+      }
+    })();
+    return () => { cancelled = true; };
   }, [user?.plan]);
 
   const displayName = user?.displayName;
@@ -353,7 +412,7 @@ export default function ProfileScreen() {
 
       {profileError && <ErrorBanner message={profileError} onDismiss={() => setProfileError(null)} />}
 
-      <View style={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Avatar */}
         <View style={styles.avatarSection}>
           <TouchableOpacity onPress={handleAvatarPress} activeOpacity={0.8} style={styles.avatarWrapper} disabled={uploadingAvatar}>
@@ -433,6 +492,19 @@ export default function ProfileScreen() {
           )}
         </View>
 
+        {/* Kew+ evergreen upsell — free users only */}
+        {user?.plan !== "pro" && kewPlusMsg && (
+          <TouchableOpacity
+            style={styles.kewPlusCard}
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate("Benefits")}
+          >
+            <ProIcon size={28} />
+            <SansText style={styles.kewPlusCardText} numberOfLines={2}>{kewPlusMsg}</SansText>
+            <Feather name="chevron-right" size={18} color={KEW_PLUS_GOLD} />
+          </TouchableOpacity>
+        )}
+
         {/* Skip counter */}
         {user && (
           <View style={styles.card}>
@@ -463,7 +535,14 @@ export default function ProfileScreen() {
                   <MiniWeekChart breakdown={insightsPreview.dailyBreakdown} colors={colors} />
                 </View>
                 <SansText style={styles.insightsSentence}>
-                  {insightsPreview.insightSentence}
+                  {(() => {
+                    const todayIso = new Date().toISOString().slice(0, 10);
+                    const daysElapsed = insightsPreview.dailyBreakdown.filter(d => d.date <= todayIso).length;
+                    const watchMin = insightsPreview.stats.watchTimeMinutes;
+                    if (daysElapsed === 0 || watchMin === 0) return "No watch data yet this week.";
+                    const avgMinutes = Math.round(watchMin / daysElapsed);
+                    return `You're averaging ${formatMinutesShort(avgMinutes)} per day this week.`;
+                  })()}
                 </SansText>
               </>
             ) : (
@@ -609,7 +688,7 @@ export default function ProfileScreen() {
         <TouchableOpacity style={styles.deleteBtn} onPress={handleDeleteAccount} activeOpacity={0.7}>
           <SansText style={styles.deleteBtnText}>Delete account</SansText>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
 
       <Toast message={toastMsg} visible={toastVisible} />
     </SafeAreaView>
@@ -622,7 +701,7 @@ function makeStyles(c: ColorPalette) {
     header:          { flexDirection: "row", alignItems: "center", paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm },
     headerTitle:     { fontSize: FontSize.md, color: c.ink, textAlign: "center" },
     backBtn:         { flex: 1, padding: 4 },
-    content:         { flex: 1, paddingHorizontal: Spacing.md, paddingTop: Spacing.md },
+    content:         { paddingHorizontal: Spacing.md, paddingTop: Spacing.md, paddingBottom: 64 },
     avatarSection:   { alignItems: "center", gap: Spacing.sm, marginBottom: Spacing.xl },
     avatarWrapper:   { position: "relative" },
     avatar:          { width: 80, height: 80, borderRadius: 40 },
@@ -651,6 +730,8 @@ function makeStyles(c: ColorPalette) {
     saveBtnDisabled: { opacity: 0.5 },
     saveBtnText:     { fontSize: FontSize.sm, color: c.cream, fontFamily: FontFamily.sansMedium },
     card:            { backgroundColor: c.cardBg, borderWidth: 1, borderColor: c.divider, borderRadius: Radius.md, padding: Spacing.md, gap: Spacing.xs, marginBottom: Spacing.md, maxWidth: 400, width: "100%", alignSelf: "center" },
+    kewPlusCard:     { backgroundColor: c.cardBg, borderWidth: 0.5, borderColor: KEW_PLUS_GOLD_BORDER, borderRadius: Radius.md, paddingVertical: Spacing.md - 2, paddingHorizontal: Spacing.md, marginBottom: Spacing.md, maxWidth: 400, width: "100%", alignSelf: "center", flexDirection: "row", alignItems: "center", gap: Spacing.sm },
+    kewPlusCardText: { flex: 1, fontSize: FontSize.sm, color: c.ink, fontFamily: FontFamily.sans, lineHeight: 18 },
     insightsCard:    { backgroundColor: c.cardBg, borderWidth: 1, borderColor: c.divider, borderRadius: Radius.md, padding: Spacing.md, gap: Spacing.xs, marginBottom: Spacing.md, maxWidth: 400, width: "100%", alignSelf: "center" },
     insightsSentence:{ fontSize: FontSize.xs, color: c.warmMid, lineHeight: 17, marginTop: Spacing.xs, fontStyle: "italic" },
     cardRow:         { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },

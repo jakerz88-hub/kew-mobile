@@ -12,6 +12,7 @@ import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/th
 import { useTheme } from "../contexts/ThemeContext";
 import { formatDuration } from "../types";
 import type { PlaylistVideo } from "../types";
+import { handleQueueLimitReached } from "../utils/kewPlusUpsell";
 
 const MAX_SELECT = 50;
 
@@ -88,11 +89,7 @@ export default function PlaylistVideoPickerScreen() {
       }
     } catch (e: any) {
       if (e?.code === "queue_limit_reached") {
-        Alert.alert(
-          "Queue limit reached",
-          "Free accounts can hold up to 25 videos in their queue.",
-          [{ text: "OK" }],
-        );
+        await handleQueueLimitReached();
       } else {
         showToast(e?.message ?? "Import failed. Please try again.");
       }
