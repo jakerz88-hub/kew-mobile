@@ -8,6 +8,7 @@ import { useStore } from "../store";
 import { supabase } from "../services/supabase";
 import { api } from "../services/api";
 import { connectYouTube } from "../utils/youtubeConnect";
+import { useSubscription } from "../hooks/useSubscription";
 
 import { SansText, SerifText, Divider, SkipCounter, Toast, ErrorBanner } from "../components/UI";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
@@ -62,6 +63,7 @@ const USERNAME_MAX = 24;
 export default function ProfileScreen() {
   const navigation = useNavigation<any>();
   const { user, fetchUser } = useStore();
+  const { isPro: rcIsPro, openManagement } = useSubscription();
   const { colors, mode, setMode, themeId, setThemeId } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
@@ -672,6 +674,14 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           )}
         </View>
+
+        {/* Manage subscription — only when an active Kew+ subscription exists */}
+        {(rcIsPro || user?.plan === "pro") && (
+          <TouchableOpacity style={styles.helpBtn} onPress={openManagement} activeOpacity={0.7}>
+            <SansText style={styles.helpBtnText}>Manage subscription</SansText>
+            <Feather name="external-link" size={14} color={colors.warmMid} />
+          </TouchableOpacity>
+        )}
 
         {/* Help */}
         <TouchableOpacity style={styles.helpBtn} onPress={() => navigation.navigate("Help")} activeOpacity={0.7}>

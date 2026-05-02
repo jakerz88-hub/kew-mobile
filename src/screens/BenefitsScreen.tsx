@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import {
-  View, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Alert,
+  View, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
@@ -9,6 +9,8 @@ import { SansText, SerifText } from "../components/UI";
 import { ProIcon } from "../components/ProIcon";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
+import { useSubscription } from "../hooks/useSubscription";
+import { useStore } from "../store";
 
 const GOLD = "#C49A28";
 const GOLD_TINT = "rgba(196,154,40,0.12)";
@@ -120,14 +122,42 @@ export default function BenefitsScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const [plan, setPlan] = useState<Plan>("annual");
+  const [purchasing, setPurchasing] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+  const fetchUser = useStore(s => s.fetchUser);
+  const {
+    isPro, isLoading, monthlyPackage, annualPackage,
+    purchaseMonthly, purchaseAnnual, restorePurchases, openManagement,
+  } = useSubscription();
 
-  const handleSubscribe = () => {
-    Alert.alert("Coming soon", "Payment will be available in a future update.");
+  const handleSubscribe = async () => {
+    if (purchasing) return;
+    setPurchasing(true);
+    try {
+      const success = plan === "annual" ? await purchaseAnnual() : await purchaseMonthly();
+      if (success) {
+        // Backend webhook updates profiles.plan asynchronously — refetch so the
+        // gold badge and pro-only UI appear without waiting for the next mount.
+        fetchUser().catch(() => {});
+        navigation.goBack();
+      }
+    } finally {
+      setPurchasing(false);
+    }
   };
 
-  const handleRestore = () => {
-    Alert.alert("Coming soon", "Payment will be available in a future update.");
+  const handleRestore = async () => {
+    if (restoring) return;
+    setRestoring(true);
+    try {
+      await restorePurchases();
+    } finally {
+      setRestoring(false);
+    }
   };
+
+  const monthlyPriceLabel = monthlyPackage?.product.priceString;
+  const annualPriceLabel = annualPackage?.product.priceString;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -169,50 +199,80 @@ export default function BenefitsScreen() {
           ))}
         </View>
 
-        <View style={styles.toggleWrap}>
-          <View style={styles.togglePill}>
-            <TouchableOpacity
-              style={[styles.toggleOption, plan === "annual" && styles.toggleOptionActive]}
-              onPress={() => setPlan("annual")}
-              activeOpacity={0.8}
-            >
-              <SansText style={[styles.toggleOptionText, plan === "annual" && styles.toggleOptionTextActive]}>
-                Annual
-              </SansText>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.toggleOption, plan === "monthly" && styles.toggleOptionActive]}
-              onPress={() => setPlan("monthly")}
-              activeOpacity={0.8}
-            >
-              <SansText style={[styles.toggleOptionText, plan === "monthly" && styles.toggleOptionTextActive]}>
-                Monthly
-              </SansText>
+        {isPro ? (
+          <View style={styles.activeWrap}>
+            <SerifText style={styles.activeHeadline}>You're on Kew+</SerifText>
+            <SansText style={styles.activeSubhead}>
+              Thanks for supporting Kew.
+            </SansText>
+            <TouchableOpacity style={styles.ctaBtn} onPress={openManagement} activeOpacity={0.85}>
+              <SansText style={styles.ctaBtnText}>Manage subscription</SansText>
             </TouchableOpacity>
           </View>
+        ) : (
+          <>
+            <View style={styles.toggleWrap}>
+              <View style={styles.togglePill}>
+                <TouchableOpacity
+                  style={[styles.toggleOption, plan === "annual" && styles.toggleOptionActive]}
+                  onPress={() => setPlan("annual")}
+                  activeOpacity={0.8}
+                >
+                  <SansText style={[styles.toggleOptionText, plan === "annual" && styles.toggleOptionTextActive]}>
+                    Annual
+                  </SansText>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.toggleOption, plan === "monthly" && styles.toggleOptionActive]}
+                  onPress={() => setPlan("monthly")}
+                  activeOpacity={0.8}
+                >
+                  <SansText style={[styles.toggleOptionText, plan === "monthly" && styles.toggleOptionTextActive]}>
+                    Monthly
+                  </SansText>
+                </TouchableOpacity>
+              </View>
 
-          <View style={styles.priceBlock}>
-            {plan === "annual" ? (
-              <>
-                <SerifText style={styles.priceMain}>$27.99/year</SerifText>
-                <SansText style={styles.priceSub}>$2.33/month, billed annually</SansText>
-              </>
-            ) : (
-              <>
-                <SerifText style={styles.priceMain}>$2.99/month</SerifText>
-                <SansText style={styles.priceSub}>Billed monthly, cancel any time</SansText>
-              </>
-            )}
-          </View>
-        </View>
+              <View style={styles.priceBlock}>
+                {plan === "annual" ? (
+                  <>
+                    <SerifText style={styles.priceMain}>{annualPriceLabel ?? "$24.99"}/year</SerifText>
+                    <SansText style={styles.priceSub}>$2.08/month, billed annually</SansText>
+                  </>
+                ) : (
+                  <>
+                    <SerifText style={styles.priceMain}>{monthlyPriceLabel ?? "$2.99"}/month</SerifText>
+                    <SansText style={styles.priceSub}>Billed monthly, cancel any time</SansText>
+                  </>
+                )}
+              </View>
+            </View>
 
-        <TouchableOpacity style={styles.ctaBtn} onPress={handleSubscribe} activeOpacity={0.85}>
-          <SansText style={styles.ctaBtnText}>Subscribe to Kew+</SansText>
-        </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.ctaBtn, (purchasing || isLoading) && styles.ctaBtnDisabled]}
+              onPress={handleSubscribe}
+              activeOpacity={0.85}
+              disabled={purchasing || isLoading}
+            >
+              {purchasing ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <SansText style={styles.ctaBtnText}>Subscribe to Kew+</SansText>
+              )}
+            </TouchableOpacity>
 
-        <TouchableOpacity onPress={handleRestore} activeOpacity={0.7} style={styles.restoreBtn}>
-          <SansText style={styles.restoreText}>Restore purchases</SansText>
-        </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleRestore}
+              activeOpacity={0.7}
+              style={styles.restoreBtn}
+              disabled={restoring}
+            >
+              <SansText style={styles.restoreText}>
+                {restoring ? "Restoring…" : "Restore purchases"}
+              </SansText>
+            </TouchableOpacity>
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -247,8 +307,12 @@ function makeStyles(c: ColorPalette) {
     priceMain:        { fontSize: FontSize.xl, color: c.ink },
     priceSub:         { fontSize: FontSize.xs, color: c.warmMid },
     ctaBtn:           { marginTop: Spacing.lg, backgroundColor: GOLD, borderRadius: Radius.pill, paddingVertical: Spacing.md - 2, alignItems: "center", justifyContent: "center" },
+    ctaBtnDisabled:   { opacity: 0.6 },
     ctaBtnText:       { fontSize: FontSize.sm, color: "#FFFFFF", fontFamily: FontFamily.sansMedium, letterSpacing: 0.3 },
     restoreBtn:       { marginTop: Spacing.md, alignItems: "center", paddingVertical: Spacing.sm },
     restoreText:      { fontSize: FontSize.xs, color: c.warmMid, fontFamily: FontFamily.sansMedium, textDecorationLine: "underline" },
+    activeWrap:       { marginTop: Spacing.lg, alignItems: "center", gap: Spacing.xs },
+    activeHeadline:   { fontSize: FontSize.lg, color: c.ink },
+    activeSubhead:    { fontSize: FontSize.sm, color: c.warmMid, marginBottom: Spacing.sm },
   });
 }

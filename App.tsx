@@ -14,6 +14,7 @@ import {
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "./src/services/supabase";
 import { api } from "./src/services/api";
+import { configurePurchases, logoutPurchases } from "./src/services/revenuecat";
 import { useStore } from "./src/store";
 import { Colors } from "./src/types/theme";
 import { ThemeProvider, useTheme } from "./src/contexts/ThemeContext";
@@ -171,10 +172,20 @@ export default function App() {
         fetchQueue();
         fetchQueues();
       }
+
+      if (event === "SIGNED_OUT") {
+        logoutPurchases();
+      }
     });
 
     return () => listener.subscription.unsubscribe();
   }, []);
+
+  // Configure RevenueCat once the Supabase user is loaded.
+  useEffect(() => {
+    if (!user?.id) return;
+    configurePurchases(user.id);
+  }, [user?.id]);
 
   // Once user is loaded, check whether to skip onboarding
   useEffect(() => {
