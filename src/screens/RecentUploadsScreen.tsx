@@ -83,7 +83,7 @@ export default function RecentUploadsScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={() => loadVideos(true)}
-              tintColor={colors.accent}
+              tintColor={colors.ink}
             />
           }
           columnWrapperStyle={isTablet ? styles.gridRow : undefined}

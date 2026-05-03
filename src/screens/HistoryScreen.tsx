@@ -95,7 +95,7 @@ export default function HistoryScreen() {
       <FlatList
         data={entries}
         keyExtractor={item => item.id}
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={loadHistory} tintColor={colors.accent} />}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={loadHistory} tintColor={colors.ink} />}
         ListHeaderComponent={
           <View style={styles.pageHeader}>
             <SerifText style={styles.pageTitle}>Your Watch History</SerifText>

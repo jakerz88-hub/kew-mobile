@@ -255,7 +255,7 @@ export default function BrowseScreen() {
               data={filteredChannels}
               keyExtractor={item => item.ytChannelId}
               refreshControl={
-                <RefreshControl refreshing={syncing} onRefresh={handleRefresh} tintColor={colors.accent} />
+                <RefreshControl refreshing={syncing} onRefresh={handleRefresh} tintColor={colors.ink} />
               }
               ListHeaderComponent={
                 <TouchableOpacity
@@ -384,7 +384,7 @@ export default function BrowseScreen() {
         data={filteredChannels}
         keyExtractor={item => item.ytChannelId}
         refreshControl={
-          <RefreshControl refreshing={syncing} onRefresh={handleRefresh} tintColor={colors.accent} />
+          <RefreshControl refreshing={syncing} onRefresh={handleRefresh} tintColor={colors.ink} />
         }
         ListHeaderComponent={
           <>

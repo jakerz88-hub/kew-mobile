@@ -92,7 +92,7 @@ export default function ChannelScreen() {
       <FlatList
         data={videos}
         keyExtractor={item => item.ytVideoId}
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={() => loadVideos(0)} tintColor={colors.accent} />}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={() => loadVideos(0)} tintColor={colors.ink} />}
         renderItem={({ item }) => {
           const entryId = queueEntryByVideoId[item.ytVideoId];
           const inQueue = !!entryId;

@@ -353,7 +353,7 @@ export default function QueueScreen() {
               data={listPendingEntries}
               keyExtractor={item => item.id}
               refreshControl={
-                <RefreshControl refreshing={isLoadingQueue} onRefresh={onRefresh} tintColor={colors.accent} />
+                <RefreshControl refreshing={isLoadingQueue} onRefresh={onRefresh} tintColor={colors.ink} />
               }
               ListHeaderComponent={
                 current ? (
@@ -567,7 +567,7 @@ export default function QueueScreen() {
       {error && <ErrorBanner message={error} onDismiss={clearError} />}
 
       <ScrollView
-        refreshControl={<RefreshControl refreshing={isLoadingQueue} onRefresh={onRefresh} tintColor={colors.accent} />}
+        refreshControl={<RefreshControl refreshing={isLoadingQueue} onRefresh={onRefresh} tintColor={colors.ink} />}
         contentContainerStyle={styles.listContent}
         keyboardShouldPersistTaps="handled"
         scrollEnabled={!isDragging && !protectedModalEntry}
