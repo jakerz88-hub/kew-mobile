@@ -10,6 +10,7 @@ import {
   ForestTrailColors, ForestTrailDarkColors,
   OpenWaterColors, OpenWaterDarkColors,
 } from "../types/theme";
+import { useStore } from "../store";
 
 export type ThemeMode = "system" | "light" | "dark";
 export type ThemeId   = "standard" | "goldenHour" | "leatherWine" | "brightTide" | "nectar" | "quietForest" | "openWater";
@@ -55,6 +56,7 @@ const ThemeContext = createContext<ThemeContextValue>({
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const systemScheme            = useColorScheme();
+  const userPlan                = useStore(s => s.user?.plan ?? null);
   const [mode,      setModeState]    = useState<ThemeMode>("system");
   const [themeId,   setThemeIdState] = useState<ThemeId>("standard");
   const [hydrated,  setHydrated]     = useState(false);
@@ -81,6 +83,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setThemeIdState(id);
     AsyncStorage.setItem("kew_theme_id", id);
   };
+
+  // Premium themes are pro-only. If a user lands as free with a premium
+  // theme cached (downgrade, refund, expiration), force them back to standard.
+  // Gated on hydration + a known plan so we don't reset during the loading window.
+  useEffect(() => {
+    if (!hydrated || userPlan === null) return;
+    if (userPlan !== "pro" && themeId !== "standard") {
+      setThemeIdState("standard");
+      AsyncStorage.setItem("kew_theme_id", "standard");
+    }
+  }, [hydrated, userPlan, themeId]);
 
   const isDark = hydrated
     ? mode === "dark" || (mode === "system" && systemScheme === "dark")
