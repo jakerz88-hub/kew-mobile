@@ -35,7 +35,7 @@ function formatDelta(cur: number, prev: number, suffix: string = ""): { text: st
   return { text: `${sign}${diff}${suffix} vs last`, tone: diff > 0 ? "up" : "down" };
 }
 
-function formatMinutesShort(min: number): string {
+export function formatMinutesShort(min: number): string {
   if (min < 60) return `${min}m`;
   const h = Math.floor(min / 60);
   const m = min % 60;
