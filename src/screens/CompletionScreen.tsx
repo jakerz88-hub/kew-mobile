@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { View, StyleSheet, SafeAreaView, TouchableOpacity } from "react-native";
+import { View, StyleSheet, SafeAreaView, TouchableOpacity, Image } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useStore } from "../store";
 import { SerifText, SansText, ThumbPlaceholder } from "../components/UI";
@@ -18,7 +18,11 @@ export default function CompletionScreen() {
   useEffect(() => { fetchUser().then(() => setUserLoaded(true)); }, []);
 
   const watchedSecs: number = route.params?.watchedSecs ?? 0;
-  const nextEntry = queue?.entries.find(e => e.status === "pending");
+  // The backend promotes the next entry to "watching" on completion, so the
+  // up-next card should show queue.current — not the first pending, which
+  // would be one entry too far ahead.
+  const nextEntry = queue?.current ?? queue?.entries.find(e => e.status === "watching") ?? null;
+  const watchedDisplay = watchedSecs > 0 ? formatDuration(watchedSecs) : "0:00";
   const earnedSkip = userLoaded && user != null && user.skipsRemaining < user.skipsMax;
 
   return (
@@ -37,7 +41,7 @@ export default function CompletionScreen() {
         </View>
 
         <View style={styles.statsRow}>
-          <StatCard value={formatDuration(watchedSecs)} label="Watched" />
+          <StatCard value={watchedDisplay} label="Watched" />
           <StatCard value={String(queue?.total ?? 0)} label="In Queue" />
           <StatCard value={String(user?.skipsRemaining ?? "-")} label="Skips Left" />
         </View>
@@ -47,12 +51,11 @@ export default function CompletionScreen() {
             <SansText style={styles.nextLabel}>Up Next - Ready</SansText>
             <TouchableOpacity style={styles.nextCard} onPress={() => navigation.replace("Player")} activeOpacity={0.85}>
               <View style={styles.nextThumbArea}>
-                <ThumbPlaceholder seed={nextEntry.video.ytVideoId} style={StyleSheet.absoluteFillObject} />
+                {nextEntry.video.thumbnailUrl
+                  ? <Image source={{ uri: nextEntry.video.thumbnailUrl }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
+                  : <ThumbPlaceholder seed={nextEntry.video.ytVideoId} style={StyleSheet.absoluteFillObject} />}
                 <View style={styles.readyTag}>
                   <SansText style={styles.readyTagText}>Ready to watch the next one?</SansText>
-                </View>
-                <View style={styles.nextPlayBtn}>
-                  <SansText style={styles.nextPlayIcon}>&#9654;</SansText>
                 </View>
               </View>
               <View style={styles.nextInfo}>
@@ -107,8 +110,6 @@ function makeStyles(c: ColorPalette) {
     nextThumbArea:{ height: 120, justifyContent: "center", alignItems: "center", position: "relative" },
     readyTag:     { position: "absolute", top: 8, left: 8, backgroundColor: c.green, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 },
     readyTagText: { color: "white", fontSize: FontSize.xxs, fontFamily: FontFamily.sansMedium, letterSpacing: 0.5 },
-    nextPlayBtn:  { width: 48, height: 48, borderRadius: 24, backgroundColor: c.accent, alignItems: "center", justifyContent: "center", paddingLeft: 3 },
-    nextPlayIcon: { color: "white", fontSize: 18 },
     nextInfo:     { padding: Spacing.sm + 2 },
     nextChannel:  { color: "rgba(255,255,255,0.45)", fontSize: FontSize.xxs, textTransform: "uppercase", letterSpacing: 0.5 },
     nextTitle:    { color: "white", fontSize: FontSize.md, lineHeight: 22, marginTop: 3 },

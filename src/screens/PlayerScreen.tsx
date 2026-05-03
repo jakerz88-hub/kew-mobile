@@ -131,7 +131,12 @@ export default function PlayerScreen() {
     }
     if (state === "paused")  setPlaying(false);
     if (state === "ended" && current) {
-      const watchedSecs = current.video.durationSecs ?? 0;
+      // Prefer the player's actual current position over the cached video
+      // duration — some YouTube videos (livestreams, premieres) have null
+      // durationSecs, which would otherwise leave watchedSecs at 0 and
+      // render as "-" on the completion screen.
+      const playerSecs = await playerRef.current?.getCurrentTime().catch(() => null);
+      const watchedSecs = playerSecs != null ? Math.floor(playerSecs) : (current.video.durationSecs ?? 0);
       await recordEvent("completed", watchedSecs);
       await updateProgress(current.id, watchedSecs);
       await fetchQueue();
