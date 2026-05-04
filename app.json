@@ -2,7 +2,7 @@
   "expo": {
     "name": "Kew",
     "slug": "kew",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -38,14 +38,12 @@
       "SUPABASE_URL": "https://piedqhsglgpzcdrvvihk.supabase.co",
       "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpZWRxaHNnbGdwemNkcnZ2aWhrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NTcyMzAsImV4cCI6MjA5MDAzMzIzMH0.D1kWc41oNiDV-aM1cAwnDDDnzSwfQwxWB0nZDqrIjPw",
       "API_BASE_URL": "https://kew-backend-production.up.railway.app",
-      "REVENUECAT_IOS_KEY": "",
+      "REVENUECAT_IOS_KEY": "appl_ZFJRDePQxOoTfLabPQOpVQmLkVq",
       "eas": {
         "projectId": "d7d74b72-c5d5-4f5a-95b2-1deacc44b4d4"
       }
     },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "1.0.0",
     "updates": {
       "url": "https://u.expo.dev/d7d74b72-c5d5-4f5a-95b2-1deacc44b4d4"
     }
