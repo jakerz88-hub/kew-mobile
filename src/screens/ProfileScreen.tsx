@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useState, useMemo } from "react";
+import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { View, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Alert, TextInput, Image, ActivityIndicator } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getAppIcon } from "expo-dynamic-app-icon";
 import { useStore } from "../store";
 import { supabase } from "../services/supabase";
 import { api } from "../services/api";
@@ -14,8 +15,20 @@ import { SansText, SerifText, Divider, SkipCounter, Toast, ErrorBanner } from ".
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { useTheme, type ThemeId } from "../contexts/ThemeContext";
 import { MiniWeekChart, formatMinutesShort } from "./InsightsScreen";
+import { ICON_THEMES, normalizeCurrentSlot, type IconSlot } from "./AppIconScreen";
 import { ProIcon } from "../components/ProIcon";
 import type { Insights } from "../types";
+
+// Resolve a slot key to its theme entry + variant, for the Appearance row preview.
+function resolveIconSlot(slot: IconSlot): { source: number; label: string } {
+  for (const t of ICON_THEMES) {
+    if (t.light.slot === slot) return { source: t.light.source, label: `${t.name} · Light` };
+    if (t.dark.slot  === slot) return { source: t.dark.source,  label: `${t.name} · Dark` };
+  }
+  // Should be unreachable, but fall back to standardLight rather than crashing.
+  const std = ICON_THEMES[0];
+  return { source: std.light.source, label: `${std.name} · Light` };
+}
 
 const KEW_PLUS_GOLD = "#C49A28";
 const KEW_PLUS_GOLD_BORDER = "rgba(196,154,40,0.35)";
@@ -83,6 +96,19 @@ export default function ProfileScreen() {
   const [toastVisible, setToastVisible] = useState(false);
   const [insightsPreview, setInsightsPreview] = useState<Insights | null>(null);
   const [kewPlusMsg, setKewPlusMsg] = useState<string | null>(null);
+  const [activeIconSlot, setActiveIconSlot] = useState<IconSlot>(() =>
+    normalizeCurrentSlot(getAppIcon()),
+  );
+
+  // Refresh the App icon row preview whenever the user returns to Profile —
+  // they may have just changed it on AppIconScreen.
+  useFocusEffect(
+    useCallback(() => {
+      setActiveIconSlot(normalizeCurrentSlot(getAppIcon()));
+    }, []),
+  );
+
+  const activeIconPreview = useMemo(() => resolveIconSlot(activeIconSlot), [activeIconSlot]);
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
@@ -627,6 +653,21 @@ export default function ProfileScreen() {
               </View>
             </>
           )}
+
+          {/* App icon row */}
+          <View style={styles.premiumDivider} />
+          <TouchableOpacity
+            style={styles.appIconRow}
+            onPress={() => navigation.navigate("AppIcon")}
+            activeOpacity={0.7}
+          >
+            <SansText style={styles.cardLabel}>App icon</SansText>
+            <View style={styles.appIconPreviewWrap}>
+              <Image source={activeIconPreview.source} style={styles.appIconPreviewImg} />
+              <SansText style={styles.appIconPreviewLabel}>{activeIconPreview.label}</SansText>
+              <Feather name="chevron-right" size={15} color={colors.warmMid} />
+            </View>
+          </TouchableOpacity>
         </View>
 
         {/* YouTube connection */}
@@ -757,6 +798,11 @@ function makeStyles(c: ColorPalette) {
     themeOptionTextActive: { color: c.ink },
     // Premium themes
     premiumDivider:           { height: 1, backgroundColor: c.divider, marginVertical: Spacing.sm },
+
+    appIconRow:               { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 4 },
+    appIconPreviewWrap:       { flexDirection: "row", alignItems: "center", gap: Spacing.xs },
+    appIconPreviewImg:        { width: 28, height: 28, borderRadius: Radius.sm },
+    appIconPreviewLabel:      { fontSize: FontSize.xs, color: c.warmMid },
     premiumLabel:             { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 0.8, fontFamily: FontFamily.sansMedium, marginBottom: Spacing.xs },
     themePillRow:             { flexDirection: "row", gap: Spacing.xs },
     themePillBtn:             { flex: 1, paddingVertical: 7, borderRadius: Radius.pill, borderWidth: 1, alignItems: "center" },

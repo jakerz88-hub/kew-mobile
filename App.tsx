@@ -41,6 +41,7 @@ import AllQueuesScreen from "./src/screens/AllQueuesScreen";
 import NewQueueScreen from "./src/screens/NewQueueScreen";
 import InsightsScreen from "./src/screens/InsightsScreen";
 import BenefitsScreen from "./src/screens/BenefitsScreen";
+import AppIconScreen from "./src/screens/AppIconScreen";
 
 const ONBOARDING_KEY = "kew_onboarding_done";
 
@@ -125,6 +126,7 @@ function AppNavigator() {
       <Stack.Screen name="NewQueue"             component={NewQueueScreen} />
       <Stack.Screen name="Insights"             component={InsightsScreen} />
       <Stack.Screen name="Benefits"             component={BenefitsScreen} />
+      <Stack.Screen name="AppIcon"              component={AppIconScreen} />
     </Stack.Navigator>
   );
 }

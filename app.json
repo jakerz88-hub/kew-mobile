@@ -31,7 +31,26 @@
     },
     "plugins": [
       "expo-secure-store",
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      [
+        "expo-dynamic-app-icon",
+        {
+          "standardLight":    { "image": "./assets/icons/standardLight.png",    "prerendered": true },
+          "standardDark":     { "image": "./assets/icons/standardDark.png",     "prerendered": true },
+          "goldenHourLight":  { "image": "./assets/icons/goldenHourLight.png",  "prerendered": true },
+          "goldenHourDark":   { "image": "./assets/icons/goldenHourDark.png",   "prerendered": true },
+          "leatherWineLight": { "image": "./assets/icons/leatherWineLight.png", "prerendered": true },
+          "leatherWineDark":  { "image": "./assets/icons/leatherWineDark.png",  "prerendered": true },
+          "nectarLight":      { "image": "./assets/icons/nectarLight.png",      "prerendered": true },
+          "nectarDark":       { "image": "./assets/icons/nectarDark.png",       "prerendered": true },
+          "brightTideLight":  { "image": "./assets/icons/brightTideLight.png",  "prerendered": true },
+          "brightTideDark":   { "image": "./assets/icons/brightTideDark.png",   "prerendered": true },
+          "quietForestLight": { "image": "./assets/icons/quietForestLight.png", "prerendered": true },
+          "quietForestDark":  { "image": "./assets/icons/quietForestDark.png",  "prerendered": true },
+          "openWaterLight":   { "image": "./assets/icons/openWaterLight.png",   "prerendered": true },
+          "openWaterDark":    { "image": "./assets/icons/openWaterDark.png",    "prerendered": true }
+        }
+      ]
     ],
     "scheme": "kew",
     "extra": {
