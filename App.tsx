@@ -174,6 +174,12 @@ export default function App() {
       }
 
       if (event === "SIGNED_OUT") {
+        // Wipe user-scoped store + per-user AsyncStorage so a different account
+        // signing in on the same device doesn't inherit the previous user's
+        // queue, activeQueueId, or onboarding-skip state.
+        useStore.getState().reset();
+        AsyncStorage.removeItem(ONBOARDING_KEY).catch(() => {});
+        setOnboardingDone(undefined);
         logoutPurchases();
       }
     });

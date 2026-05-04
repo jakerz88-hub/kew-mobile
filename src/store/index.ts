@@ -36,6 +36,7 @@ interface AppState {
   updateProgress: (entryId: string, progressSecs: number) => Promise<void>;
   skipCurrent: () => Promise<void>;
   clearError: () => void;
+  reset: () => void;
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -53,6 +54,21 @@ export const useStore = create<AppState>((set, get) => ({
   hideKewPlusUpsell: () => set({ kewPlusUpsell: null }),
 
   clearError: () => set({ error: null }),
+
+  // Wipe user-scoped state. Call on sign-out so the next sign-in (same device,
+  // different user) starts clean instead of inheriting the previous user's
+  // queue, queues, and activeQueueId.
+  reset: () => set({
+    user: null,
+    queue: null,
+    queues: [],
+    activeQueueId: null,
+    isLoadingQueue: false,
+    isLoadingUser: false,
+    isLoadingQueues: false,
+    error: null,
+    kewPlusUpsell: null,
+  }),
 
   fetchUser: async () => {
     set({ isLoadingUser: true });
