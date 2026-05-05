@@ -7,7 +7,7 @@ import { setAppIcon, getAppIcon } from "expo-dynamic-app-icon";
 import { useStore } from "../store";
 import { useSubscription } from "../hooks/useSubscription";
 import { useTheme } from "../contexts/ThemeContext";
-import { SansText, SerifText, Divider } from "../components/UI";
+import { SansText, SerifText, Divider, Toast } from "../components/UI";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 
 // ── Icon catalog ─────────────────────────────────────────────────────────────
@@ -94,6 +94,14 @@ export default function AppIconScreen() {
   const [currentSlot, setCurrentSlot] = useState<IconSlot>(() =>
     normalizeCurrentSlot(getAppIcon()),
   );
+  const [toastMsg, setToastMsg] = useState("");
+  const [toastVisible, setToastVisible] = useState(false);
+
+  const showToast = (msg: string) => {
+    setToastMsg(msg);
+    setToastVisible(true);
+    setTimeout(() => setToastVisible(false), 3000);
+  };
 
   // Refresh on focus in case the user came back from elsewhere.
   useEffect(() => {
@@ -103,16 +111,17 @@ export default function AppIconScreen() {
     return unsub;
   }, [navigation]);
 
-  const handleSelect = useCallback((slot: IconSlot) => {
+  const handleSelect = useCallback(async (slot: IconSlot) => {
     if (slot === currentSlot) return;
-    // setAppIcon is sync on iOS; iOS shows its own "An app has changed your
-    // icon" alert after success. Don't double-confirm.
-    const result = setAppIcon(slot);
+    // iOS shows its own "An app has changed your icon" alert after success,
+    // so we only add a brief in-app confirmation toast on top of that.
+    const result = await setAppIcon(slot);
     if (result) {
       setCurrentSlot(slot);
+      showToast("Icon updated");
     }
-    // On failure (false), leave selection unchanged. The OS will not have
-    // changed the icon, so the user's home-screen state stays consistent.
+    // On failure, leave selection unchanged. The OS will not have changed
+    // the icon, so the user's home-screen state stays consistent.
   }, [currentSlot]);
 
   const visibleThemes = ICON_THEMES.filter(t => !t.premium || isPro);
@@ -143,6 +152,8 @@ export default function AppIconScreen() {
           </>
         )}
       </ScrollView>
+
+      <Toast message={toastMsg} visible={toastVisible} />
     </SafeAreaView>
   );
 }
