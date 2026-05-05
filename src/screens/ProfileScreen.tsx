@@ -747,7 +747,7 @@ export default function ProfileScreen() {
         </TouchableOpacity>
 
         {APP_VERSION_STRING && (
-          <SansText style={styles.versionText}>{APP_VERSION_STRING}</SansText>
+          <SansText style={styles.versionText}>App version: {APP_VERSION_STRING}</SansText>
         )}
       </ScrollView>
 
