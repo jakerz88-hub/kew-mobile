@@ -36,6 +36,7 @@ export interface Video {
   thumbnailUrl: string | null;
   durationSecs: number | null;
   publishedAt: string | null;
+  description: string | null;
 }
 
 export type QueueStatus = "pending" | "watching" | "completed" | "skipped";

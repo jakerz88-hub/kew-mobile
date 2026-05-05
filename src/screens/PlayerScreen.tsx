@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect, useCallback, useMemo } from "react";
-import { View, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Modal, Image, StatusBar, useWindowDimensions } from "react-native";
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Modal, Image, StatusBar, useWindowDimensions } from "react-native";
 import * as ScreenOrientation from "expo-screen-orientation";
+import * as WebBrowser from "expo-web-browser";
 import { Feather } from "@expo/vector-icons";
 import { QueueActionSheet } from "../components/QueueActionSheet";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
@@ -18,6 +19,29 @@ import type { QueueEntry } from "../types";
 import { formatDuration, timeAgo } from "../types";
 
 const PROGRESS_REPORT_INTERVAL = 10 * 1000;
+
+// Split text into plain-text and URL parts so URLs can be rendered as
+// tappable elements. Trailing punctuation that's likely sentence-ending
+// (".", ",", ")", etc.) is stripped from the URL and kept as text.
+function parseDescriptionParts(text: string): Array<{ type: "text" | "url"; value: string }> {
+  const parts: Array<{ type: "text" | "url"; value: string }> = [];
+  const regex = /(https?:\/\/[^\s]+)/g;
+  let lastIdx = 0;
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIdx) {
+      parts.push({ type: "text", value: text.slice(lastIdx, match.index) });
+    }
+    let url = match[0];
+    const trail = url.match(/[.,;:!?)\]}>"']+$/)?.[0] ?? "";
+    if (trail) url = url.slice(0, -trail.length);
+    parts.push({ type: "url", value: url });
+    if (trail) parts.push({ type: "text", value: trail });
+    lastIdx = match.index + match[0].length;
+  }
+  if (lastIdx < text.length) parts.push({ type: "text", value: text.slice(lastIdx) });
+  return parts;
+}
 
 const PLAYER_TIPS = [
   "Looking for a refresh? Shuffle the whole queue to reorder all your upcoming videos.",
@@ -58,6 +82,7 @@ export default function PlayerScreen() {
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [markingDone,   setMarkingDone]     = useState(false);
   const [removing,      setRemoving]        = useState(false);
+  const [descExpanded,  setDescExpanded]    = useState(false);
   const [actionEntry,   setActionEntry]     = useState<typeof upcomingEntries[0] | null>(null);
 
   // ── Watch event + limit tracking ──
@@ -256,6 +281,34 @@ export default function PlayerScreen() {
           <View style={styles.metaRow}>
             <SansText style={styles.metaText}>Added {timeAgo(current.addedAt)}</SansText>
           </View>
+          {current.video.description && current.video.description.trim().length > 0 && (
+            <>
+              <TouchableOpacity
+                onPress={() => setDescExpanded(e => !e)}
+                activeOpacity={0.7}
+                style={styles.descToggle}
+              >
+                <SansText style={styles.descLabel}>Description</SansText>
+              </TouchableOpacity>
+              {descExpanded && (
+                <SansText style={styles.descBody}>
+                  {parseDescriptionParts(current.video.description).map((p, i) =>
+                    p.type === "url" ? (
+                      <Text
+                        key={i}
+                        style={styles.descLink}
+                        onPress={() => WebBrowser.openBrowserAsync(p.value).catch(() => {})}
+                      >
+                        {p.value}
+                      </Text>
+                    ) : (
+                      p.value
+                    ),
+                  )}
+                </SansText>
+              )}
+            </>
+          )}
         </View>
 
         {/* Action bar */}
@@ -444,6 +497,10 @@ function makeStyles(c: ColorPalette) {
     videoTitle:          { fontSize: FontSize.lg, lineHeight: 26 },
     metaRow:             { flexDirection: "row", gap: Spacing.md, marginTop: Spacing.xs },
     metaText:            { fontSize: FontSize.xxs, color: c.warmMid },
+    descToggle:          { marginTop: Spacing.sm, alignSelf: "flex-start" },
+    descLabel:           { fontSize: FontSize.xs, color: c.warmMid },
+    descBody:            { fontSize: FontSize.xs, color: c.ink, lineHeight: 18, marginTop: Spacing.xs },
+    descLink:            { color: c.accent, textDecorationLine: "underline" },
     actionBar:           { marginHorizontal: Spacing.md, marginTop: Spacing.xs, backgroundColor: c.cardBg, borderWidth: 1, borderColor: c.divider, borderRadius: Radius.md, padding: Spacing.md, gap: Spacing.sm },
     actionSkipCount:     { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
     actionSkipCountText: { fontSize: FontSize.xs, color: c.warmMid, fontFamily: FontFamily.sansMedium },
