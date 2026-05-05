@@ -289,6 +289,11 @@ export default function PlayerScreen() {
                 style={styles.descToggle}
               >
                 <SansText style={styles.descLabel}>Description</SansText>
+                <Feather
+                  name={descExpanded ? "chevron-up" : "chevron-down"}
+                  size={14}
+                  color={colors.warmMid}
+                />
               </TouchableOpacity>
               {descExpanded && (
                 <SansText style={styles.descBody}>
@@ -497,7 +502,7 @@ function makeStyles(c: ColorPalette) {
     videoTitle:          { fontSize: FontSize.lg, lineHeight: 26 },
     metaRow:             { flexDirection: "row", gap: Spacing.md, marginTop: Spacing.xs },
     metaText:            { fontSize: FontSize.xxs, color: c.warmMid },
-    descToggle:          { marginTop: Spacing.sm, alignSelf: "flex-start" },
+    descToggle:          { marginTop: Spacing.sm, alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: Spacing.xs },
     descLabel:           { fontSize: FontSize.xs, color: c.warmMid },
     descBody:            { fontSize: FontSize.xs, color: c.ink, lineHeight: 18, marginTop: Spacing.xs },
     descLink:            { color: c.accent, textDecorationLine: "underline" },
