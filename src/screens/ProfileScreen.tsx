@@ -4,6 +4,7 @@ import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Constants from "expo-constants";
 import { getAppIcon } from "expo-dynamic-app-icon";
 import { useStore } from "../store";
 import { supabase } from "../services/supabase";
@@ -29,6 +30,11 @@ function resolveIconSlot(slot: IconSlot): { source: number; label: string } {
   const std = ICON_THEMES[0];
   return { source: std.light.source, label: `${std.name} · Light` };
 }
+
+const _v = Constants.expoConfig?.version;
+const _b = Constants.expoConfig?.ios?.buildNumber;
+const APP_VERSION_STRING: string | null =
+  _v && _b ? `${_v} (${_b})` : _v ?? (_b ? `(${_b})` : null);
 
 const KEW_PLUS_GOLD = "#C49A28";
 const KEW_PLUS_GOLD_BORDER = "rgba(196,154,40,0.35)";
@@ -739,6 +745,10 @@ export default function ProfileScreen() {
         <TouchableOpacity style={styles.deleteBtn} onPress={handleDeleteAccount} activeOpacity={0.7}>
           <SansText style={styles.deleteBtnText}>Delete account</SansText>
         </TouchableOpacity>
+
+        {APP_VERSION_STRING && (
+          <SansText style={styles.versionText}>{APP_VERSION_STRING}</SansText>
+        )}
       </ScrollView>
 
       <Toast message={toastMsg} visible={toastVisible} />
@@ -825,5 +835,6 @@ function makeStyles(c: ColorPalette) {
     signOutText:     { fontSize: FontSize.sm, color: c.accent, fontFamily: FontFamily.sansMedium },
     deleteBtn:       { marginTop: Spacing.xs, paddingVertical: Spacing.sm, paddingHorizontal: Spacing.md, alignItems: "center", alignSelf: "center" },
     deleteBtnText:   { fontSize: FontSize.xs, color: c.warmMid, fontFamily: FontFamily.sans },
+    versionText:     { fontSize: FontSize.xxs, color: c.warmMid, textAlign: "center", marginTop: Spacing.xl, paddingBottom: Spacing.md },
   });
 }
