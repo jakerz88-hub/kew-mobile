@@ -32,7 +32,7 @@ export function KewLogo({ size = 28, plus }: { size?: number; plus?: boolean }) 
   const user = useStore(s => s.user);
   const showPlus = plus ?? user?.plan === "pro";
   return (
-    <Text style={{ fontFamily: FontFamily.serif, fontSize: size }}>
+    <Text style={{ fontFamily: FontFamily.serif, fontSize: size, paddingRight: 2 }}>
       <Text style={{ color: colors.accent }}>K</Text>
       <Text style={{ color: colors.warmMid }}>e</Text>
       <Text style={{ color: colors.ink }}>w</Text>

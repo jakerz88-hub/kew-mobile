@@ -224,7 +224,7 @@ export default function App() {
   if (isLoading) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: Colors.cream, gap: 32 }}>
-        <View style={{ alignItems: "center", gap: 10 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
           <LogoMark size={44} />
           <KewLogo size={44} plus={false} />
         </View>
@@ -243,7 +243,7 @@ export default function App() {
         ) : user === null ? (
           // Session exists but user not yet loaded — show splash
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: Colors.cream, gap: 32 }}>
-            <View style={{ alignItems: "center", gap: 10 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
               <LogoMark size={44} />
               <KewLogo size={44} plus={false} />
             </View>
