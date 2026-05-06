@@ -89,6 +89,24 @@ export default function PlayerScreen() {
   const startedRef = useRef<string | null>(null);
   const [limitHit, setLimitHit] = useState<{ title: string; body: string } | null>(null);
 
+  // Track latest known progress so we can save one last time when the
+  // screen unmounts (back nav, tab switch, app backgrounding) without
+  // having to query the player ref during cleanup. Reset whenever the
+  // current entry changes so a stale value from the previous video
+  // never gets written against the next one.
+  const lastReportedSecsRef = useRef(0);
+  const currentIdRef        = useRef<string | null>(null);
+  // Set by completion paths (mark done, end, skip, remove) so the
+  // unmount cleanup doesn't overwrite a final value that was just saved.
+  const suppressFinalSaveRef = useRef(false);
+  useEffect(() => {
+    currentIdRef.current = current?.id ?? null;
+    lastReportedSecsRef.current = 0;
+    // Completion paths set this for the current entry; don't let it
+    // leak into the next one if the screen stays mounted.
+    suppressFinalSaveRef.current = false;
+  }, [current?.id]);
+
   // Keep queue in sync whenever this screen comes into focus
   useFocusEffect(useCallback(() => { fetchQueue(); }, []));
 
@@ -98,11 +116,25 @@ export default function PlayerScreen() {
     const interval = setInterval(async () => {
       const currentTime = await playerRef.current?.getCurrentTime();
       if (currentTime != null) {
-        updateProgress(current.id, Math.floor(currentTime));
+        const secs = Math.floor(currentTime);
+        lastReportedSecsRef.current = secs;
+        updateProgress(current.id, secs);
       }
     }, PROGRESS_REPORT_INTERVAL);
     return () => clearInterval(interval);
   }, [current?.id, playing]);
+
+  // Final save on unmount — covers back navigation, tab switches, and
+  // anywhere the screen is torn down without going through a completion
+  // path. Fire-and-forget; updateProgress in the store swallows errors.
+  useEffect(() => {
+    return () => {
+      if (suppressFinalSaveRef.current) return;
+      const id = currentIdRef.current;
+      const secs = lastReportedSecsRef.current;
+      if (id && secs > 0) updateProgress(id, secs);
+    };
+  }, []);
 
   // Limit check: before starting a new video, see if any soft limit would be exceeded.
   // Pro-only — non-Pro users can't set limits, so this is a no-op for them.
@@ -162,6 +194,7 @@ export default function PlayerScreen() {
       // render as "-" on the completion screen.
       const playerSecs = await playerRef.current?.getCurrentTime().catch(() => null);
       const watchedSecs = playerSecs != null ? Math.floor(playerSecs) : (current.video.durationSecs ?? 0);
+      suppressFinalSaveRef.current = true;
       await recordEvent("completed", watchedSecs);
       await updateProgress(current.id, watchedSecs);
       await fetchQueue();
@@ -175,6 +208,7 @@ export default function PlayerScreen() {
     const playerSecs = await playerRef.current?.getCurrentTime().catch(() => null);
     const watchedSecs = playerSecs != null ? Math.floor(playerSecs) : (current.video.durationSecs ?? 0);
     try {
+      suppressFinalSaveRef.current = true;
       await recordEvent("completed", watchedSecs);
       await updateProgress(current.id, current.video.durationSecs ?? watchedSecs);
       await fetchQueue();
@@ -187,6 +221,7 @@ export default function PlayerScreen() {
 
   const handleSkipConfirm = async () => {
     setShowSkipModal(false);
+    suppressFinalSaveRef.current = true;
     const playerSecs = await playerRef.current?.getCurrentTime().catch(() => null);
     const watchedSecs = playerSecs != null ? Math.floor(playerSecs) : 0;
     await recordEvent("skipped", watchedSecs);
@@ -203,6 +238,7 @@ export default function PlayerScreen() {
   const handleRemoveConfirm = async () => {
     if (!current) return;
     setRemoving(true);
+    suppressFinalSaveRef.current = true;
     try {
       await api.removeFromQueue(current.id);
       await fetchQueue();
