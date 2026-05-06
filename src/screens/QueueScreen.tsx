@@ -81,7 +81,7 @@ export default function QueueScreen() {
   const tStyles = useMemo(() => makeTabletStyles(colors), [colors]);
 
   const {
-    queue, user, isLoadingQueue, error,
+    queue, user, error,
     fetchQueue, clearError, shuffleQueue, updateProgress, skipCurrent, addToQueue, reorderQueue,
     queues, activeQueueId, setActiveQueue,
   } = useStore();
@@ -91,6 +91,7 @@ export default function QueueScreen() {
   const [showShuffleConfirm, setShowShuffleConfirm] = useState(false);
   const [shuffling, setShuffling] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
 
   // ── Recently removed ──
   const [removedList, setRemovedList] = useState<RemovedEntry[]>([]);
@@ -119,7 +120,11 @@ export default function QueueScreen() {
   useEffect(() => { fetchQueue(); }, []);
   useEffect(() => { loadRemoved().then(setRemovedList); }, []);
   useFocusEffect(useCallback(() => { fetchQueue(); }, []));
-  const onRefresh = useCallback(() => { fetchQueue(); }, []);
+  const onRefresh = useCallback(async () => {
+    setIsManualRefreshing(true);
+    try { await fetchQueue(); }
+    finally { setIsManualRefreshing(false); }
+  }, []);
 
   // Auto-start playing whenever the active video changes
   useEffect(() => { if (current?.id) setPlaying(true); }, [current?.id]);
@@ -353,7 +358,7 @@ export default function QueueScreen() {
               data={listPendingEntries}
               keyExtractor={item => item.id}
               refreshControl={
-                <RefreshControl refreshing={isLoadingQueue} onRefresh={onRefresh} tintColor={colors.ink} />
+                <RefreshControl refreshing={isManualRefreshing} onRefresh={onRefresh} tintColor={colors.ink} />
               }
               ListHeaderComponent={
                 current ? (
@@ -567,7 +572,7 @@ export default function QueueScreen() {
       {error && <ErrorBanner message={error} onDismiss={clearError} />}
 
       <ScrollView
-        refreshControl={<RefreshControl refreshing={isLoadingQueue} onRefresh={onRefresh} tintColor={colors.ink} />}
+        refreshControl={<RefreshControl refreshing={isManualRefreshing} onRefresh={onRefresh} tintColor={colors.ink} />}
         contentContainerStyle={styles.listContent}
         keyboardShouldPersistTaps="handled"
         scrollEnabled={!isDragging && !protectedModalEntry}
