@@ -142,8 +142,8 @@ function makeStyles(c: ColorPalette) {
     statLabel:    { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 0.5, marginTop: 2 },
     interactRow:    { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: Spacing.sm, paddingVertical: Spacing.xs },
     interactCopy:   { flex: 1, fontSize: FontSize.sm, color: c.warmMid, lineHeight: 18 },
-    interactBtn:    { borderWidth: 1.5, borderColor: c.accent, borderRadius: Radius.pill, paddingVertical: 8, paddingHorizontal: 18, backgroundColor: "transparent" },
-    interactBtnText:{ fontSize: FontSize.sm, color: c.accent, fontFamily: FontFamily.sansMedium },
+    interactBtn:    { borderWidth: 1.5, borderColor: c.accent, borderRadius: Radius.pill, paddingVertical: 8, paddingHorizontal: 18, backgroundColor: c.accent },
+    interactBtnText:{ fontSize: FontSize.sm, color: c.buttonText, fontFamily: FontFamily.sansMedium },
     nextSection:  { gap: Spacing.sm },
     nextLabel:    { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 1, fontFamily: FontFamily.sansMedium },
     // "Up Next" card — intentionally always dark (immersive cinema surface)

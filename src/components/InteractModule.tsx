@@ -18,6 +18,8 @@ import { ColorPalette, FontFamily, FontSize, Radius } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
 import { SansText, ErrorBanner, Toast } from "./UI";
 import { api } from "../services/api";
+import { connectYouTube } from "../utils/youtubeConnect";
+import { useStore } from "../store";
 
 const COMMENT_MAX = 500;
 const SHEET_ANIM_IN_MS = 280;
@@ -119,6 +121,8 @@ export function InteractModule({
   const [postedUrl, setPostedUrl] = useState<string | null>(null);
 
   const [error, setError] = useState<string | null>(null);
+  const [reconnecting, setReconnecting] = useState(false);
+  const fetchUser = useStore(s => s.fetchUser);
   const [toastMsg, setToastMsg] = useState("");
   const [toastVisible, setToastVisible] = useState(false);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -198,10 +202,29 @@ export function InteractModule({
       if (msg.includes(RECONNECT_HINT) || msg.startsWith("403")) {
         setError(RECONNECT_HINT);
       } else {
-        setError("Couldn't update like. Please try again.");
+        setError(`Couldn't update like. ${msg}`);
       }
     } finally {
       setLikeBusy(false);
+    }
+  };
+
+  const handleReconnect = async () => {
+    if (reconnecting) return;
+    setReconnecting(true);
+    try {
+      const { success, error: connectErr } = await connectYouTube();
+      if (success) {
+        await fetchUser();
+        setError(null);
+        showToast("YouTube reconnected");
+      } else if (connectErr) {
+        setError(connectErr);
+      }
+    } catch (e: any) {
+      setError(e?.message ?? "Could not reconnect YouTube.");
+    } finally {
+      setReconnecting(false);
     }
   };
 
@@ -226,7 +249,7 @@ export function InteractModule({
       if (msg.includes(RECONNECT_HINT) || msg.startsWith("403")) {
         setError(RECONNECT_HINT);
       } else {
-        setError("Couldn't post comment. Please try again.");
+        setError(`Couldn't post comment. ${msg}`);
       }
     } finally {
       setPosting(false);
@@ -282,7 +305,13 @@ export function InteractModule({
             <View style={styles.fullDivider} />
 
             {error && (
-              <ErrorBanner message={error} onDismiss={() => setError(null)} />
+              <ErrorBanner
+                message={error}
+                onDismiss={() => setError(null)}
+                actionLabel={error === RECONNECT_HINT ? "Reconnect" : undefined}
+                onAction={error === RECONNECT_HINT ? handleReconnect : undefined}
+                actionBusy={reconnecting}
+              />
             )}
 
             <View style={styles.actions}>
