@@ -6,6 +6,7 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { QueueActionSheet } from "../components/QueueActionSheet";
+import { InteractModule } from "../components/InteractModule";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import YoutubePlayer from "react-native-youtube-iframe";
 import { useStore } from "../store";
@@ -106,6 +107,14 @@ export default function QueueScreen() {
   const [showDoneModal, setShowDoneModal] = useState(false);
   const [markingDone, setMarkingDone] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
+  const [interactVisible, setInteractVisible] = useState(false);
+  const [interactTs, setInteractTs] = useState(0);
+
+  const openInteract = useCallback(async () => {
+    const playerSecs = await playerRef.current?.getCurrentTime().catch(() => null);
+    setInteractTs(playerSecs != null ? Math.floor(playerSecs) : 0);
+    setInteractVisible(true);
+  }, []);
 
   // ── Tooltip journey ──
   const queueTip = useTooltip("queue", 3);
@@ -160,7 +169,14 @@ export default function QueueScreen() {
       const watchedSecs = current.video.durationSecs ?? 0;
       await updateProgress(current.id, watchedSecs);
       await fetchQueue();
-      navigation.navigate("Completion", { watchedSecs });
+      navigation.navigate("Completion", {
+        watchedSecs,
+        completedVideo: {
+          ytVideoId: current.video.ytVideoId,
+          title: current.video.title,
+          durationSecs: current.video.durationSecs,
+        },
+      });
     }
   }, [current?.id]);
 
@@ -171,7 +187,14 @@ export default function QueueScreen() {
     try {
       await updateProgress(current.id, watchedSecs);
       await fetchQueue();
-      navigation.navigate("Completion", { watchedSecs });
+      navigation.navigate("Completion", {
+        watchedSecs,
+        completedVideo: {
+          ytVideoId: current.video.ytVideoId,
+          title: current.video.title,
+          durationSecs: current.video.durationSecs,
+        },
+      });
     } finally {
       setMarkingDone(false);
       setShowDoneModal(false);
@@ -480,6 +503,15 @@ export default function QueueScreen() {
                 {/* Controls */}
                 <View style={tStyles.controls}>
                   <TouchableOpacity
+                    style={tStyles.btnInteract}
+                    onPress={openInteract}
+                    activeOpacity={0.8}
+                    accessibilityRole="button"
+                    accessibilityLabel="Interact"
+                  >
+                    <SansText style={tStyles.btnInteractText}>Interact</SansText>
+                  </TouchableOpacity>
+                  <TouchableOpacity
                     style={[tStyles.btnSkip, (!user || user.skipsRemaining <= 0) && { opacity: 0.4 }]}
                     onPress={() => setShowSkipModal(true)}
                     disabled={!user || user.skipsRemaining <= 0}
@@ -603,6 +635,17 @@ export default function QueueScreen() {
             </View>
           </View>
         </Modal>
+
+        {current && (
+          <InteractModule
+            visible={interactVisible}
+            onClose={() => setInteractVisible(false)}
+            videoTitle={current.video.title}
+            currentTimestamp={interactTs}
+            ytVideoId={current.video.ytVideoId}
+            durationSecs={current.video.durationSecs}
+          />
+        )}
       </SafeAreaView>
     );
   }
@@ -1389,6 +1432,8 @@ function makeTabletStyles(c: ColorPalette) {
       flexDirection: "row", alignItems: "center", gap: Spacing.sm,
       paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm + 4,
     },
+    btnInteract:    { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderRadius: Radius.pill, borderWidth: 1.5, borderColor: c.accent, backgroundColor: c.accent },
+    btnInteractText:{ color: c.buttonText, fontSize: FontSize.sm, fontFamily: FontFamily.sansMedium },
     btnDone:       { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderRadius: Radius.pill, borderWidth: 1.5, borderColor: c.greenText },
     btnDoneText:   { color: c.greenText, fontSize: FontSize.sm, fontFamily: FontFamily.sansMedium },
     btnSkip:       { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderRadius: Radius.pill, borderWidth: 1.5, borderColor: c.accent },

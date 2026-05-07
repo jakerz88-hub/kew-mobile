@@ -1,9 +1,11 @@
 import React, { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Modal, Image, StatusBar, useWindowDimensions } from "react-native";
+import Svg, { Path } from "react-native-svg";
 import * as ScreenOrientation from "expo-screen-orientation";
 import * as WebBrowser from "expo-web-browser";
 import { Feather } from "@expo/vector-icons";
 import { QueueActionSheet } from "../components/QueueActionSheet";
+import { InteractModule } from "../components/InteractModule";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import YoutubePlayer from "react-native-youtube-iframe";
 import { useStore } from "../store";
@@ -84,6 +86,12 @@ export default function PlayerScreen() {
   const [removing,      setRemoving]        = useState(false);
   const [descExpanded,  setDescExpanded]    = useState(false);
   const [actionEntry,   setActionEntry]     = useState<typeof upcomingEntries[0] | null>(null);
+  const [interactVisible, setInteractVisible] = useState(false);
+  const [interactTs, setInteractTs] = useState(0);
+  // Pre-fill the Mark Done circle to filled-green the moment the user taps it,
+  // even though the confirmation modal still gates the actual completion.
+  // Reverts on cancel / when a new video starts.
+  const [markDonePressed, setMarkDonePressed] = useState(false);
 
   // ── Watch event + limit tracking ──
   const startedRef = useRef<string | null>(null);
@@ -105,7 +113,14 @@ export default function PlayerScreen() {
     // Completion paths set this for the current entry; don't let it
     // leak into the next one if the screen stays mounted.
     suppressFinalSaveRef.current = false;
+    setMarkDonePressed(false);
   }, [current?.id]);
+
+  const openInteract = useCallback(async () => {
+    const playerSecs = await playerRef.current?.getCurrentTime().catch(() => null);
+    setInteractTs(playerSecs != null ? Math.floor(playerSecs) : 0);
+    setInteractVisible(true);
+  }, []);
 
   // Keep queue in sync whenever this screen comes into focus
   useFocusEffect(useCallback(() => { fetchQueue(); }, []));
@@ -198,7 +213,14 @@ export default function PlayerScreen() {
       await recordEvent("completed", watchedSecs);
       await updateProgress(current.id, watchedSecs);
       await fetchQueue();
-      navigation.replace("Completion", { watchedSecs });
+      navigation.replace("Completion", {
+        watchedSecs,
+        completedVideo: {
+          ytVideoId: current.video.ytVideoId,
+          title: current.video.title,
+          durationSecs: current.video.durationSecs,
+        },
+      });
     }
   }, [current, recordEvent]);
 
@@ -212,7 +234,14 @@ export default function PlayerScreen() {
       await recordEvent("completed", watchedSecs);
       await updateProgress(current.id, current.video.durationSecs ?? watchedSecs);
       await fetchQueue();
-      navigation.replace("Completion", { watchedSecs });
+      navigation.replace("Completion", {
+        watchedSecs,
+        completedVideo: {
+          ytVideoId: current.video.ytVideoId,
+          title: current.video.title,
+          durationSecs: current.video.durationSecs,
+        },
+      });
     } finally {
       setMarkingDone(false);
       setShowDoneModal(false);
@@ -352,38 +381,77 @@ export default function PlayerScreen() {
           )}
         </View>
 
-        {/* Action bar */}
-        <View style={styles.actionBar}>
-          {user && (
-            <View style={styles.actionSkipCount}>
-              <SansText style={styles.actionSkipCountText}>{user.skipsRemaining}/{user.skipsMax} Skips</SansText>
-              <SkipCounter remaining={user.skipsRemaining} max={user.skipsMax} />
-            </View>
-          )}
-          <View style={styles.actionBtns}>
-            <TouchableOpacity
-              onPress={() => setShowSkipModal(true)}
-              disabled={!user || user.skipsRemaining <= 0}
-              style={[styles.actionBtn, styles.actionBtnSkip, (!user || user.skipsRemaining <= 0) && styles.actionBtnDisabled]}
-              activeOpacity={0.7}
-            >
-              <SansText style={styles.actionBtnSkipText}>Skip</SansText>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setShowRemoveModal(true)}
-              style={[styles.actionBtn, styles.actionBtnRemove]}
-              activeOpacity={0.7}
-            >
-              <SansText style={styles.actionBtnRemoveText}>Remove</SansText>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setShowDoneModal(true)}
-              style={[styles.actionBtn, styles.actionBtnDone]}
-              activeOpacity={0.7}
-            >
-              <SansText style={styles.actionBtnDoneText}>Mark done</SansText>
-            </TouchableOpacity>
+        {/* Skip counter — kept exactly where it was */}
+        {user && (
+          <View style={styles.skipCountBar}>
+            <SansText style={styles.actionSkipCountText}>{user.skipsRemaining}/{user.skipsMax} Skips</SansText>
+            <SkipCounter remaining={user.skipsRemaining} max={user.skipsMax} />
           </View>
+        )}
+
+        {/* Interact / Skip / Mark done / Remove */}
+        <View style={styles.ctaRow}>
+          <TouchableOpacity
+            onPress={openInteract}
+            style={[styles.ctaChip, styles.ctaChipInteract]}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Interact"
+          >
+            <SansText style={styles.ctaChipInteractText}>Interact</SansText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setShowSkipModal(true)}
+            disabled={!user || user.skipsRemaining <= 0}
+            style={[
+              styles.ctaChip,
+              styles.ctaChipSkip,
+              (!user || user.skipsRemaining <= 0) && styles.actionBtnDisabled,
+            ]}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Skip"
+          >
+            <SansText style={styles.ctaChipSkipText}>Skip</SansText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => { setMarkDonePressed(true); setShowDoneModal(true); }}
+            style={[styles.ctaCircle, markDonePressed ? styles.markDoneFilled : styles.markDoneOutline]}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Mark done"
+          >
+            <Svg width={16} height={16} viewBox="0 0 24 24">
+              <Path
+                d="M5 12 10 17 19 8"
+                fill="none"
+                stroke={markDonePressed ? colors.buttonText : colors.green}
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setShowRemoveModal(true)}
+            style={[styles.ctaCircle, styles.removeCircle]}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Remove from queue"
+          >
+            <Svg width={14} height={14} viewBox="0 0 24 24">
+              <Path
+                d="M6 6 18 18 M18 6 6 18"
+                fill="none"
+                stroke={colors.warmMid}
+                strokeWidth={1.8}
+                strokeLinecap="round"
+              />
+            </Svg>
+          </TouchableOpacity>
         </View>
 
         <Divider style={{ marginVertical: Spacing.md }} />
@@ -420,7 +488,7 @@ export default function PlayerScreen() {
       )} {/* end portrait-only scroll content */}
 
       {/* Mark as watched modal */}
-      <Modal visible={showDoneModal} transparent animationType="fade" onRequestClose={() => setShowDoneModal(false)}>
+      <Modal visible={showDoneModal} transparent animationType="fade" onRequestClose={() => { setShowDoneModal(false); setMarkDonePressed(false); }}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <SerifText style={styles.modalTitle}>Done watching?</SerifText>
@@ -428,7 +496,7 @@ export default function PlayerScreen() {
               This will mark "{current.video.title}" as complete and move to the next video.
             </SansText>
             <View style={styles.modalBtns}>
-              <TouchableOpacity style={[styles.modalBtn, styles.modalBtnCancel]} onPress={() => setShowDoneModal(false)}>
+              <TouchableOpacity style={[styles.modalBtn, styles.modalBtnCancel]} onPress={() => { setShowDoneModal(false); setMarkDonePressed(false); }}>
                 <SansText style={styles.modalBtnCancelText}>Not yet</SansText>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.modalBtn, styles.modalBtnConfirm]} onPress={handleMarkDone} disabled={markingDone}>
@@ -438,6 +506,15 @@ export default function PlayerScreen() {
           </View>
         </View>
       </Modal>
+
+      <InteractModule
+        visible={interactVisible}
+        onClose={() => setInteractVisible(false)}
+        videoTitle={current.video.title}
+        currentTimestamp={interactTs}
+        ytVideoId={current.video.ytVideoId}
+        durationSecs={current.video.durationSecs}
+      />
 
       <QueueActionSheet
         visible={!!actionEntry}
@@ -542,17 +619,18 @@ function makeStyles(c: ColorPalette) {
     descLabel:           { fontSize: FontSize.xs, color: c.warmMid },
     descBody:            { fontSize: FontSize.xs, color: c.ink, lineHeight: 18, marginTop: Spacing.xs },
     descLink:            { color: c.accent, textDecorationLine: "underline" },
-    actionBar:           { marginHorizontal: Spacing.md, marginTop: Spacing.xs, backgroundColor: c.cardBg, borderWidth: 1, borderColor: c.divider, borderRadius: Radius.md, padding: Spacing.md, gap: Spacing.sm },
-    actionSkipCount:     { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+    skipCountBar:        { marginHorizontal: Spacing.md, marginTop: Spacing.xs, backgroundColor: c.cardBg, borderWidth: 1, borderColor: c.divider, borderRadius: Radius.md, padding: Spacing.md, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
     actionSkipCountText: { fontSize: FontSize.xs, color: c.warmMid, fontFamily: FontFamily.sansMedium },
-    actionBtns:          { flexDirection: "row", gap: Spacing.sm },
-    actionBtn:           { flex: 1, paddingVertical: Spacing.sm - 1, borderRadius: Radius.pill, alignItems: "center", borderWidth: 1.5 },
-    actionBtnSkip:       { borderColor: c.accent },
-    actionBtnSkipText:   { fontSize: FontSize.xs, color: c.accent, fontFamily: FontFamily.sansMedium },
-    actionBtnRemove:     { borderColor: c.ink, backgroundColor: c.ink },
-    actionBtnRemoveText: { fontSize: FontSize.xs, color: c.cream, fontFamily: FontFamily.sansMedium },
-    actionBtnDone:       { borderColor: c.greenText },
-    actionBtnDoneText:   { fontSize: FontSize.xs, color: c.greenText, fontFamily: FontFamily.sansMedium },
+    ctaRow:              { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingTop: 10, paddingBottom: 4 },
+    ctaChip:             { flex: 1, borderRadius: Radius.pill, alignItems: "center", borderWidth: 1.5, paddingVertical: 8, paddingHorizontal: 10 },
+    ctaChipInteract:     { borderColor: c.accent, backgroundColor: c.accent },
+    ctaChipInteractText: { fontSize: FontSize.sm, color: c.buttonText, fontFamily: FontFamily.sansMedium },
+    ctaChipSkip:         { borderColor: c.accent, backgroundColor: "transparent" },
+    ctaChipSkipText:     { fontSize: FontSize.sm, color: c.accent, fontFamily: FontFamily.sansMedium },
+    ctaCircle:           { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", flexShrink: 0 },
+    markDoneOutline:     { borderWidth: 1.5, borderColor: c.green, backgroundColor: "transparent" },
+    markDoneFilled:      { backgroundColor: c.green, borderWidth: 0 },
+    removeCircle:        { borderWidth: 1.5, borderColor: c.divider, backgroundColor: "transparent" },
     actionBtnDisabled:   { opacity: 0.4 },
     upNextSection:       { paddingHorizontal: Spacing.md },
     upNextLabel:         { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 1, fontFamily: FontFamily.sansMedium, marginBottom: Spacing.sm },
