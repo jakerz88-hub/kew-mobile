@@ -106,7 +106,7 @@ const BOTTOM_TABS: { tab: TabletTab; label: string; icon: (color: string) => Rea
   { tab: "Browse",  label: "Browse",  icon: (color) => <BrowseTabIcon  color={color} /> },
   { tab: "Explore", label: "Explore", icon: (color) => <ExploreTabIcon color={color} /> },
   { tab: "History", label: "History", icon: (color) => <HistoryTabIcon color={color} /> },
-  { tab: "Import",  label: "Import",  icon: (color) => <Feather name="file-text" size={20} color={color} /> },
+  { tab: "Import",  label: "Import",  icon: (color) => <Feather name="download" size={20} color={color} /> },
 ];
 
 function TabletBottomTabBar({
