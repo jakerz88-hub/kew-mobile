@@ -136,15 +136,42 @@ export function InteractModule({
 
   const tsLabel = formatTimestamp(currentTimestamp, durationSecs);
 
+  // Pre-fetch like status whenever the video changes. The module is mounted while the
+  // parent screen is visible, so this usually completes before the user taps Interact —
+  // making the open feel instant. If they tap mid-fetch, behavior matches the old open-
+  // gated path (button disabled until the response lands).
+  useEffect(() => {
+    if (!ytVideoId) return;
+    setLiked(false);
+    setLikeBusy(true);
+    setError(null);
+    let cancelled = false;
+    (async () => {
+      try {
+        const { liked: serverLiked } = await api.interactLikeStatus(ytVideoId);
+        if (cancelled) return;
+        setLiked(serverLiked);
+      } catch (e: any) {
+        if (cancelled) return;
+        const msg: string = e?.message ?? "";
+        if (msg.includes(RECONNECT_HINT) || msg.startsWith("403")) {
+          setError(RECONNECT_HINT);
+        }
+      } finally {
+        if (!cancelled) setLikeBusy(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [ytVideoId]);
+
   useEffect(() => {
     if (visible) {
       setMounted(true);
-      setError(null);
       setChipTapped(false);
       setComment("");
       setPostedUrl(null);
-      setLiked(false);
-      setLikeBusy(true);
       translateY.setValue(1);
       backdropOpacity.setValue(0);
       Animated.parallel([
@@ -160,29 +187,8 @@ export function InteractModule({
           useNativeDriver: true,
         }),
       ]).start();
-
-      let cancelled = false;
-      (async () => {
-        try {
-          const { liked: serverLiked } = await api.interactLikeStatus(ytVideoId);
-          if (cancelled) return;
-          setLiked(serverLiked);
-        } catch (e: any) {
-          if (cancelled) return;
-          const msg: string = e?.message ?? "";
-          if (msg.includes(RECONNECT_HINT) || msg.startsWith("403")) {
-            setError(RECONNECT_HINT);
-          }
-        } finally {
-          if (!cancelled) setLikeBusy(false);
-        }
-      })();
-
-      return () => {
-        cancelled = true;
-      };
     }
-  }, [visible, ytVideoId]);
+  }, [visible]);
 
   const runClose = () => {
     Keyboard.dismiss();
