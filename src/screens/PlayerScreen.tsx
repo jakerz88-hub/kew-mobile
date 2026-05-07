@@ -78,7 +78,7 @@ export default function PlayerScreen() {
   // ── Tooltip journey ──
   const playerTip = useTooltip("player", 2);
 
-  const [playing, setPlaying]               = useState(true);
+  const [playing, setPlaying]               = useState(false);
   const [showSkipModal, setShowSkipModal]   = useState(false);
   const [showDoneModal, setShowDoneModal]   = useState(false);
   const [showRemoveModal, setShowRemoveModal] = useState(false);

@@ -102,7 +102,7 @@ export default function QueueScreen() {
 
   // ── Tablet inline player state (must be declared unconditionally) ──
   const playerRef = useRef<any>(null);
-  const [playing, setPlaying] = useState(true);
+  const [playing, setPlaying] = useState(false);
   const [showSkipModal, setShowSkipModal] = useState(false);
   const [showDoneModal, setShowDoneModal] = useState(false);
   const [markingDone, setMarkingDone] = useState(false);
@@ -143,12 +143,9 @@ export default function QueueScreen() {
     finally { setIsManualRefreshing(false); }
   }, []);
 
-  // Auto-start playing whenever the active video changes; collapse description.
+  // Collapse description whenever the active video changes.
   useEffect(() => {
-    if (current?.id) {
-      setPlaying(true);
-      setDescExpanded(false);
-    }
+    if (current?.id) setDescExpanded(false);
   }, [current?.id]);
 
   // Tablet: report progress every 10s while playing
