@@ -1,18 +1,13 @@
 import { useWindowDimensions } from "react-native";
 
 /**
- * True only when wide enough AND in landscape — i.e. iPad rotated wide.
- * iPad portrait falls back to phone layout (with a centered max-width wrapper
- * applied at the navigator level), since the side-by-side panes feel cramped
- * at portrait widths.
+ * Returns true when the screen is tablet-width (>= 768pt) — i.e. iPad, in
+ * either orientation. Screens use this to render their two-column tablet
+ * layout. The choice between sidebar and bottom-tab chrome is made by
+ * TabletNavigator based on orientation, so screens themselves don't need
+ * to know which one is wrapping them.
  */
 export function useIsTablet(): boolean {
-  const { width, height } = useWindowDimensions();
-  return width >= 768 && width > height;
-}
-
-/** True when the device is tablet-class (>= 768pt) regardless of orientation. */
-export function useIsTabletDevice(): boolean {
-  const { width, height } = useWindowDimensions();
-  return Math.max(width, height) >= 768;
+  const { width } = useWindowDimensions();
+  return width >= 768;
 }
