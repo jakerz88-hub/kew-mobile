@@ -42,6 +42,8 @@ import NewQueueScreen from "./src/screens/NewQueueScreen";
 import InsightsScreen from "./src/screens/InsightsScreen";
 import BenefitsScreen from "./src/screens/BenefitsScreen";
 import AppIconScreen from "./src/screens/AppIconScreen";
+import TabletNavigator from "./src/navigation/TabletNavigator";
+import { useIsTablet } from "./src/hooks/useIsTablet";
 
 const ONBOARDING_KEY = "kew_onboarding_done";
 
@@ -110,10 +112,15 @@ function TabNavigator() {
   );
 }
 
+function TabsOrTablet() {
+  const isTablet = useIsTablet();
+  return isTablet ? <TabletNavigator /> : <TabNavigator />;
+}
+
 function AppNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Tabs"       component={TabNavigator} />
+      <Stack.Screen name="Tabs"       component={TabsOrTablet} />
       <Stack.Screen name="Player"     component={PlayerScreen} />
       <Stack.Screen name="Completion" component={CompletionScreen} />
       <Stack.Screen name="Channel"       component={ChannelScreen} />
