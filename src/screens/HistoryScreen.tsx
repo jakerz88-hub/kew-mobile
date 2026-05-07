@@ -10,6 +10,8 @@ import { useAddToQueue } from "../hooks/useAddToQueue";
 import { LogoMark } from "../components/TabIcons";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
+import { useIsTablet } from "../hooks/useIsTablet";
+import { useInTabletSidebar } from "../contexts/TabletSidebarContext";
 import { formatDuration, timeAgo } from "../types";
 import type { QueueEntry } from "../types";
 
@@ -25,6 +27,8 @@ export default function HistoryScreen() {
   const navigation = useNavigation<any>();
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const isTablet = useIsTablet();
+  const inSidebar = useInTabletSidebar();
   const { error, clearError, user } = useStore();
   const { handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId } = useAddToQueue(
     (ytVideoId) => setReaddedIds(prev => new Set([...prev, ytVideoId]))
@@ -76,19 +80,21 @@ export default function HistoryScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <LogoMark size={24} />
-          <KewLogo />
+      {!(isTablet && inSidebar) && (
+        <View style={styles.header}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <LogoMark size={24} />
+            <KewLogo />
+          </View>
+          <AvatarBubble
+            avatarUrl={user?.avatarUrl}
+            initial={user?.displayName?.charAt(0).toUpperCase() ?? "?"}
+            size={30}
+            onPress={() => navigation.navigate("Profile")}
+          />
         </View>
-        <AvatarBubble
-          avatarUrl={user?.avatarUrl}
-          initial={user?.displayName?.charAt(0).toUpperCase() ?? "?"}
-          size={30}
-          onPress={() => navigation.navigate("Profile")}
-        />
-      </View>
-      <Divider />
+      )}
+      {!(isTablet && inSidebar) && <Divider />}
 
       {error && <ErrorBanner message={error} onDismiss={clearError} />}
 

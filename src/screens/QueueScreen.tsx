@@ -20,6 +20,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import type { QueueEntry } from "../types";
 import { formatDuration, formatProgress, timeAgo } from "../types";
 import { useIsTablet } from "../hooks/useIsTablet";
+import { useInTabletSidebar, useTabletSwitchTab } from "../contexts/TabletSidebarContext";
 import { useTooltip } from "../hooks/useTooltip";
 import TooltipOverlay, { TooltipAnchor } from "../components/TooltipOverlay";
 import { Feather } from "@expo/vector-icons";
@@ -76,6 +77,8 @@ export default function QueueScreen() {
   const navigation = useNavigation<any>();
   const { width } = useWindowDimensions();
   const isTablet = useIsTablet();
+  const inSidebar = useInTabletSidebar();
+  const switchTab = useTabletSwitchTab();
   const { colors } = useTheme();
   const styles  = useMemo(() => makePhoneStyles(colors), [colors]);
   const tStyles = useMemo(() => makeTabletStyles(colors), [colors]);
@@ -102,6 +105,7 @@ export default function QueueScreen() {
   const [showSkipModal, setShowSkipModal] = useState(false);
   const [showDoneModal, setShowDoneModal] = useState(false);
   const [markingDone, setMarkingDone] = useState(false);
+  const [descExpanded, setDescExpanded] = useState(false);
 
   // ── Tooltip journey ──
   const queueTip = useTooltip("queue", 3);
@@ -114,8 +118,12 @@ export default function QueueScreen() {
   const listPendingEntries = queue?.current ? pendingEntries : pendingEntries.slice(1);
   const canShuffle = pendingEntries.length >= 2;
 
-  const playerPanelWidth = width - QUEUE_COL_WIDTH;
-  const playerHeight = Math.round(playerPanelWidth * 9 / 16);
+  // Measure the actual width the player container takes — accounts for
+  // the sidebar (172/48 expanded/collapsed) which the static window
+  // width doesn't know about. The fallback keeps the first paint sane
+  // before onLayout fires.
+  const [measuredPlayerWidth, setMeasuredPlayerWidth] = useState(width - QUEUE_COL_WIDTH);
+  const playerHeight = Math.round(measuredPlayerWidth * 9 / 16);
 
   useEffect(() => { fetchQueue(); }, []);
   useEffect(() => { loadRemoved().then(setRemovedList); }, []);
@@ -126,8 +134,13 @@ export default function QueueScreen() {
     finally { setIsManualRefreshing(false); }
   }, []);
 
-  // Auto-start playing whenever the active video changes
-  useEffect(() => { if (current?.id) setPlaying(true); }, [current?.id]);
+  // Auto-start playing whenever the active video changes; collapse description.
+  useEffect(() => {
+    if (current?.id) {
+      setPlaying(true);
+      setDescExpanded(false);
+    }
+  }, [current?.id]);
 
   // Tablet: report progress every 10s while playing
   useEffect(() => {
@@ -246,109 +259,121 @@ export default function QueueScreen() {
   // TABLET LAYOUT
   // ══════════════════════════════════════════════════════════════
   if (isTablet) {
+    const chipsContent = user?.plan === "pro" ? (() => {
+      const mainQ = queues.find(q => q.isMain);
+      const nonMain = queues.filter(q => !q.isMain);
+      const pinnedNonMain = nonMain.filter(q => q.pinned);
+      const chipQueues = [
+        ...(mainQ ? [mainQ] : []),
+        ...(pinnedNonMain.length > 0 ? pinnedNonMain.slice(0, 3) : nonMain.slice(0, 3)),
+      ];
+      return (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={{ paddingVertical: 8, paddingHorizontal: 12 }}
+          contentContainerStyle={{ gap: 8, flexDirection: "row" }}
+        >
+          {chipQueues.map(q => (
+            <TouchableOpacity
+              key={q.id}
+              onPress={() => handleQueueSwitch(q.id)}
+              style={[
+                { flexDirection: "row", alignItems: "center", gap: 4, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 },
+                activeQueueId === q.id
+                  ? { backgroundColor: colors.accent }
+                  : { backgroundColor: colors.cardBg, borderColor: colors.divider, borderWidth: 1 },
+              ]}
+            >
+              {q.emoji ? (
+                <SansText style={{ fontSize: 12 }}>{q.emoji}</SansText>
+              ) : (
+                <LogoMark color={activeQueueId === q.id ? "#fff" : colors.warmMid} size={12} />
+              )}
+              <SansText style={[
+                { fontSize: 12, fontFamily: "DMSans_500Medium" },
+                activeQueueId === q.id ? { color: "#fff" } : { color: colors.warmMid },
+              ]}>
+                {q.name} · {q.videoCount}
+              </SansText>
+            </TouchableOpacity>
+          ))}
+          <TouchableOpacity
+            onPress={() => navigation.navigate("AllQueues")}
+            style={{ backgroundColor: colors.cardBg, borderColor: colors.divider, borderWidth: 1, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, flexDirection: "row", alignItems: "center", gap: 4 }}
+          >
+            <SansText style={{ color: colors.warmMid, fontSize: 12, fontFamily: "DMSans_500Medium" }}>All queues</SansText>
+          </TouchableOpacity>
+        </ScrollView>
+      );
+    })() : null;
+
     return (
       <SafeAreaView style={styles.container}>
-        {/* Top bar: logo + avatar */}
-        <View style={tStyles.topBar}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <LogoMark size={20} />
-            <KewLogo size={20} />
+        {/* Top bar — hidden when embedded in sidebar (sidebar provides nav) */}
+        {!inSidebar && (
+          <View style={tStyles.topBar}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <LogoMark size={20} />
+              <KewLogo size={20} />
+            </View>
+            <AvatarBubble
+              avatarUrl={user?.avatarUrl}
+              initial={user?.displayName?.charAt(0).toUpperCase() ?? "?"}
+              size={28}
+              onPress={() => navigation.navigate("Profile")}
+            />
           </View>
-          <AvatarBubble
-            avatarUrl={user?.avatarUrl}
-            initial={user?.displayName?.charAt(0).toUpperCase() ?? "?"}
-            size={28}
-            onPress={() => navigation.navigate("Profile")}
-          />
-        </View>
-        <Divider />
+        )}
+        {!inSidebar && <Divider />}
+
+        {/* Full-width queue chips — only when in sidebar so they span both panels */}
+        {inSidebar && chipsContent && (
+          <>
+            {chipsContent}
+            <Divider />
+          </>
+        )}
 
         <View style={tStyles.root}>
           {/* ── Left: Queue list ── */}
           <View style={tStyles.queueCol}>
             {/* Queue pill strip — shown for pro users so they can discover / navigate queues */}
-            {user?.plan === "pro" && (() => {
-              const mainQ = queues.find(q => q.isMain);
-              const nonMain = queues.filter(q => !q.isMain);
-              const pinnedNonMain = nonMain.filter(q => q.pinned);
-              const chipQueues = [
-                ...(mainQ ? [mainQ] : []),
-                ...(pinnedNonMain.length > 0 ? pinnedNonMain.slice(0, 3) : nonMain.slice(0, 3)),
-              ];
-              return (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={{ paddingVertical: 8, paddingHorizontal: 12 }}
-                contentContainerStyle={{ gap: 8, flexDirection: "row" }}
-              >
-                {chipQueues.map(q => (
-                  <TouchableOpacity
-                    key={q.id}
-                    onPress={() => handleQueueSwitch(q.id)}
-                    style={[
-                      { flexDirection: "row", alignItems: "center", gap: 4, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 },
-                      activeQueueId === q.id
-                        ? { backgroundColor: colors.accent }
-                        : { backgroundColor: colors.cardBg, borderColor: colors.divider, borderWidth: 1 },
-                    ]}
-                  >
-                    {q.emoji ? (
-                      <SansText style={{ fontSize: 12 }}>{q.emoji}</SansText>
-                    ) : (
-                      <LogoMark color={activeQueueId === q.id ? "#fff" : colors.warmMid} size={12} />
-                    )}
-                    <SansText style={[
-                      { fontSize: 12, fontFamily: "DMSans_500Medium" },
-                      activeQueueId === q.id ? { color: "#fff" } : { color: colors.warmMid },
-                    ]}>
-                      {q.name} · {q.videoCount}
-                    </SansText>
-                  </TouchableOpacity>
-                ))}
-                <TouchableOpacity
-                  onPress={() => navigation.navigate("AllQueues")}
-                  style={{ backgroundColor: colors.cardBg, borderColor: colors.divider, borderWidth: 1, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, flexDirection: "row", alignItems: "center", gap: 4 }}
-                >
-                  <SansText style={{ color: colors.warmMid, fontSize: 12, fontFamily: "DMSans_500Medium" }}>All queues</SansText>
-                </TouchableOpacity>
-              </ScrollView>
-              );
-            })()}
+            {!inSidebar && chipsContent}
             <View style={tStyles.queueHeader}>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <View>
-                  <SerifText style={tStyles.queueTitle}>Your Queue</SerifText>
-                  {queue && (
-                    <SansText style={tStyles.queueSub}>
-                      {queue.total} video{queue.total !== 1 ? "s" : ""} · {_totalTimeRemaining(queue.entries)}
-                    </SansText>
-                  )}
-                </View>
-                <View style={{ flexDirection: "row", gap: 8 }}>
-                  <TouchableOpacity
-                    onPress={handleShare}
-                    disabled={sharing || !queue || queue.total === 0}
-                    style={[tStyles.shuffleBtn, { borderColor: colors.warmMid }, (!queue || queue.total === 0) && { opacity: 0.35 }]}
-                    activeOpacity={0.7}
-                  >
-                    <SansText style={[tStyles.shuffleBtnText, { color: colors.warmMid }]}>
-                      {sharing ? "Sharing…" : "Share"}
-                    </SansText>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => setShowShuffleConfirm(true)}
-                    disabled={!canShuffle}
-                    style={[tStyles.shuffleBtn, !canShuffle && { opacity: 0.35 }]}
-                    activeOpacity={0.7}
-                  >
-                    <SansText style={tStyles.shuffleBtnText}>Shuffle</SansText>
-                  </TouchableOpacity>
-                </View>
+              <SerifText style={tStyles.queueTitle}>Your Queue</SerifText>
+              {queue && (
+                <SansText style={tStyles.queueSub}>
+                  {queue.total} video{queue.total !== 1 ? "s" : ""} · {_totalTimeRemaining(queue.entries)}
+                </SansText>
+              )}
+              <View style={tStyles.actionRow}>
+                <TouchableOpacity
+                  onPress={handleShare}
+                  disabled={sharing || !queue || queue.total === 0}
+                  style={[tStyles.btnAction, tStyles.btnShareFill, (sharing || !queue || queue.total === 0) && { opacity: 0.35 }]}
+                  activeOpacity={0.8}
+                >
+                  <SansText style={tStyles.btnShareFillText}>
+                    {sharing ? "Sharing…" : "Share"}
+                  </SansText>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setShowShuffleConfirm(true)}
+                  disabled={!canShuffle}
+                  style={[tStyles.btnAction, tStyles.btnShuffleOutline, !canShuffle && { opacity: 0.35 }]}
+                  activeOpacity={0.7}
+                >
+                  <SansText style={tStyles.btnShuffleOutlineText}>Shuffle</SansText>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => switchTab ? switchTab("Import") : navigation.navigate("PlaylistList")}
+                  style={[tStyles.btnAction, tStyles.btnImportFill]}
+                  activeOpacity={0.8}
+                >
+                  <SansText style={tStyles.btnImportFillText}>Import</SansText>
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity onPress={() => navigation.navigate("PlaylistList")} activeOpacity={0.7} style={tStyles.importBtn}>
-                <SansText style={tStyles.importBtnText}>+ Import from YouTube playlist</SansText>
-              </TouchableOpacity>
             </View>
             <Divider />
 
@@ -402,11 +427,17 @@ export default function QueueScreen() {
                 showsVerticalScrollIndicator={false}
               >
                 {/* YouTube embed — letterbox bg always dark */}
-                <View style={{ backgroundColor: "#1A1714" }}>
+                <View
+                  style={{ backgroundColor: "#1A1714" }}
+                  onLayout={(e) => {
+                    const w = Math.round(e.nativeEvent.layout.width);
+                    if (w > 0 && w !== measuredPlayerWidth) setMeasuredPlayerWidth(w);
+                  }}
+                >
                   <YoutubePlayer
                     ref={playerRef}
                     height={playerHeight}
-                    width={playerPanelWidth}
+                    width={measuredPlayerWidth}
                     videoId={current.video.ytVideoId}
                     play={playing}
                     onChangeState={onPlayerStateChange}
@@ -422,19 +453,32 @@ export default function QueueScreen() {
                   <SansText style={tStyles.videoChannel}>{current.video.channelTitle}</SansText>
                   <SerifText style={tStyles.videoTitle}>{current.video.title}</SerifText>
                   <SansText style={tStyles.videoMeta}>Added {timeAgo(current.addedAt)}</SansText>
+
+                  {current.video.description && (
+                    <>
+                      <TouchableOpacity
+                        onPress={() => setDescExpanded(v => !v)}
+                        activeOpacity={0.7}
+                        style={tStyles.descToggle}
+                      >
+                        <SansText style={tStyles.descToggleLabel}>Description</SansText>
+                        <Feather
+                          name={descExpanded ? "chevron-down" : "chevron-right"}
+                          size={16}
+                          color={colors.warmMid}
+                        />
+                      </TouchableOpacity>
+                      {descExpanded && (
+                        <SansText style={tStyles.descBody}>{current.video.description}</SansText>
+                      )}
+                    </>
+                  )}
                 </View>
 
                 <Divider />
 
                 {/* Controls */}
                 <View style={tStyles.controls}>
-                  <TouchableOpacity
-                    style={tStyles.btnDone}
-                    onPress={() => setShowDoneModal(true)}
-                    activeOpacity={0.8}
-                  >
-                    <SansText style={tStyles.btnDoneText}>Mark as watched</SansText>
-                  </TouchableOpacity>
                   <TouchableOpacity
                     style={[tStyles.btnSkip, (!user || user.skipsRemaining <= 0) && { opacity: 0.4 }]}
                     onPress={() => setShowSkipModal(true)}
@@ -443,6 +487,20 @@ export default function QueueScreen() {
                   >
                     <SansText style={tStyles.btnSkipText}>Skip</SansText>
                   </TouchableOpacity>
+                  <TouchableOpacity
+                    style={tStyles.btnDone}
+                    onPress={() => setShowDoneModal(true)}
+                    activeOpacity={0.8}
+                  >
+                    <SansText style={tStyles.btnDoneText}>Mark done</SansText>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={tStyles.btnRemove}
+                    onPress={() => setActionEntry(current)}
+                    activeOpacity={0.8}
+                  >
+                    <SansText style={tStyles.btnRemoveText}>Remove</SansText>
+                  </TouchableOpacity>
                   {user && (
                     <View style={{ marginLeft: "auto" }}>
                       <SkipCounter remaining={user.skipsRemaining} max={user.skipsMax} />
@@ -450,38 +508,37 @@ export default function QueueScreen() {
                   )}
                 </View>
 
-                {/* Up next */}
-                {listPendingEntries.length > 0 && (
-                  <>
-                    <Divider />
-                    <View style={tStyles.upNext}>
-                      <SansText style={tStyles.upNextLabel}>
-                        Up Next · {listPendingEntries.length} video{listPendingEntries.length !== 1 ? "s" : ""}
-                      </SansText>
-                      {listPendingEntries.slice(0, 8).map(entry => (
+                {/* Up next — single preview of the immediate next video */}
+                {listPendingEntries.length > 0 && (() => {
+                  const nextEntry = listPendingEntries[0];
+                  return (
+                    <>
+                      <Divider />
+                      <View style={tStyles.upNext}>
+                        <SansText style={tStyles.upNextLabel}>Up Next</SansText>
                         <TouchableOpacity
-                          key={entry.id}
+                          key={nextEntry.id}
                           style={tStyles.upNextRow}
-                          onLongPress={() => setActionEntry(entry)}
+                          onLongPress={() => setActionEntry(nextEntry)}
                           delayLongPress={400}
                           activeOpacity={0.8}
                         >
                           <View style={tStyles.upNextThumb}>
-                            {entry.video.thumbnailUrl
-                              ? <Image source={{ uri: entry.video.thumbnailUrl }} style={[StyleSheet.absoluteFill, { borderRadius: Radius.sm }]} resizeMode="cover" />
-                              : <ThumbPlaceholder seed={entry.video.ytVideoId} style={StyleSheet.absoluteFill} />
+                            {nextEntry.video.thumbnailUrl
+                              ? <Image source={{ uri: nextEntry.video.thumbnailUrl }} style={[StyleSheet.absoluteFill, { borderRadius: Radius.sm }]} resizeMode="cover" />
+                              : <ThumbPlaceholder seed={nextEntry.video.ytVideoId} style={StyleSheet.absoluteFill} />
                             }
                           </View>
                           <View style={{ flex: 1, minWidth: 0 }}>
-                            <SansText style={tStyles.upNextChannel}>{entry.video.channelTitle}</SansText>
-                            <SansText style={tStyles.upNextTitle} numberOfLines={2}>{entry.video.title}</SansText>
-                            <SansText style={tStyles.upNextMeta}>{formatDuration(entry.video.durationSecs)}</SansText>
+                            <SansText style={tStyles.upNextChannel}>{nextEntry.video.channelTitle}</SansText>
+                            <SansText style={tStyles.upNextTitle} numberOfLines={2}>{nextEntry.video.title}</SansText>
+                            <SansText style={tStyles.upNextMeta}>{formatDuration(nextEntry.video.durationSecs)}</SansText>
                           </View>
                         </TouchableOpacity>
-                      ))}
-                    </View>
-                  </>
-                )}
+                      </View>
+                    </>
+                  );
+                })()}
               </ScrollView>
             ) : (
               <View style={tStyles.emptyPlayer}>
@@ -1287,18 +1344,19 @@ function makeTabletStyles(c: ColorPalette) {
       backgroundColor: c.cardBg,
       flexDirection: "column",
     },
-    queueHeader:     { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: Spacing.md, paddingBottom: Spacing.sm },
+    queueHeader:     { padding: Spacing.md, paddingBottom: Spacing.sm },
     queueTitle:      { fontSize: FontSize.lg },
     skipMini:        { alignItems: "flex-end", gap: 4 },
     skipMiniLabel:   { fontSize: FontSize.xxs, color: c.warmMid, fontFamily: FontFamily.sansMedium, textTransform: "uppercase", letterSpacing: 0.5 },
     queueSub:        { fontSize: FontSize.xxs, color: c.warmMid, marginTop: 2 },
-    shuffleBtn: {
-      paddingHorizontal: Spacing.sm + 4, paddingVertical: 5,
-      borderRadius: Radius.pill, borderWidth: 1.5, borderColor: c.accent,
-    },
-    shuffleBtnText: { fontSize: FontSize.xs, color: c.accent, fontFamily: FontFamily.sansMedium },
-    importBtn:      { paddingVertical: Spacing.sm - 2, borderRadius: Radius.pill, borderWidth: 1.5, borderColor: c.green, backgroundColor: c.green, alignItems: "center", marginTop: 4 },
-    importBtnText:  { fontSize: FontSize.xs, color: c.buttonText, fontFamily: FontFamily.sansMedium },
+    actionRow:       { flexDirection: "row", gap: Spacing.xs + 2, marginTop: Spacing.sm },
+    btnAction:       { flex: 1, paddingVertical: 7, borderRadius: Radius.pill, alignItems: "center", justifyContent: "center" },
+    btnShareFill:           { backgroundColor: c.accent },
+    btnShareFillText:       { fontSize: FontSize.xs, color: c.buttonText, fontFamily: FontFamily.sansMedium },
+    btnShuffleOutline:      { borderWidth: 1.5, borderColor: c.accent, paddingVertical: 7 - 1.5 },
+    btnShuffleOutlineText:  { fontSize: FontSize.xs, color: c.accent, fontFamily: FontFamily.sansMedium },
+    btnImportFill:          { backgroundColor: c.green },
+    btnImportFillText:      { fontSize: FontSize.xs, color: c.buttonText, fontFamily: FontFamily.sansMedium },
     emptyQueue:      { padding: Spacing.lg, alignItems: "center" },
     emptyQueueTitle: { fontSize: FontSize.sm, color: c.warmMid, textAlign: "center" },
     emptyQueueSub:   { fontSize: FontSize.xs, color: c.queued, textAlign: "center", marginTop: 4 },
@@ -1324,14 +1382,19 @@ function makeTabletStyles(c: ColorPalette) {
     videoChannel: { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: Spacing.xs },
     videoTitle:   { fontSize: FontSize.lg, lineHeight: 26 },
     videoMeta:    { fontSize: FontSize.xxs, color: c.warmMid, marginTop: Spacing.xs },
+    descToggle:   { flexDirection: "row", alignItems: "center", gap: 4, marginTop: Spacing.sm + 2, paddingVertical: 4 },
+    descToggleLabel: { fontSize: FontSize.xs, color: c.warmMid, fontFamily: FontFamily.sansMedium, textTransform: "uppercase", letterSpacing: 0.5 },
+    descBody:     { fontSize: FontSize.sm, color: c.ink, lineHeight: 20, marginTop: Spacing.xs, fontFamily: FontFamily.sans },
     controls: {
       flexDirection: "row", alignItems: "center", gap: Spacing.sm,
       paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm + 4,
     },
-    btnDone:     { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderRadius: Radius.pill, borderWidth: 1.5, borderColor: c.greenText },
-    btnDoneText: { color: c.greenText, fontSize: FontSize.sm, fontFamily: FontFamily.sansMedium },
-    btnSkip:     { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderRadius: Radius.pill, borderWidth: 1.5, borderColor: c.accent },
-    btnSkipText: { color: c.accent, fontSize: FontSize.sm, fontFamily: FontFamily.sansMedium },
+    btnDone:       { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderRadius: Radius.pill, borderWidth: 1.5, borderColor: c.greenText },
+    btnDoneText:   { color: c.greenText, fontSize: FontSize.sm, fontFamily: FontFamily.sansMedium },
+    btnSkip:       { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderRadius: Radius.pill, borderWidth: 1.5, borderColor: c.accent },
+    btnSkipText:   { color: c.accent, fontSize: FontSize.sm, fontFamily: FontFamily.sansMedium },
+    btnRemove:     { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm + 1.5, borderRadius: Radius.pill, backgroundColor: c.ink },
+    btnRemoveText: { color: c.cream, fontSize: FontSize.sm, fontFamily: FontFamily.sansMedium },
     upNext:      { padding: Spacing.md, paddingTop: Spacing.sm },
     upNextLabel: {
       fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase",
