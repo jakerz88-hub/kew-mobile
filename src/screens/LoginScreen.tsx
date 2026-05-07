@@ -45,7 +45,7 @@ export default function LoginScreen() {
         provider: "google",
         options: {
           redirectTo,
-          scopes: "https://www.googleapis.com/auth/youtube.readonly",
+          scopes: "https://www.googleapis.com/auth/youtube.force-ssl",
           queryParams: { access_type: "offline", prompt: "consent" },
         },
       });
