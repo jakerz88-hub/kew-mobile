@@ -274,6 +274,10 @@ export const api = {
     });
   },
 
+  interactLikeStatus(ytVideoId: string): Promise<{ liked: boolean }> {
+    return request(`/v1/interact/like-status?yt_video_id=${encodeURIComponent(ytVideoId)}`);
+  },
+
   interactComment(ytVideoId: string, text: string): Promise<{ commentId: string; commentUrl: string }> {
     return request("/v1/interact/comment", {
       method: "POST",

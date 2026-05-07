@@ -143,6 +143,8 @@ export function InteractModule({
       setChipTapped(false);
       setComment("");
       setPostedUrl(null);
+      setLiked(false);
+      setLikeBusy(true);
       translateY.setValue(1);
       backdropOpacity.setValue(0);
       Animated.parallel([
@@ -158,8 +160,29 @@ export function InteractModule({
           useNativeDriver: true,
         }),
       ]).start();
+
+      let cancelled = false;
+      (async () => {
+        try {
+          const { liked: serverLiked } = await api.interactLikeStatus(ytVideoId);
+          if (cancelled) return;
+          setLiked(serverLiked);
+        } catch (e: any) {
+          if (cancelled) return;
+          const msg: string = e?.message ?? "";
+          if (msg.includes(RECONNECT_HINT) || msg.startsWith("403")) {
+            setError(RECONNECT_HINT);
+          }
+        } finally {
+          if (!cancelled) setLikeBusy(false);
+        }
+      })();
+
+      return () => {
+        cancelled = true;
+      };
     }
-  }, [visible]);
+  }, [visible, ytVideoId]);
 
   const runClose = () => {
     Keyboard.dismiss();
