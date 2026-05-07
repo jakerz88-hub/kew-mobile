@@ -5,8 +5,9 @@ import { useStore } from "../store";
 import { useTheme } from "../contexts/ThemeContext";
 import { SansText, KewLogo } from "./UI";
 import { LogoMark, QueueTabIcon, BrowseTabIcon, ExploreTabIcon, HistoryTabIcon } from "./TabIcons";
+import type { TabletTab } from "../contexts/TabletSidebarContext";
 
-export type TabletTab = "Queue" | "Browse" | "Explore" | "History" | "Import";
+export type { TabletTab };
 
 interface TabletSidebarProps {
   activeTab: TabletTab;

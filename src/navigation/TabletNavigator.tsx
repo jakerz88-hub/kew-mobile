@@ -45,7 +45,7 @@ export default function TabletNavigator() {
 
   if (isLandscape) {
     return (
-      <TabletSidebarProvider>
+      <TabletSidebarProvider switchTab={setActiveTab}>
         <View style={{ flex: 1, flexDirection: "row" }}>
           <TabletSidebar
             activeTab={activeTab}
@@ -62,7 +62,7 @@ export default function TabletNavigator() {
 
   // Portrait: full-width tablet content with top bar + bottom tab bar.
   return (
-    <TabletSidebarProvider>
+    <TabletSidebarProvider switchTab={setActiveTab}>
       <View style={{ flex: 1 }}>
         <TabletTopBar onProfilePress={() => navigation.navigate("Profile")} />
         {screenStack}

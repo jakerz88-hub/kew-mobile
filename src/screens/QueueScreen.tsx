@@ -20,7 +20,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import type { QueueEntry } from "../types";
 import { formatDuration, formatProgress, timeAgo } from "../types";
 import { useIsTablet } from "../hooks/useIsTablet";
-import { useInTabletSidebar } from "../contexts/TabletSidebarContext";
+import { useInTabletSidebar, useTabletSwitchTab } from "../contexts/TabletSidebarContext";
 import { useTooltip } from "../hooks/useTooltip";
 import TooltipOverlay, { TooltipAnchor } from "../components/TooltipOverlay";
 import { Feather } from "@expo/vector-icons";
@@ -78,6 +78,7 @@ export default function QueueScreen() {
   const { width } = useWindowDimensions();
   const isTablet = useIsTablet();
   const inSidebar = useInTabletSidebar();
+  const switchTab = useTabletSwitchTab();
   const { colors } = useTheme();
   const styles  = useMemo(() => makePhoneStyles(colors), [colors]);
   const tStyles = useMemo(() => makeTabletStyles(colors), [colors]);
@@ -366,7 +367,7 @@ export default function QueueScreen() {
                   <SansText style={tStyles.btnShuffleOutlineText}>Shuffle</SansText>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  onPress={() => navigation.navigate("PlaylistList")}
+                  onPress={() => switchTab ? switchTab("Import") : navigation.navigate("PlaylistList")}
                   style={[tStyles.btnAction, tStyles.btnImportFill]}
                   activeOpacity={0.8}
                 >
