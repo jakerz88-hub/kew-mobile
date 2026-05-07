@@ -2,7 +2,11 @@ import { supabase } from "./supabase";
 import Constants from "expo-constants";
 import type { Queue, BrowseVideo, Channel, User, SkipResult, Playlist, PlaylistVideosResult, ImportResult, KewQueue, Insights, InsightsPeriod, Intentionality, WatchLimits, WatchEventType } from "../types";
 
-const BASE_URL = (process.env.EXPO_PUBLIC_API_BASE_URL || Constants.expoConfig?.extra?.API_BASE_URL) as string;
+// Final fallback: see src/services/supabase.ts — Constants.expoConfig.extra can return null
+// in OTA-delivered manifests, leaving BASE_URL undefined and hanging fetchUser() forever
+// during bootstrap. Hardcoding prod prevents the splash-stall failure mode.
+const PROD_API_BASE_URL = "https://kew-backend-production.up.railway.app";
+const BASE_URL = (process.env.EXPO_PUBLIC_API_BASE_URL || Constants.expoConfig?.extra?.API_BASE_URL || PROD_API_BASE_URL) as string;
 
 // Convert snake_case keys to camelCase recursively
 function toCamel(s: string): string {

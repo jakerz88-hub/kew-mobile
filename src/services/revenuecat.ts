@@ -4,9 +4,13 @@ import Purchases, { LOG_LEVEL } from "react-native-purchases";
 
 export const PRO_ENTITLEMENT_ID = "pro";
 
+// Final fallback: see src/services/supabase.ts — Constants.expoConfig.extra can return null
+// in OTA-delivered manifests. With "" as the previous fallback, isRevenueCatAvailable() would
+// return false on prod, silently skipping configure (no Kew+ entitlement on those devices).
+const PROD_IOS_KEY = "appl_ZFJRDePQxOoTfLabPQOpVQmLkVq";
 const IOS_KEY = (process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY
   || Constants.expoConfig?.extra?.REVENUECAT_IOS_KEY
-  || "") as string;
+  || PROD_IOS_KEY) as string;
 
 let configured = false;
 let currentUserId: string | null = null;

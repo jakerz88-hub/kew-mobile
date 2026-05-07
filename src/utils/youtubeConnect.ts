@@ -76,7 +76,8 @@ export async function connectYouTube(): Promise<YouTubeConnectResult> {
     return { success: false, error: "YouTube permission was not granted. Please try again." };
   }
 
-  const BASE_URL = (process.env.EXPO_PUBLIC_API_BASE_URL || Constants.expoConfig?.extra?.API_BASE_URL) as string;
+  const PROD_API_BASE_URL = "https://kew-backend-production.up.railway.app";
+  const BASE_URL = (process.env.EXPO_PUBLIC_API_BASE_URL || Constants.expoConfig?.extra?.API_BASE_URL || PROD_API_BASE_URL) as string;
   try {
     const ytResp = await fetch(`${BASE_URL}/v1/profile/youtube-token`, {
       method: "POST",

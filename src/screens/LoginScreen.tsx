@@ -64,7 +64,8 @@ export default function LoginScreen() {
           const expiresAt            = params.get("expires_at");
 
           if (accessToken && providerToken) {
-            const BASE_URL = (process.env.EXPO_PUBLIC_API_BASE_URL || Constants.expoConfig?.extra?.API_BASE_URL) as string;
+            const PROD_API_BASE_URL = "https://kew-backend-production.up.railway.app";
+            const BASE_URL = (process.env.EXPO_PUBLIC_API_BASE_URL || Constants.expoConfig?.extra?.API_BASE_URL || PROD_API_BASE_URL) as string;
 
             // Save YouTube token BEFORE setSession so fetchUser() sees hasYoutube: true.
             // If this fails, surface the error and bail — the token in the URL is one-time.
