@@ -17,6 +17,7 @@ import { useAddToQueue } from "../hooks/useAddToQueue";
 import { QueuePickerModal } from "../components/QueuePickerModal";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
+import { useInTabletSidebar } from "../contexts/TabletSidebarContext";
 import { useTooltip } from "../hooks/useTooltip";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import TooltipOverlay, { TooltipAnchor } from "../components/TooltipOverlay";
@@ -81,6 +82,7 @@ export default function ExploreScreen() {
   const navigation = useNavigation<any>();
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const inSidebar = useInTabletSidebar();
   const { user, queue } = useStore();
   const { handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId } = useAddToQueue(
     (ytVideoId) => setAddedIds(prev => new Set([...prev, ytVideoId]))
@@ -179,19 +181,21 @@ export default function ExploreScreen() {
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <LogoMark size={24} />
-          <KewLogo />
+      {!inSidebar && (
+        <View style={styles.header}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <LogoMark size={24} />
+            <KewLogo />
+          </View>
+          <AvatarBubble
+            avatarUrl={user?.avatarUrl}
+            initial={user?.displayName?.charAt(0).toUpperCase() ?? "?"}
+            size={30}
+            onPress={() => navigation.navigate("Profile")}
+          />
         </View>
-        <AvatarBubble
-          avatarUrl={user?.avatarUrl}
-          initial={user?.displayName?.charAt(0).toUpperCase() ?? "?"}
-          size={30}
-          onPress={() => navigation.navigate("Profile")}
-        />
-      </View>
-      <Divider />
+      )}
+      {!inSidebar && <Divider />}
 
       {/* Page title — always visible, matches other tabs */}
       <View style={styles.pageTitleRow}>

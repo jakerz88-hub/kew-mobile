@@ -20,6 +20,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import type { QueueEntry } from "../types";
 import { formatDuration, formatProgress, timeAgo } from "../types";
 import { useIsTablet } from "../hooks/useIsTablet";
+import { useInTabletSidebar } from "../contexts/TabletSidebarContext";
 import { useTooltip } from "../hooks/useTooltip";
 import TooltipOverlay, { TooltipAnchor } from "../components/TooltipOverlay";
 import { Feather } from "@expo/vector-icons";
@@ -76,6 +77,7 @@ export default function QueueScreen() {
   const navigation = useNavigation<any>();
   const { width } = useWindowDimensions();
   const isTablet = useIsTablet();
+  const inSidebar = useInTabletSidebar();
   const { colors } = useTheme();
   const styles  = useMemo(() => makePhoneStyles(colors), [colors]);
   const tStyles = useMemo(() => makeTabletStyles(colors), [colors]);
@@ -246,75 +248,87 @@ export default function QueueScreen() {
   // TABLET LAYOUT
   // ══════════════════════════════════════════════════════════════
   if (isTablet) {
+    const chipsContent = user?.plan === "pro" ? (() => {
+      const mainQ = queues.find(q => q.isMain);
+      const nonMain = queues.filter(q => !q.isMain);
+      const pinnedNonMain = nonMain.filter(q => q.pinned);
+      const chipQueues = [
+        ...(mainQ ? [mainQ] : []),
+        ...(pinnedNonMain.length > 0 ? pinnedNonMain.slice(0, 3) : nonMain.slice(0, 3)),
+      ];
+      return (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={{ paddingVertical: 8, paddingHorizontal: 12 }}
+          contentContainerStyle={{ gap: 8, flexDirection: "row" }}
+        >
+          {chipQueues.map(q => (
+            <TouchableOpacity
+              key={q.id}
+              onPress={() => handleQueueSwitch(q.id)}
+              style={[
+                { flexDirection: "row", alignItems: "center", gap: 4, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 },
+                activeQueueId === q.id
+                  ? { backgroundColor: colors.accent }
+                  : { backgroundColor: colors.cardBg, borderColor: colors.divider, borderWidth: 1 },
+              ]}
+            >
+              {q.emoji ? (
+                <SansText style={{ fontSize: 12 }}>{q.emoji}</SansText>
+              ) : (
+                <LogoMark color={activeQueueId === q.id ? "#fff" : colors.warmMid} size={12} />
+              )}
+              <SansText style={[
+                { fontSize: 12, fontFamily: "DMSans_500Medium" },
+                activeQueueId === q.id ? { color: "#fff" } : { color: colors.warmMid },
+              ]}>
+                {q.name} · {q.videoCount}
+              </SansText>
+            </TouchableOpacity>
+          ))}
+          <TouchableOpacity
+            onPress={() => navigation.navigate("AllQueues")}
+            style={{ backgroundColor: colors.cardBg, borderColor: colors.divider, borderWidth: 1, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, flexDirection: "row", alignItems: "center", gap: 4 }}
+          >
+            <SansText style={{ color: colors.warmMid, fontSize: 12, fontFamily: "DMSans_500Medium" }}>All queues</SansText>
+          </TouchableOpacity>
+        </ScrollView>
+      );
+    })() : null;
+
     return (
       <SafeAreaView style={styles.container}>
-        {/* Top bar: logo + avatar */}
-        <View style={tStyles.topBar}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <LogoMark size={20} />
-            <KewLogo size={20} />
+        {/* Top bar — hidden when embedded in sidebar (sidebar provides nav) */}
+        {!inSidebar && (
+          <View style={tStyles.topBar}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <LogoMark size={20} />
+              <KewLogo size={20} />
+            </View>
+            <AvatarBubble
+              avatarUrl={user?.avatarUrl}
+              initial={user?.displayName?.charAt(0).toUpperCase() ?? "?"}
+              size={28}
+              onPress={() => navigation.navigate("Profile")}
+            />
           </View>
-          <AvatarBubble
-            avatarUrl={user?.avatarUrl}
-            initial={user?.displayName?.charAt(0).toUpperCase() ?? "?"}
-            size={28}
-            onPress={() => navigation.navigate("Profile")}
-          />
-        </View>
-        <Divider />
+        )}
+        {!inSidebar && <Divider />}
+
+        {/* Full-width queue chips — only when in sidebar so they span both panels */}
+        {inSidebar && chipsContent && (
+          <>
+            {chipsContent}
+            <Divider />
+          </>
+        )}
 
         <View style={tStyles.root}>
           {/* ── Left: Queue list ── */}
           <View style={tStyles.queueCol}>
             {/* Queue pill strip — shown for pro users so they can discover / navigate queues */}
-            {user?.plan === "pro" && (() => {
-              const mainQ = queues.find(q => q.isMain);
-              const nonMain = queues.filter(q => !q.isMain);
-              const pinnedNonMain = nonMain.filter(q => q.pinned);
-              const chipQueues = [
-                ...(mainQ ? [mainQ] : []),
-                ...(pinnedNonMain.length > 0 ? pinnedNonMain.slice(0, 3) : nonMain.slice(0, 3)),
-              ];
-              return (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={{ paddingVertical: 8, paddingHorizontal: 12 }}
-                contentContainerStyle={{ gap: 8, flexDirection: "row" }}
-              >
-                {chipQueues.map(q => (
-                  <TouchableOpacity
-                    key={q.id}
-                    onPress={() => handleQueueSwitch(q.id)}
-                    style={[
-                      { flexDirection: "row", alignItems: "center", gap: 4, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 },
-                      activeQueueId === q.id
-                        ? { backgroundColor: colors.accent }
-                        : { backgroundColor: colors.cardBg, borderColor: colors.divider, borderWidth: 1 },
-                    ]}
-                  >
-                    {q.emoji ? (
-                      <SansText style={{ fontSize: 12 }}>{q.emoji}</SansText>
-                    ) : (
-                      <LogoMark color={activeQueueId === q.id ? "#fff" : colors.warmMid} size={12} />
-                    )}
-                    <SansText style={[
-                      { fontSize: 12, fontFamily: "DMSans_500Medium" },
-                      activeQueueId === q.id ? { color: "#fff" } : { color: colors.warmMid },
-                    ]}>
-                      {q.name} · {q.videoCount}
-                    </SansText>
-                  </TouchableOpacity>
-                ))}
-                <TouchableOpacity
-                  onPress={() => navigation.navigate("AllQueues")}
-                  style={{ backgroundColor: colors.cardBg, borderColor: colors.divider, borderWidth: 1, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, flexDirection: "row", alignItems: "center", gap: 4 }}
-                >
-                  <SansText style={{ color: colors.warmMid, fontSize: 12, fontFamily: "DMSans_500Medium" }}>All queues</SansText>
-                </TouchableOpacity>
-              </ScrollView>
-              );
-            })()}
+            {!inSidebar && chipsContent}
             <View style={tStyles.queueHeader}>
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <View>

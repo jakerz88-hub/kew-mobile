@@ -19,6 +19,7 @@ import { useStore } from "../store";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
 import { useIsTablet } from "../hooks/useIsTablet";
+import { useInTabletSidebar } from "../contexts/TabletSidebarContext";
 import { useTooltip } from "../hooks/useTooltip";
 import { useAddToQueue } from "../hooks/useAddToQueue";
 import { QueuePickerModal } from "../components/QueuePickerModal";
@@ -38,6 +39,7 @@ const BROWSE_ANCHORS: TooltipAnchor[] = [
 export default function BrowseScreen() {
   const navigation = useNavigation<any>();
   const isTablet = useIsTablet();
+  const inSidebar = useInTabletSidebar();
   const { colors } = useTheme();
   const styles  = useMemo(() => makePhoneStyles(colors), [colors]);
   const tStyles = useMemo(() => makeTabletStyles(colors), [colors]);
@@ -201,20 +203,22 @@ export default function BrowseScreen() {
   if (isTablet) {
     return (
       <SafeAreaView style={styles.container}>
-        {/* Top bar */}
-        <View style={tStyles.topBar}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <LogoMark size={20} />
-            <KewLogo size={20} />
+        {/* Top bar — hidden when embedded in sidebar (sidebar provides nav) */}
+        {!inSidebar && (
+          <View style={tStyles.topBar}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <LogoMark size={20} />
+              <KewLogo size={20} />
+            </View>
+            <AvatarBubble
+              avatarUrl={user?.avatarUrl}
+              initial={user?.displayName?.charAt(0).toUpperCase() ?? "?"}
+              size={28}
+              onPress={() => navigation.navigate("Profile")}
+            />
           </View>
-          <AvatarBubble
-            avatarUrl={user?.avatarUrl}
-            initial={user?.displayName?.charAt(0).toUpperCase() ?? "?"}
-            size={28}
-            onPress={() => navigation.navigate("Profile")}
-          />
-        </View>
-        <Divider />
+        )}
+        {!inSidebar && <Divider />}
 
         {loadError && <ErrorBanner message={loadError} onDismiss={() => setLoadError(null)} />}
 
