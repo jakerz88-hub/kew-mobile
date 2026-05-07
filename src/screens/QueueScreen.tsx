@@ -1383,7 +1383,7 @@ function makeTabletStyles(c: ColorPalette) {
     btnSkip:       { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderRadius: Radius.pill, borderWidth: 1.5, borderColor: c.accent },
     btnSkipText:   { color: c.accent, fontSize: FontSize.sm, fontFamily: FontFamily.sansMedium },
     btnRemove:     { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm + 1.5, borderRadius: Radius.pill, backgroundColor: c.ink },
-    btnRemoveText: { color: c.buttonText, fontSize: FontSize.sm, fontFamily: FontFamily.sansMedium },
+    btnRemoveText: { color: c.cream, fontSize: FontSize.sm, fontFamily: FontFamily.sansMedium },
     upNext:      { padding: Spacing.md, paddingTop: Spacing.sm },
     upNextLabel: {
       fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase",
