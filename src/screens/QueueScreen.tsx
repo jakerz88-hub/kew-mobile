@@ -117,8 +117,12 @@ export default function QueueScreen() {
   const listPendingEntries = queue?.current ? pendingEntries : pendingEntries.slice(1);
   const canShuffle = pendingEntries.length >= 2;
 
-  const playerPanelWidth = width - QUEUE_COL_WIDTH;
-  const playerHeight = Math.round(playerPanelWidth * 9 / 16);
+  // Measure the actual width the player container takes — accounts for
+  // the sidebar (172/48 expanded/collapsed) which the static window
+  // width doesn't know about. The fallback keeps the first paint sane
+  // before onLayout fires.
+  const [measuredPlayerWidth, setMeasuredPlayerWidth] = useState(width - QUEUE_COL_WIDTH);
+  const playerHeight = Math.round(measuredPlayerWidth * 9 / 16);
 
   useEffect(() => { fetchQueue(); }, []);
   useEffect(() => { loadRemoved().then(setRemovedList); }, []);
@@ -422,11 +426,17 @@ export default function QueueScreen() {
                 showsVerticalScrollIndicator={false}
               >
                 {/* YouTube embed — letterbox bg always dark */}
-                <View style={{ backgroundColor: "#1A1714" }}>
+                <View
+                  style={{ backgroundColor: "#1A1714" }}
+                  onLayout={(e) => {
+                    const w = Math.round(e.nativeEvent.layout.width);
+                    if (w > 0 && w !== measuredPlayerWidth) setMeasuredPlayerWidth(w);
+                  }}
+                >
                   <YoutubePlayer
                     ref={playerRef}
                     height={playerHeight}
-                    width={playerPanelWidth}
+                    width={measuredPlayerWidth}
                     videoId={current.video.ytVideoId}
                     play={playing}
                     onChangeState={onPlayerStateChange}

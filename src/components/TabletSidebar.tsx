@@ -38,7 +38,7 @@ export function TabletSidebar({
     { tab: "Browse",  label: "Browse",  icon: (color) => <BrowseTabIcon  color={color} /> },
     { tab: "Explore", label: "Explore", icon: (color) => <ExploreTabIcon color={color} /> },
     { tab: "History", label: "History", icon: (color) => <HistoryTabIcon color={color} /> },
-    { tab: "Import",  label: "Import",  icon: (color) => <Feather name="list" size={15} color={color} /> },
+    { tab: "Import",  label: "Import",  icon: (color) => <Feather name="download" size={15} color={color} /> },
   ];
 
   return (
