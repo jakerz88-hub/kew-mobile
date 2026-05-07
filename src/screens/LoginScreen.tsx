@@ -220,8 +220,8 @@ export default function LoginScreen() {
         >
           <View style={styles.logoSection}>
             <View style={styles.logoLockup}>
-              <LogoMark size={40} />
-              <KewLogo size={56} />
+              <LogoMark size={56} />
+              <KewLogo size={72} />
             </View>
             <SansText style={styles.tagline}>
               Watch intentionally.{"\n"}No algorithm. No autoplay. No noise.
@@ -375,12 +375,12 @@ const styles = StyleSheet.create({
   inner:        { flexGrow: 1, paddingHorizontal: Spacing.lg, justifyContent: "space-between", paddingVertical: Spacing.xl },
   logoSection:  { alignItems: "center", paddingTop: Spacing.xxl, gap: Spacing.md },
   logoLockup:   { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
-  tagline:      { fontSize: FontSize.md, color: Colors.warmMid, textAlign: "center", lineHeight: 24, fontFamily: FontFamily.sansLight },
+  tagline:      { fontSize: FontSize.lg, color: Colors.warmMid, textAlign: "center", lineHeight: 28, fontFamily: FontFamily.sansLight },
   howItWorks:   { gap: Spacing.lg, paddingHorizontal: Spacing.sm },
-  howItem:      { flexDirection: "row", alignItems: "flex-start", gap: Spacing.md },
-  howIcon:      { fontSize: 18, width: 28, textAlign: "center", marginTop: 1 },
-  howText:      { flex: 1, fontSize: FontSize.sm, color: Colors.warmMid, lineHeight: 20 },
-  ctaSection:   { gap: Spacing.md },
+  howItem:      { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.md },
+  howIcon:      { fontSize: 22, textAlign: "center", marginTop: 1 },
+  howText:      { fontSize: FontSize.md, color: Colors.warmMid, lineHeight: 22, textAlign: "center" },
+  ctaSection:   { gap: Spacing.md, alignSelf: "center", width: "100%", maxWidth: 340 },
 
   // Google
   googleBtn:      { backgroundColor: Colors.ink, borderRadius: 999, height: 52, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.sm },

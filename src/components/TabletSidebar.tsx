@@ -1,5 +1,5 @@
 import React from "react";
-import { View, TouchableOpacity, StyleSheet } from "react-native";
+import { View, TouchableOpacity, StyleSheet, SafeAreaView } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useStore } from "../store";
 import { useTheme } from "../contexts/ThemeContext";
@@ -42,7 +42,7 @@ export function TabletSidebar({
   ];
 
   return (
-    <View style={[styles.sidebar, { width, backgroundColor: colors.cardBg, borderRightColor: colors.divider }]}>
+    <SafeAreaView style={[styles.sidebar, { width, backgroundColor: colors.cardBg, borderRightColor: colors.divider }]}>
       {/* Logo area */}
       <View style={[styles.logoArea, { borderBottomColor: colors.divider }, collapsed && styles.logoAreaCollapsed]}>
         {collapsed ? (
@@ -127,7 +127,7 @@ export function TabletSidebar({
           )}
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 

@@ -43,7 +43,7 @@ import InsightsScreen from "./src/screens/InsightsScreen";
 import BenefitsScreen from "./src/screens/BenefitsScreen";
 import AppIconScreen from "./src/screens/AppIconScreen";
 import TabletNavigator from "./src/navigation/TabletNavigator";
-import { useIsTablet } from "./src/hooks/useIsTablet";
+import { useIsTablet, useIsTabletDevice } from "./src/hooks/useIsTablet";
 
 const ONBOARDING_KEY = "kew_onboarding_done";
 
@@ -112,9 +112,25 @@ function TabNavigator() {
   );
 }
 
+const PHONE_LAYOUT_MAX_WIDTH = 500;
+
 function TabsOrTablet() {
   const isTablet = useIsTablet();
-  return isTablet ? <TabletNavigator /> : <TabNavigator />;
+  const isTabletDevice = useIsTabletDevice();
+  const { colors } = useTheme();
+  if (isTablet) return <TabletNavigator />;
+  if (isTabletDevice) {
+    // iPad in portrait: render the phone layout centered at a max width
+    // so it doesn't sprawl across the full screen.
+    return (
+      <View style={{ flex: 1, alignItems: "center", backgroundColor: colors.background }}>
+        <View style={{ flex: 1, width: "100%", maxWidth: PHONE_LAYOUT_MAX_WIDTH }}>
+          <TabNavigator />
+        </View>
+      </View>
+    );
+  }
+  return <TabNavigator />;
 }
 
 function AppNavigator() {
