@@ -264,4 +264,20 @@ export const api = {
       }),
     });
   },
+
+  // ── Interact (like + comment via YouTube) ──────────────────────────────────
+
+  interactLike(ytVideoId: string, action: "like" | "unlike"): Promise<{ message: string }> {
+    return request("/v1/interact/like", {
+      method: "POST",
+      body: JSON.stringify({ yt_video_id: ytVideoId, action }),
+    });
+  },
+
+  interactComment(ytVideoId: string, text: string): Promise<{ commentId: string; commentUrl: string }> {
+    return request("/v1/interact/comment", {
+      method: "POST",
+      body: JSON.stringify({ yt_video_id: ytVideoId, text }),
+    });
+  },
 };

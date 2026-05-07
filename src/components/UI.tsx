@@ -193,11 +193,44 @@ export function Toast({ message, visible }: { message: string; visible: boolean 
   );
 }
 
-export function ErrorBanner({ message, onDismiss }: { message: string; onDismiss: () => void }) {
+export function ErrorBanner({
+  message,
+  onDismiss,
+  actionLabel,
+  onAction,
+  actionBusy,
+}: {
+  message: string;
+  onDismiss: () => void;
+  actionLabel?: string;
+  onAction?: () => void;
+  actionBusy?: boolean;
+}) {
   const { colors } = useTheme();
+  const hasAction = !!actionLabel && !!onAction;
   return (
-    <TouchableOpacity style={[staticStyles.errorBanner, { backgroundColor: colors.accent }]} onPress={onDismiss}>
-      <SansText style={[staticStyles.errorText, { color: colors.buttonText }]}>{message}</SansText>
+    <TouchableOpacity
+      style={[staticStyles.errorBanner, { backgroundColor: colors.accent }]}
+      onPress={onDismiss}
+      activeOpacity={0.85}
+    >
+      <SansText style={[staticStyles.errorText, { color: colors.buttonText, flex: hasAction ? 1 : undefined }]}>
+        {message}
+      </SansText>
+      {hasAction && (
+        <TouchableOpacity
+          onPress={(e) => { e.stopPropagation(); onAction!(); }}
+          disabled={actionBusy}
+          activeOpacity={0.7}
+          style={[staticStyles.errorActionBtn, { borderColor: colors.buttonText, opacity: actionBusy ? 0.5 : 1 }]}
+          accessibilityRole="button"
+          accessibilityLabel={actionLabel}
+        >
+          <SansText style={[staticStyles.errorActionText, { color: colors.buttonText }]}>
+            {actionBusy ? "…" : actionLabel}
+          </SansText>
+        </TouchableOpacity>
+      )}
     </TouchableOpacity>
   );
 }
@@ -220,8 +253,10 @@ const staticStyles = StyleSheet.create({
   emptyIcon:     { fontSize: 40, marginBottom: Spacing.md },
   emptyTitle:    { fontSize: FontSize.lg, textAlign: "center", marginBottom: Spacing.sm },
   emptySubtitle: { fontSize: FontSize.sm, textAlign: "center", lineHeight: 20 },
-  errorBanner:   { padding: Spacing.sm, margin: Spacing.md, borderRadius: Radius.sm },
+  errorBanner:   { padding: Spacing.sm, margin: Spacing.md, borderRadius: Radius.sm, flexDirection: "row", alignItems: "center", gap: Spacing.sm },
   errorText:     { fontSize: FontSize.xs, textAlign: "center" },
+  errorActionBtn:  { borderWidth: 1.5, borderRadius: Radius.pill, paddingVertical: 4, paddingHorizontal: 12, flexShrink: 0 },
+  errorActionText: { fontSize: FontSize.xs, fontFamily: FontFamily.sansMedium },
   avatarBubbleBg:      { alignItems: "center", justifyContent: "center" },
   avatarBubbleInitial: { fontFamily: FontFamily.sansMedium },
   // Toast stays intentionally dark in both modes

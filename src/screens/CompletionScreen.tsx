@@ -3,9 +3,16 @@ import { View, StyleSheet, SafeAreaView, TouchableOpacity, Image } from "react-n
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { useStore } from "../store";
 import { SerifText, SansText, ThumbPlaceholder } from "../components/UI";
+import { InteractModule } from "../components/InteractModule";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
 import { formatDuration } from "../types";
+
+interface CompletedVideoParam {
+  ytVideoId: string;
+  title: string;
+  durationSecs: number | null;
+}
 
 export default function CompletionScreen() {
   const navigation = useNavigation<any>();
@@ -14,10 +21,12 @@ export default function CompletionScreen() {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { queue, user, fetchUser } = useStore();
   const [userLoaded, setUserLoaded] = useState(false);
+  const [interactVisible, setInteractVisible] = useState(false);
 
   useEffect(() => { fetchUser().then(() => setUserLoaded(true)); }, []);
 
   const watchedSecs: number = route.params?.watchedSecs ?? 0;
+  const completedVideo: CompletedVideoParam | undefined = route.params?.completedVideo;
   // The backend promotes the next entry to "watching" on completion, so the
   // up-next card should show queue.current — not the first pending, which
   // would be one entry too far ahead.
@@ -45,6 +54,23 @@ export default function CompletionScreen() {
           <StatCard value={String(queue?.total ?? 0)} label="In Queue" />
           <StatCard value={String(user?.skipsRemaining ?? "-")} label="Skips Left" />
         </View>
+
+        {completedVideo && (
+          <View style={styles.interactRow}>
+            <SansText style={styles.interactCopy} numberOfLines={2}>
+              Let this creator know what you thought of this video
+            </SansText>
+            <TouchableOpacity
+              onPress={() => setInteractVisible(true)}
+              style={styles.interactBtn}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Interact"
+            >
+              <SansText style={styles.interactBtnText}>Interact</SansText>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {nextEntry ? (
           <View style={styles.nextSection}>
@@ -75,6 +101,17 @@ export default function CompletionScreen() {
           <SansText style={styles.backToQueueText}>Back to queue</SansText>
         </TouchableOpacity>
       </View>
+
+      {completedVideo && (
+        <InteractModule
+          visible={interactVisible}
+          onClose={() => setInteractVisible(false)}
+          videoTitle={completedVideo.title}
+          currentTimestamp={watchedSecs}
+          ytVideoId={completedVideo.ytVideoId}
+          durationSecs={completedVideo.durationSecs}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -103,6 +140,10 @@ function makeStyles(c: ColorPalette) {
     statCard:     { flex: 1, backgroundColor: c.cardBg, borderWidth: 1, borderColor: c.divider, borderRadius: Radius.md, padding: Spacing.md, alignItems: "center" },
     statValue:    { fontSize: FontSize.xl },
     statLabel:    { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 0.5, marginTop: 2 },
+    interactRow:    { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: Spacing.sm, paddingVertical: Spacing.xs },
+    interactCopy:   { flex: 1, fontSize: FontSize.sm, color: c.warmMid, lineHeight: 18 },
+    interactBtn:    { borderWidth: 1.5, borderColor: c.accent, borderRadius: Radius.pill, paddingVertical: 8, paddingHorizontal: 18, backgroundColor: c.accent },
+    interactBtnText:{ fontSize: FontSize.sm, color: c.buttonText, fontFamily: FontFamily.sansMedium },
     nextSection:  { gap: Spacing.sm },
     nextLabel:    { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 1, fontFamily: FontFamily.sansMedium },
     // "Up Next" card — intentionally always dark (immersive cinema surface)
