@@ -14,7 +14,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.kew.app",
-      "buildNumber": "3",
+      "buildNumber": "6",
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSAppTransportSecurity": {

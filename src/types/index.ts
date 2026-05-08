@@ -167,6 +167,15 @@ export function formatProgress(progressSecs: number, durationSecs: number | null
   return `${Math.round((progressSecs / durationSecs) * 100)}% watched`;
 }
 
+export function formatDate(isoString: string | null): string {
+  if (!isoString) return "";
+  return new Date(isoString).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 export function timeAgo(isoString: string | null): string {
   if (!isoString) return "";
   const diff = Date.now() - new Date(isoString).getTime();

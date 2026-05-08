@@ -18,7 +18,7 @@ import { useTooltip } from "../hooks/useTooltip";
 import TooltipOverlay, { TooltipAnchor } from "../components/TooltipOverlay";
 import { handleLastSkipUsed } from "../utils/kewPlusUpsell";
 import type { QueueEntry } from "../types";
-import { formatDuration, timeAgo } from "../types";
+import { formatDuration, timeAgo, formatDate } from "../types";
 
 const PROGRESS_REPORT_INTERVAL = 10 * 1000;
 
@@ -343,8 +343,11 @@ export default function PlayerScreen() {
         <View style={styles.metaSection}>
           <SansText style={styles.channelName}>{current.video.channelTitle}</SansText>
           <SerifText style={styles.videoTitle}>{current.video.title}</SerifText>
+          {current.video.publishedAt && (
+            <SansText style={styles.metaText}>Uploaded on {formatDate(current.video.publishedAt)}</SansText>
+          )}
           <View style={styles.metaRow}>
-            <SansText style={styles.metaText}>Added {timeAgo(current.addedAt)}</SansText>
+            <SansText style={styles.metaText}>Added to your queue {timeAgo(current.addedAt)}</SansText>
           </View>
           {current.video.description && current.video.description.trim().length > 0 && (
             <>

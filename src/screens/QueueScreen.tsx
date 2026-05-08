@@ -19,7 +19,7 @@ import { LogoMark } from "../components/TabIcons";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
 import type { QueueEntry } from "../types";
-import { formatDuration, formatProgress, timeAgo } from "../types";
+import { formatDuration, formatProgress, timeAgo, formatDate } from "../types";
 import { useIsTablet } from "../hooks/useIsTablet";
 import { useInTabletSidebar, useTabletSwitchTab } from "../contexts/TabletSidebarContext";
 import { useTooltip } from "../hooks/useTooltip";
@@ -472,7 +472,10 @@ export default function QueueScreen() {
                 <View style={tStyles.videoInfo}>
                   <SansText style={tStyles.videoChannel}>{current.video.channelTitle}</SansText>
                   <SerifText style={tStyles.videoTitle}>{current.video.title}</SerifText>
-                  <SansText style={tStyles.videoMeta}>Added {timeAgo(current.addedAt)}</SansText>
+                  {current.video.publishedAt && (
+                    <SansText style={tStyles.videoMeta}>Uploaded on {formatDate(current.video.publishedAt)}</SansText>
+                  )}
+                  <SansText style={tStyles.videoMeta}>Added to your queue {timeAgo(current.addedAt)}</SansText>
 
                   {current.video.description && (
                     <>
