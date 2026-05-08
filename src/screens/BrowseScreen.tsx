@@ -58,6 +58,9 @@ export default function BrowseScreen() {
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
   const [panelVideos, setPanelVideos]   = useState<BrowseVideo[]>([]);
   const [panelLoading, setPanelLoading] = useState(false);
+  const STAGE_WEEKS = [2, 12, 36, 0] as const;
+  const [panelStage, setPanelStage]             = useState(0);
+  const [panelLoadingOlder, setPanelLoadingOlder] = useState(false);
 
   // Queue picker (shared hook — handles iOS ActionSheet + Android modal)
   const { handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId } = useAddToQueue(
@@ -91,17 +94,24 @@ export default function BrowseScreen() {
     } catch { /* silent — strip just won't show */ }
   }, []);
 
-  const loadPanelVideos = useCallback(async (channelId: string | null) => {
-    setPanelLoading(true);
+  const loadPanelVideos = useCallback(async (channelId: string | null, targetStage = 0) => {
+    if (targetStage === 0) {
+      setPanelLoading(true);
+      setPanelStage(0);
+    } else {
+      setPanelLoadingOlder(true);
+    }
     try {
       const vids = channelId
-        ? await api.browseFeed(channelId)
+        ? await api.browseFeed(channelId, STAGE_WEEKS[targetStage])
         : await api.getRecentUploads();
       setPanelVideos(vids);
+      if (channelId) setPanelStage(targetStage);
     } catch (e: any) {
       setLoadError(e?.message ?? "Failed to load videos");
     } finally {
       setPanelLoading(false);
+      setPanelLoadingOlder(false);
     }
   }, []);
 
@@ -355,6 +365,15 @@ export default function BrowseScreen() {
                     </SansText>
                   </View>
                 }
+                ListFooterComponent={
+                  selectedChannelId && !panelLoading ? (
+                    <TabletLoadMoreFooter
+                      stage={panelStage}
+                      loadingOlder={panelLoadingOlder}
+                      onLoadOlder={() => loadPanelVideos(selectedChannelId, panelStage + 1)}
+                    />
+                  ) : null
+                }
               />
             )}
           </View>
@@ -559,6 +578,34 @@ function ChannelRow({ channel, onPress }: { channel: Channel; onPress: () => voi
   );
 }
 
+function TabletLoadMoreFooter({ stage, loadingOlder, onLoadOlder }: {
+  stage: number;
+  loadingOlder: boolean;
+  onLoadOlder: () => void;
+}) {
+  const { colors } = useTheme();
+  const tStyles = useMemo(() => makeTabletStyles(colors), [colors]);
+  const isExhausted = stage >= 3;
+  return (
+    <View style={tStyles.footerContainer}>
+      {isExhausted ? (
+        <SansText style={tStyles.exhaustedText}>No more videos available</SansText>
+      ) : (
+        <TouchableOpacity
+          style={tStyles.loadOlderBtn}
+          onPress={onLoadOlder}
+          disabled={loadingOlder}
+          activeOpacity={0.7}
+        >
+          <SansText style={tStyles.loadOlderText}>
+            {loadingOlder ? "Loading…" : stage === 2 ? "Load all videos" : "Load older videos"}
+          </SansText>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+}
+
 // ── Tablet styles ──────────────────────────────────────────────
 function makeTabletStyles(c: ColorPalette) {
   return StyleSheet.create({
@@ -614,6 +661,10 @@ function makeTabletStyles(c: ColorPalette) {
     addBtnQueued:     { backgroundColor: "transparent", borderWidth: 1.5, borderColor: c.greenText },
     addBtnText:       { fontSize: FontSize.xxs, color: c.buttonText, fontFamily: FontFamily.sansMedium },
     addBtnTextQueued: { color: c.greenText },
+    footerContainer: { alignItems: "center", paddingVertical: Spacing.lg },
+    loadOlderBtn:    { paddingHorizontal: Spacing.xl, paddingVertical: Spacing.sm, borderRadius: Radius.pill, borderWidth: 1.5, borderColor: c.accent },
+    loadOlderText:   { fontSize: FontSize.sm, color: c.accent, fontFamily: FontFamily.sansMedium },
+    exhaustedText:   { fontSize: FontSize.sm, color: c.warmMid, fontFamily: FontFamily.sansMedium },
   });
 }
 
