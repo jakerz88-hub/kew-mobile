@@ -1028,13 +1028,13 @@ function makeStyles(c: ColorPalette) {
 
     // Day block within an expanded month
     dayBlock:        { paddingHorizontal: Spacing.md, paddingTop: 4, paddingBottom: Spacing.sm },
-    dayRow:          { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 4 },
+    dayRow:          { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 4, paddingLeft: Spacing.sm },
     dayBullet:       { fontSize: FontSize.xs, color: c.queued, marginTop: -1 },
     dayHeading:      { fontFamily: "Lora_400Regular_Italic", fontSize: FontSize.lg, color: c.ink, flexShrink: 1 },
 
     // Entry block — note text + indented video reference
     itemBlock:       { paddingTop: 6, paddingBottom: 4 },
-    entryBlock:      { paddingVertical: 6, paddingLeft: Spacing.md },
+    entryBlock:      { paddingVertical: 6, paddingLeft: Spacing.lg },
     entryRow:        { flexDirection: "row", alignItems: "flex-start", gap: 8 },
     entryNoteWrap:   { flex: 1, borderLeftWidth: 2, borderLeftColor: c.accent, paddingLeft: 8 },
     entryNote:       { fontFamily: "DMSans_400Regular_Italic", fontSize: FontSize.md, color: c.ink, lineHeight: 22 },
