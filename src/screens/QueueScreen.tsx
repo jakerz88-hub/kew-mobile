@@ -163,7 +163,16 @@ export default function QueueScreen() {
     if (state === "playing") setPlaying(true);
     if (state === "paused")  setPlaying(false);
     if (state === "ended") {
-      const watchedSecs = current.video.durationSecs ?? 0;
+      // Pause IMMEDIATELY before any awaits — YouTube's internal
+      // autoplay-next would otherwise fire during the async gap before
+      // navigation.navigate("Completion", ...). See PlayerScreen for the
+      // matching fix.
+      setPlaying(false);
+      // Use the player's actual current position (matches PlayerScreen).
+      // Some YouTube videos (livestreams, premieres) have null durationSecs,
+      // so the cached value alone leaves watchedSecs at 0 in those cases.
+      const playerSecs = await playerRef.current?.getCurrentTime().catch(() => null);
+      const watchedSecs = playerSecs != null ? Math.floor(playerSecs) : (current.video.durationSecs ?? 0);
       await updateProgress(current.id, watchedSecs);
       await fetchQueue();
       navigation.navigate("Completion", {
@@ -461,6 +470,9 @@ export default function QueueScreen() {
                     videoId={current.video.ytVideoId}
                     play={playing}
                     onChangeState={onPlayerStateChange}
+                    // rel: 0 disables YouTube's "related videos" overlay,
+                    // which on iOS can manifest as autoplay-next at end.
+                    initialPlayerParams={{ rel: 0 }}
                     webViewProps={{
                       allowsInlineMediaPlayback: true,
                       mediaPlaybackRequiresUserAction: false,
