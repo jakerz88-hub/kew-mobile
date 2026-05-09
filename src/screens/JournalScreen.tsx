@@ -1024,21 +1024,21 @@ function makeStyles(c: ColorPalette) {
 
     // Month row — Lora 400 italic, FontSize.md (15)
     monthRow:        { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: Spacing.md, paddingTop: Spacing.md, paddingBottom: 6 },
-    monthHeading:    { fontFamily: "Lora_400Regular_Italic", fontSize: FontSize.md, color: c.ink, flexShrink: 0 },
+    monthHeading:    { fontFamily: "Lora_400Regular_Italic", fontSize: FontSize.lg, color: c.ink, flexShrink: 0 },
     monthSummary:    { fontFamily: FontFamily.sans, fontSize: FontSize.xs, color: c.warmMid, marginLeft: "auto", textAlign: "right" },
 
     // Day block within an expanded month
     dayBlock:        { paddingHorizontal: Spacing.md, paddingTop: 4, paddingBottom: Spacing.sm },
     dayRow:          { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 4 },
     dayBullet:       { fontSize: FontSize.xs, color: c.queued, marginTop: -1 },
-    dayHeading:      { fontFamily: "Lora_400Regular", fontSize: FontSize.sm, color: c.ink, flexShrink: 1 },
+    dayHeading:      { fontFamily: "Lora_400Regular", fontSize: FontSize.md, color: c.ink, flexShrink: 1 },
 
     // Entry block — note text + indented video reference
     itemBlock:       { paddingTop: 6, paddingBottom: 4 },
     entryBlock:      { paddingVertical: 6 },
     entryRow:        { flexDirection: "row", alignItems: "flex-start", gap: 8 },
     entryNoteWrap:   { flex: 1, borderLeftWidth: 2, borderLeftColor: c.accent, paddingLeft: 8 },
-    entryNote:       { fontFamily: "DMSans_400Regular_Italic", fontSize: FontSize.sm, color: c.ink, lineHeight: 20 },
+    entryNote:       { fontFamily: "DMSans_400Regular_Italic", fontSize: FontSize.md, color: c.ink, lineHeight: 22 },
     readMore:        { fontFamily: FontFamily.sansMedium, fontSize: FontSize.xs, color: c.accent, marginTop: 4 },
 
     entryVideoRef:   { flexDirection: "row", alignItems: "center", gap: 8, marginLeft: 14, marginTop: 6 },
@@ -1070,7 +1070,7 @@ function makeStyles(c: ColorPalette) {
     historyMetaLine: { fontFamily: FontFamily.sans, fontSize: FontSize.xs, color: c.queued, marginTop: 2 },
 
     historyEntryWrap:    { borderLeftWidth: 2, borderLeftColor: c.accent, paddingLeft: 8 },
-    historyEntryText:    { fontFamily: "DMSans_400Regular_Italic", fontSize: FontSize.sm, color: c.ink, lineHeight: 20 },
+    historyEntryText:    { fontFamily: "DMSans_400Regular_Italic", fontSize: FontSize.md, color: c.ink, lineHeight: 22 },
     historyAddEntry:     { alignSelf: "flex-start", paddingVertical: 2 },
     historyAddEntryText: { fontFamily: FontFamily.sansMedium, fontSize: FontSize.xs, color: c.accent },
 
