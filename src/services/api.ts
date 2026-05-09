@@ -1,6 +1,6 @@
 import { supabase } from "./supabase";
 import Constants from "expo-constants";
-import type { Queue, BrowseVideo, Channel, User, SkipResult, Playlist, PlaylistVideosResult, ImportResult, KewQueue, Insights, InsightsPeriod, Intentionality, WatchLimits, WatchEventType } from "../types";
+import type { Queue, BrowseVideo, Channel, User, SkipResult, Playlist, PlaylistVideosResult, ImportResult, KewQueue, Insights, InsightsPeriod, Intentionality, WatchLimits, WatchEventType, JournalEntry, JournalFeedItem } from "../types";
 
 // Final fallback: see src/services/supabase.ts — Constants.expoConfig.extra can return null
 // in OTA-delivered manifests, leaving BASE_URL undefined and hanging fetchUser() forever
@@ -53,6 +53,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     }
     throw new Error(`${res.status}: ${errorBody.detail || "Request failed"}`);
   }
+
+  // 204 No Content (e.g. DELETE /v1/journal/entries/:id) — body is empty,
+  // so res.json() would throw. Return undefined for callers that type as void.
+  if (res.status === 204) return undefined as T;
 
   const data = await res.json();
   return keysToCamel<T>(data);
@@ -287,5 +291,39 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ yt_video_id: ytVideoId, text }),
     });
+  },
+
+  // ── Journal ────────────────────────────────────────────────────────────────
+
+  getJournalFeed(): Promise<JournalFeedItem[]> {
+    return request("/v1/journal/feed");
+  },
+
+  createJournalEntry(
+    videoId: string,
+    content: string,
+    videoTimestampSecs?: number | null,
+  ): Promise<JournalEntry> {
+    return request("/v1/journal/entries", {
+      method: "POST",
+      body: JSON.stringify({
+        video_id: videoId,
+        content,
+        // Only include the field if provided. Omitting lets the backend
+        // store NULL; passing explicit null also stores NULL.
+        ...(videoTimestampSecs !== undefined ? { video_timestamp_secs: videoTimestampSecs } : {}),
+      }),
+    });
+  },
+
+  updateJournalEntry(entryId: string, content: string): Promise<JournalEntry> {
+    return request(`/v1/journal/entries/${entryId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ content }),
+    });
+  },
+
+  deleteJournalEntry(entryId: string): Promise<void> {
+    return request(`/v1/journal/entries/${entryId}`, { method: "DELETE" });
   },
 };

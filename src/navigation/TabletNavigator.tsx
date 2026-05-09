@@ -7,12 +7,12 @@ import { TabletSidebarProvider } from "../contexts/TabletSidebarContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { useStore } from "../store";
 import { SansText, KewLogo, AvatarBubble } from "../components/UI";
-import { LogoMark, QueueTabIcon, BrowseTabIcon, ExploreTabIcon, HistoryTabIcon } from "../components/TabIcons";
+import { LogoMark, QueueTabIcon, BrowseTabIcon, ExploreTabIcon, JournalTabIcon } from "../components/TabIcons";
 import { Spacing } from "../types/theme";
 import QueueScreen from "../screens/QueueScreen";
 import BrowseScreen from "../screens/BrowseScreen";
 import ExploreScreen from "../screens/ExploreScreen";
-import HistoryScreen from "../screens/HistoryScreen";
+import JournalScreen from "../screens/JournalScreen";
 import TabletImportScreen from "../screens/tablet/TabletImportScreen";
 
 export default function TabletNavigator() {
@@ -26,7 +26,7 @@ export default function TabletNavigator() {
     Queue:   <QueueScreen />,
     Browse:  <BrowseScreen />,
     Explore: <ExploreScreen />,
-    History: <HistoryScreen />,
+    History: <JournalScreen />,
     Import:  <TabletImportScreen />,
   };
 
@@ -105,7 +105,7 @@ const BOTTOM_TABS: { tab: TabletTab; label: string; icon: (color: string) => Rea
   { tab: "Queue",   label: "Queue",   icon: (color) => <QueueTabIcon   color={color} /> },
   { tab: "Browse",  label: "Browse",  icon: (color) => <BrowseTabIcon  color={color} /> },
   { tab: "Explore", label: "Explore", icon: (color) => <ExploreTabIcon color={color} /> },
-  { tab: "History", label: "History", icon: (color) => <HistoryTabIcon color={color} /> },
+  { tab: "History", label: "Journal", icon: (color) => <JournalTabIcon color={color} /> },
   { tab: "Import",  label: "Import",  icon: (color) => <Feather name="download" size={20} color={color} /> },
 ];
 

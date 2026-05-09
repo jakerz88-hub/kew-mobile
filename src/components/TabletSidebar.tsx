@@ -4,7 +4,7 @@ import { Feather } from "@expo/vector-icons";
 import { useStore } from "../store";
 import { useTheme } from "../contexts/ThemeContext";
 import { SansText, KewLogo } from "./UI";
-import { LogoMark, QueueTabIcon, BrowseTabIcon, ExploreTabIcon, HistoryTabIcon } from "./TabIcons";
+import { LogoMark, QueueTabIcon, BrowseTabIcon, ExploreTabIcon, JournalTabIcon } from "./TabIcons";
 import type { TabletTab } from "../contexts/TabletSidebarContext";
 
 export type { TabletTab };
@@ -38,7 +38,7 @@ export function TabletSidebar({
     { tab: "Queue",   label: "Queue",   icon: (color) => <QueueTabIcon   color={color} /> },
     { tab: "Browse",  label: "Browse",  icon: (color) => <BrowseTabIcon  color={color} /> },
     { tab: "Explore", label: "Explore", icon: (color) => <ExploreTabIcon color={color} /> },
-    { tab: "History", label: "History", icon: (color) => <HistoryTabIcon color={color} /> },
+    { tab: "History", label: "Journal", icon: (color) => <JournalTabIcon color={color} /> },
     { tab: "Import",  label: "Import",  icon: (color) => <Feather name="download" size={15} color={color} /> },
   ];
 
