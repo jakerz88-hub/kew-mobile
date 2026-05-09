@@ -1021,16 +1021,16 @@ function makeStyles(c: ColorPalette) {
 
     segmentedWrap:   { paddingVertical: Spacing.sm, alignItems: "center" },
 
-    // Month row — Lora 400 italic, FontSize.md (15)
+    // Month row — DM Sans Medium (non-italic), FontSize.xl (22)
     monthRow:        { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: Spacing.md, paddingTop: Spacing.md, paddingBottom: 6 },
-    monthHeading:    { fontFamily: "Lora_400Regular_Italic", fontSize: FontSize.xl, color: c.ink, flexShrink: 0 },
+    monthHeading:    { fontFamily: FontFamily.sansMedium, fontSize: FontSize.xl, color: c.ink, flexShrink: 0 },
     monthSummary:    { fontFamily: FontFamily.sans, fontSize: FontSize.xs, color: c.warmMid, marginLeft: "auto", textAlign: "right" },
 
     // Day block within an expanded month
     dayBlock:        { paddingHorizontal: Spacing.md, paddingTop: 4, paddingBottom: Spacing.sm },
     dayRow:          { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 4 },
     dayBullet:       { fontSize: FontSize.xs, color: c.queued, marginTop: -1 },
-    dayHeading:      { fontFamily: "Lora_400Regular", fontSize: FontSize.lg, color: c.ink, flexShrink: 1 },
+    dayHeading:      { fontFamily: "Lora_400Regular_Italic", fontSize: FontSize.lg, color: c.ink, flexShrink: 1 },
 
     // Entry block — note text + indented video reference
     itemBlock:       { paddingTop: 6, paddingBottom: 4 },
