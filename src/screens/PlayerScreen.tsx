@@ -203,6 +203,11 @@ export default function PlayerScreen() {
     }
     if (state === "paused")  setPlaying(false);
     if (state === "ended" && current) {
+      // Pause IMMEDIATELY before any awaits — YouTube's internal
+      // autoplay-next behavior fires during the async gap before
+      // navigation.replace("Completion", ...) and would auto-start the
+      // next related video unless `playing` is forced false synchronously.
+      setPlaying(false);
       // Prefer the player's actual current position over the cached video
       // duration — some YouTube videos (livestreams, premieres) have null
       // durationSecs, which would otherwise leave watchedSecs at 0 and
@@ -324,11 +329,15 @@ export default function PlayerScreen() {
           videoId={current.video.ytVideoId}
           play={playing}
           onChangeState={onStateChange}
-          initialPlayerParams={
-            current.watchProgressSecs > 10
+          // rel: 0 disables YouTube's "related videos" overlay, which on iOS
+          // can manifest as an autoplay-next when a video ends. Always
+          // present; `start` only when resuming mid-video.
+          initialPlayerParams={{
+            ...(current.watchProgressSecs > 10
               ? { start: Math.max(0, current.watchProgressSecs - 3) }
-              : undefined
-          }
+              : {}),
+            rel: 0,
+          }}
           webViewProps={{
             allowsInlineMediaPlayback: true,
             mediaPlaybackRequiresUserAction: false,
