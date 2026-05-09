@@ -654,8 +654,6 @@ function EntryBlock({
             </TouchableOpacity>
           )}
         </View>
-
-        <ReaddCircle onPress={onReadd} adding={adding} readded={readded} />
       </View>
 
       <View style={styles.entryVideoRef}>
@@ -674,6 +672,7 @@ function EntryBlock({
             <SansText style={styles.tsChipText}>at {formatTimestampShort(entry.videoTimestampSecs)}</SansText>
           </View>
         )}
+        <ReaddCircle onPress={onReadd} adding={adding} readded={readded} />
       </View>
     </TouchableOpacity>
   );
@@ -1024,7 +1023,7 @@ function makeStyles(c: ColorPalette) {
 
     // Month row — Lora 400 italic, FontSize.md (15)
     monthRow:        { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: Spacing.md, paddingTop: Spacing.md, paddingBottom: 6 },
-    monthHeading:    { fontFamily: "Lora_400Regular_Italic", fontSize: FontSize.lg, color: c.ink, flexShrink: 0 },
+    monthHeading:    { fontFamily: "Lora_400Regular_Italic", fontSize: FontSize.xl, color: c.ink, flexShrink: 0 },
     monthSummary:    { fontFamily: FontFamily.sans, fontSize: FontSize.xs, color: c.warmMid, marginLeft: "auto", textAlign: "right" },
 
     // Day block within an expanded month
