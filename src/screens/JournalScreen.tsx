@@ -878,6 +878,7 @@ function EntryComposer({
 
   const translateY = useRef(new Animated.Value(1)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
+  const inputRef = useRef<TextInput>(null);
   const [mounted, setMounted] = useState(true);
   const [text, setText] = useState(existingContent ?? "");
   const [saving, setSaving] = useState(false);
@@ -890,7 +891,11 @@ function EntryComposer({
       Animated.timing(backdropOpacity, {
         toValue: BACKDROP_OPACITY, duration: 200, useNativeDriver: true,
       }),
-    ]).start();
+    ]).start(() => {
+      // Focus only after the slide-in completes — autoFocus races the keyboard
+      // against the slide and makes the sheet feel laggy on open.
+      inputRef.current?.focus();
+    });
   }, []);
 
   const runClose = () => {
@@ -965,13 +970,13 @@ function EntryComposer({
 
             <View style={styles.bodyWrap}>
               <TextInput
+                ref={inputRef}
                 style={styles.textarea}
                 placeholder="What are you thinking about…"
                 placeholderTextColor={colors.queued}
                 value={text}
                 onChangeText={setText}
                 multiline
-                autoFocus
                 maxLength={ENTRY_MAX_CHARS}
                 textAlignVertical="top"
               />
