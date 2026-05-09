@@ -1050,7 +1050,7 @@ function makeStyles(c: ColorPalette) {
     tsChipText:      { fontSize: FontSize.xxs, color: c.accent, fontFamily: FontFamily.sansMedium },
 
     // Un-entered watched item
-    unenteredRow:    { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 4, opacity: 0.45 },
+    unenteredRow:    { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 4, paddingLeft: Spacing.lg, opacity: 0.45 },
     unenteredLeft:   { flex: 1, flexDirection: "row", alignItems: "center", gap: 8 },
     unenteredThumb:  { width: 36, height: 24, borderRadius: 3, overflow: "hidden", backgroundColor: c.divider, position: "relative" },
     unenteredMeta:   { flex: 1, minWidth: 0 },

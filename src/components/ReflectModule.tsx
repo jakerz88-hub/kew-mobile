@@ -50,6 +50,10 @@ const ENTRY_MAX_CHARS = 750;
 interface ReflectModuleProps {
   visible: boolean;
   onClose: () => void;
+  /** Fired after the entry persists successfully, before the close animation
+   *  begins. The parent (PlayerScreen) uses this to surface a confirmation
+   *  toast — the modal closes too fast for an inline toast to land. */
+  onSaved?: () => void;
   videoTitle: string;
   ytVideoId: string;
   /** Playback position (seconds) at the moment the sheet opened. */
@@ -79,6 +83,7 @@ function CloseIcon({ color }: { color: string }) {
 export function ReflectModule({
   visible,
   onClose,
+  onSaved,
   videoTitle,
   ytVideoId,
   currentTimestamp,
@@ -162,6 +167,7 @@ export function ReflectModule({
       // either way — the DB column is for indexing, not display.)
       const ts = chipTapped ? Math.max(0, Math.floor(currentTimestamp)) : null;
       await api.createJournalEntry(ytVideoId, trimmed, ts);
+      onSaved?.();
       runClose();
     } catch (e: any) {
       setError(e?.message ?? "Couldn't save entry.");

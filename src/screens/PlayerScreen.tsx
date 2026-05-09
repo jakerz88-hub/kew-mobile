@@ -11,7 +11,7 @@ import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import YoutubePlayer from "react-native-youtube-iframe";
 import { useStore } from "../store";
 import { api } from "../services/api";
-import { KewLogo, SansText, SerifText, Divider, ThumbPlaceholder, SkipCounter } from "../components/UI";
+import { KewLogo, SansText, SerifText, Divider, ThumbPlaceholder, SkipCounter, Toast } from "../components/UI";
 import { LogoMark } from "../components/TabIcons";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
@@ -91,6 +91,16 @@ export default function PlayerScreen() {
   const [interactTs, setInteractTs] = useState(0);
   const [reflectVisible, setReflectVisible] = useState(false);
   const [reflectTs, setReflectTs] = useState(0);
+  const [toastMsg, setToastMsg] = useState("");
+  const [toastVisible, setToastVisible] = useState(false);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showToast = useCallback((msg: string) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToastMsg(msg);
+    setToastVisible(true);
+    toastTimer.current = setTimeout(() => setToastVisible(false), 3000);
+  }, []);
+  useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
   // Pre-fill the Mark Done circle to filled-green the moment the user taps it,
   // even though the confirmation modal still gates the actual completion.
   // Reverts on cancel / when a new video starts.
@@ -549,6 +559,7 @@ export default function PlayerScreen() {
       <ReflectModule
         visible={reflectVisible}
         onClose={() => { setReflectVisible(false); setPlaying(true); }}
+        onSaved={() => showToast("Entry saved")}
         videoTitle={current.video.title}
         ytVideoId={current.video.ytVideoId}
         currentTimestamp={reflectTs}
@@ -638,6 +649,8 @@ export default function PlayerScreen() {
           onDismiss={playerTip.dismiss}
         />
       )}
+
+      <Toast message={toastMsg} visible={toastVisible} />
     </SafeAreaView>
   );
 }
