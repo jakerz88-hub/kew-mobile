@@ -300,7 +300,12 @@ export default function QueueScreen() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          style={{ paddingVertical: 8, paddingHorizontal: 12 }}
+          // Explicit height pins the strip to its intrinsic size. Without it,
+          // the horizontal ScrollView grew to fill the column's height in
+          // landscape sidebar mode and the pills stretched vertically with
+          // it. (A previous attempt using flexGrow:0 + alignItems:"center"
+          // hung iPad bootstrap on splash — fixed height is the safe form.)
+          style={{ paddingVertical: 8, paddingHorizontal: 12, height: 48 }}
           contentContainerStyle={{ gap: 8, flexDirection: "row" }}
         >
           {chipQueues.map(q => (
