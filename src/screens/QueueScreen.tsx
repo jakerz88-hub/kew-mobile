@@ -300,14 +300,8 @@ export default function QueueScreen() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          // flexGrow: 0 stops the ScrollView from filling the column's full
-          // height in landscape sidebar mode (where the strip sits above a
-          // flex:1 split-pane). alignItems: "center" on the content container
-          // prevents the default `stretch` cross-axis alignment from making
-          // each pill expand vertically. Both together pin the strip to its
-          // intrinsic height instead of growing to half the screen.
-          style={{ paddingVertical: 8, paddingHorizontal: 12, flexGrow: 0 }}
-          contentContainerStyle={{ gap: 8, flexDirection: "row", alignItems: "center" }}
+          style={{ paddingVertical: 8, paddingHorizontal: 12 }}
+          contentContainerStyle={{ gap: 8, flexDirection: "row" }}
         >
           {chipQueues.map(q => (
             <TouchableOpacity

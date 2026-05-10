@@ -68,7 +68,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import { useIsTablet } from "../hooks/useIsTablet";
 import { useInTabletSidebar } from "../contexts/TabletSidebarContext";
 import {
-  KewLogo, SansText, SerifText, Divider, ThumbPlaceholder,
+  KewLogo, SansText, Divider, ThumbPlaceholder,
   EmptyState, ErrorBanner, AvatarBubble, Toast,
 } from "../components/UI";
 import { LogoMark } from "../components/TabIcons";
@@ -345,13 +345,6 @@ function JournalScreenPaid() {
 
       {error && <ErrorBanner message={error} onDismiss={clearError} />}
       {localError && <ErrorBanner message={localError} onDismiss={() => setLocalError(null)} />}
-
-      <View style={styles.pageHeader}>
-        <SerifText style={styles.pageTitle}>Your Journal</SerifText>
-        <SansText style={styles.pageSubtitle}>
-          Take a moment to reflect on what you&apos;ve watched.
-        </SansText>
-      </View>
 
       <View style={styles.segmentedWrap}>
         <SegmentedControl
@@ -1025,10 +1018,6 @@ function makeStyles(c: ColorPalette) {
     header:          { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm },
     spinnerWrap:     { flex: 1, alignItems: "center", justifyContent: "center" },
     listContent:     { paddingBottom: 80 },
-
-    pageHeader:      { paddingHorizontal: Spacing.md, paddingTop: Spacing.md, paddingBottom: Spacing.sm },
-    pageTitle:       { fontSize: FontSize.lg },
-    pageSubtitle:    { fontSize: FontSize.xs, color: c.warmMid, marginTop: 2 },
 
     segmentedWrap:   { paddingVertical: Spacing.sm, alignItems: "center" },
 
