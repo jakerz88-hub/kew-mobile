@@ -297,17 +297,20 @@ export default function QueueScreen() {
         ...(pinnedNonMain.length > 0 ? pinnedNonMain.slice(0, 3) : nonMain.slice(0, 3)),
       ];
       return (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          // Explicit height pins the strip to its intrinsic size. Without it,
-          // the horizontal ScrollView grew to fill the column's height in
-          // landscape sidebar mode and the pills stretched vertically with
-          // it. (A previous attempt using flexGrow:0 + alignItems:"center"
-          // hung iPad bootstrap on splash — fixed height is the safe form.)
-          style={{ paddingVertical: 8, paddingHorizontal: 12, height: 48 }}
-          contentContainerStyle={{ gap: 8, flexDirection: "row" }}
-        >
+        // Fixed-height outer wrapper pins the strip's vertical extent.
+        // Putting `height` on the ScrollView's own style didn't actually
+        // constrain it on iPad — the strip still stretched to the column
+        // height. The wrapper View bypasses RN's ScrollView sizing edge
+        // cases entirely. (A previous attempt using flexGrow:0 +
+        // alignItems:"center" hung iPad bootstrap on splash, so we avoid
+        // both flex hacks and let the wrapper do the work.)
+        <View style={{ height: 48 }}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ paddingVertical: 8, paddingHorizontal: 12 }}
+            contentContainerStyle={{ gap: 8, flexDirection: "row" }}
+          >
           {chipQueues.map(q => (
             <TouchableOpacity
               key={q.id}
@@ -338,7 +341,8 @@ export default function QueueScreen() {
           >
             <SansText style={{ color: colors.warmMid, fontSize: 12, fontFamily: "DMSans_500Medium" }}>All queues</SansText>
           </TouchableOpacity>
-        </ScrollView>
+          </ScrollView>
+        </View>
       );
     })() : null;
 
