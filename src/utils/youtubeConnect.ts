@@ -65,12 +65,13 @@ export async function connectYouTube(): Promise<YouTubeConnectResult> {
     return { success: false, error: "Authorization was not completed." };
   }
 
-  const params = new URLSearchParams(
-    result.url.split("#")[1] ?? result.url.split("?")[1] ?? ""
-  );
-  const providerToken        = params.get("provider_token");
-  const providerRefreshToken = params.get("provider_refresh_token");
-  const expiresAt            = params.get("expires_at");
+  const { data: exchangeData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(result.url);
+  if (exchangeError) return { success: false, error: exchangeError.message };
+
+  const session = exchangeData.session;
+  const providerToken        = session.provider_token;
+  const providerRefreshToken = session.provider_refresh_token;
+  const expiresAt            = session.expires_at;
 
   if (!providerToken) {
     return { success: false, error: "YouTube permission was not granted. Please try again." };
