@@ -55,7 +55,12 @@ export default function LoginScreen() {
       if (data?.url) {
         const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
         if (result.type === "success" && result.url) {
-          const { data: exchangeData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(result.url);
+          // exchangeCodeForSession wants just the `code` value, not the full callback URL.
+          // Passing the URL produces "invalid flow state" because the server tries to
+          // match the flow by the literal auth_code string.
+          const code = new URL(result.url).searchParams.get("code");
+          if (!code) throw new Error("No code in callback URL.");
+          const { data: exchangeData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
           if (exchangeError) throw exchangeError;
 
           const session = exchangeData.session;
