@@ -65,7 +65,11 @@ export async function connectYouTube(): Promise<YouTubeConnectResult> {
     return { success: false, error: "Authorization was not completed." };
   }
 
-  const { data: exchangeData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(result.url);
+  // exchangeCodeForSession wants the `code` value, not the full callback URL —
+  // passing the URL triggers "invalid flow state" on the server.
+  const code = new URL(result.url).searchParams.get("code");
+  if (!code) return { success: false, error: "No code in callback URL." };
+  const { data: exchangeData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
   if (exchangeError) return { success: false, error: exchangeError.message };
 
   const session = exchangeData.session;
