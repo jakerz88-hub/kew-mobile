@@ -55,20 +55,19 @@ export default function LoginScreen() {
       if (data?.url) {
         const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
         if (result.type === "success" && result.url) {
-          // Implicit flow — tokens are in the URL hash fragment
-          const params = new URLSearchParams(result.url.split("#")[1] ?? result.url.split("?")[1] ?? "");
-          const accessToken          = params.get("access_token");
-          const refreshToken         = params.get("refresh_token");
-          const providerToken        = params.get("provider_token");
-          const providerRefreshToken = params.get("provider_refresh_token");
-          const expiresAt            = params.get("expires_at");
+          const { data: exchangeData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(result.url);
+          if (exchangeError) throw exchangeError;
 
-          if (accessToken && providerToken) {
+          const session = exchangeData.session;
+          const accessToken = session.access_token;
+          const providerToken = session.provider_token;
+          const providerRefreshToken = session.provider_refresh_token;
+          const expiresAt = session.expires_at;
+
+          if (providerToken) {
             const PROD_API_BASE_URL = "https://kew-backend-production.up.railway.app";
             const BASE_URL = (process.env.EXPO_PUBLIC_API_BASE_URL || Constants.expoConfig?.extra?.API_BASE_URL || PROD_API_BASE_URL) as string;
 
-            // Save YouTube token BEFORE setSession so fetchUser() sees hasYoutube: true.
-            // If this fails, surface the error and bail — the token in the URL is one-time.
             const ytResp = await fetch(`${BASE_URL}/v1/profile/youtube-token`, {
               method: "POST",
               headers: {
@@ -86,25 +85,11 @@ export default function LoginScreen() {
               throw new Error(`Could not connect YouTube (${ytResp.status}): ${errText}`);
             }
 
-            // Establish the Supabase session — triggers onAuthStateChange → fetchUser
-            await supabase.auth.setSession({
-              access_token:  accessToken,
-              refresh_token: refreshToken ?? "",
-            });
-
             // Sync subscriptions in the background
             fetch(`${BASE_URL}/v1/channels/sync`, {
               method: "POST",
               headers: { "Authorization": `Bearer ${accessToken}` },
             }).catch(() => {});
-
-          } else if (accessToken && !providerToken) {
-            await supabase.auth.setSession({
-              access_token:  accessToken,
-              refresh_token: refreshToken ?? "",
-            });
-          } else {
-            setError("No token in callback URL.");
           }
         } else {
           setError("Auth result: " + result.type);
