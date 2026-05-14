@@ -66,7 +66,7 @@ const FEATURES: FeatureRow[] = [
   {
     key: "journal",
     title: "Journal",
-    subtitle: "Add private notes and reflections on the videos you watch",
+    subtitle: "Save private notes and reflections on your videos",
     icon: (color, s) => (
       <Svg width={s} height={s} viewBox="0 0 24 24">
         <Rect x={5} y={3} width={14} height={18} rx={1.5} stroke={color} strokeWidth={2} fill="none" />
