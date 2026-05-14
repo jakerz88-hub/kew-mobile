@@ -433,6 +433,35 @@ export default function ProfileScreen() {
     );
   };
 
+  const handleClearTutorials = () => {
+    Alert.alert(
+      "Clear Tutorials",
+      "Reset all onboarding tooltips? They will reappear on next visit to each screen.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Clear",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await AsyncStorage.multiRemove([
+                "tooltip_queue_v2",
+                "tooltip_queue_mobile_reflect",
+                "tooltip_queue_mobile_switcher",
+                "tooltip_journal",
+                "tooltip_insights",
+                "tooltip_player",
+              ]);
+              Alert.alert("Success", "Tutorials cleared. Refresh the screen to see tooltips again.");
+            } catch (e: any) {
+              setProfileError("Could not clear tutorials.");
+            }
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -746,6 +775,11 @@ export default function ProfileScreen() {
           <SansText style={styles.deleteBtnText}>Delete account</SansText>
         </TouchableOpacity>
 
+        {/* Debug: Clear tutorials */}
+        <TouchableOpacity style={styles.debugBtn} onPress={handleClearTutorials} activeOpacity={0.7}>
+          <SansText style={styles.debugBtnText}>Clear tutorials</SansText>
+        </TouchableOpacity>
+
         {APP_VERSION_STRING && (
           <SansText style={styles.versionText}>App version: {APP_VERSION_STRING}</SansText>
         )}
@@ -835,6 +869,8 @@ function makeStyles(c: ColorPalette) {
     signOutText:     { fontSize: FontSize.sm, color: c.accent, fontFamily: FontFamily.sansMedium },
     deleteBtn:       { marginTop: Spacing.xs, paddingVertical: Spacing.sm, paddingHorizontal: Spacing.md, alignItems: "center", alignSelf: "center" },
     deleteBtnText:   { fontSize: FontSize.xs, color: c.warmMid, fontFamily: FontFamily.sans },
+    debugBtn:        { marginTop: Spacing.xs, paddingVertical: Spacing.xs, paddingHorizontal: Spacing.md, alignItems: "center", alignSelf: "center" },
+    debugBtnText:    { fontSize: FontSize.xxs, color: c.warmMid, fontFamily: FontFamily.sans },
     versionText:     { fontSize: FontSize.xxs, color: c.warmMid, textAlign: "center", marginTop: Spacing.xl, paddingBottom: Spacing.md },
   });
 }
