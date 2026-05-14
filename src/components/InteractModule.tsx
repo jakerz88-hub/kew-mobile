@@ -495,6 +495,12 @@ function makeStyles(c: ColorPalette) {
       borderTopLeftRadius: Radius.lg,
       borderTopRightRadius: Radius.lg,
       paddingTop: 6,
+      // Width cap so the sheet doesn't span an iPad's full landscape width.
+      // Phones (< 520pt wide) get full width naturally; iPad caps at 520pt
+      // and centers via alignSelf.
+      width: "100%",
+      maxWidth: 520,
+      alignSelf: "center",
     },
     handle: {
       alignSelf: "center",
