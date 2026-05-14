@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import {
   View, FlatList, TextInput, TouchableOpacity, StyleSheet,
   SafeAreaView, Image, RefreshControl, ActivityIndicator, ScrollView,
@@ -19,6 +19,7 @@ import { useStore } from "../store";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
 import { useIsTablet } from "../hooks/useIsTablet";
+import { useScrollToTopOnTabPress } from "../hooks/useScrollToTopOnTabPress";
 import { useInTabletSidebar } from "../contexts/TabletSidebarContext";
 import { useTooltip } from "../hooks/useTooltip";
 import { useAddToQueue } from "../hooks/useAddToQueue";
@@ -43,7 +44,8 @@ export default function BrowseScreen() {
   const { colors } = useTheme();
   const styles  = useMemo(() => makePhoneStyles(colors), [colors]);
   const tStyles = useMemo(() => makeTabletStyles(colors), [colors]);
-  const { user, queue } = useStore();
+  const { user } = useStore();
+  const queuedVideos = useStore(s => s.queuedVideos);
 
   const { fetchUser } = useStore();
   const [channels, setChannels]         = useState<Channel[]>([]);
@@ -62,6 +64,16 @@ export default function BrowseScreen() {
   const [panelStage, setPanelStage]             = useState(0);
   const [panelLoadingOlder, setPanelLoadingOlder] = useState(false);
 
+  // Tab-icon re-tap → scroll to top. Phone uses the channels FlatList;
+  // tablet has both the left channel column and the right video panel —
+  // wire both so whichever the user has scrolled snaps back.
+  const phoneListRef = useRef<FlatList | null>(null);
+  const tabletChannelsRef = useRef<FlatList | null>(null);
+  const tabletPanelRef = useRef<FlatList | null>(null);
+  useScrollToTopOnTabPress(phoneListRef, "Browse");
+  useScrollToTopOnTabPress(tabletChannelsRef, "Browse");
+  useScrollToTopOnTabPress(tabletPanelRef, "Browse");
+
   // Queue picker (shared hook — handles iOS ActionSheet + Android modal)
   const { handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId } = useAddToQueue(
     (ytVideoId) => setPanelVideos(v => v.map(x => x.ytVideoId === ytVideoId ? { ...x, inQueue: true } : x))
@@ -69,14 +81,6 @@ export default function BrowseScreen() {
 
   // ── Tooltip journey ──
   const browseTip = useTooltip("browse", 2);
-
-  // Derive which video IDs are already queued
-  const queuedVideoIds = React.useMemo(() => {
-    const ids = new Set<string>();
-    for (const e of queue?.entries ?? []) ids.add(e.video.ytVideoId);
-    if (queue?.current) ids.add(queue.current.video.ytVideoId);
-    return ids;
-  }, [queue]);
 
   const loadChannels = useCallback(async () => {
     try {
@@ -266,6 +270,7 @@ export default function BrowseScreen() {
             <Divider />
 
             <FlatList
+              ref={tabletChannelsRef}
               data={filteredChannels}
               keyExtractor={item => item.ytChannelId}
               refreshControl={
@@ -337,6 +342,7 @@ export default function BrowseScreen() {
               </View>
             ) : (
               <FlatList
+                ref={tabletPanelRef}
                 key="2col"
                 numColumns={2}
                 data={panelVideos}
@@ -344,7 +350,7 @@ export default function BrowseScreen() {
                 columnWrapperStyle={tStyles.gridRow}
                 contentContainerStyle={tStyles.gridContent}
                 renderItem={({ item }) => {
-                  const inQueue = item.inQueue || queuedVideoIds.has(item.ytVideoId);
+                  const inQueue = item.inQueue || !!queuedVideos[item.ytVideoId];
                   return (
                     <BrowseVideoCard
                       video={item}
@@ -404,6 +410,7 @@ export default function BrowseScreen() {
       {loadError && <ErrorBanner message={loadError} onDismiss={() => setLoadError(null)} />}
 
       <FlatList
+        ref={phoneListRef}
         data={filteredChannels}
         keyExtractor={item => item.ytChannelId}
         refreshControl={

@@ -64,6 +64,7 @@ import {
 import { api } from "../services/api";
 import { useStore } from "../store";
 import { useAddToQueue } from "../hooks/useAddToQueue";
+import { useScrollToTopOnTabPress } from "../hooks/useScrollToTopOnTabPress";
 import { useTheme } from "../contexts/ThemeContext";
 import { useIsTablet } from "../hooks/useIsTablet";
 import { useInTabletSidebar } from "../contexts/TabletSidebarContext";
@@ -193,6 +194,7 @@ function JournalScreenPaid() {
   const isTablet = useIsTablet();
   const inSidebar = useInTabletSidebar();
   const { user, error, clearError } = useStore();
+  const queuedVideos = useStore(s => s.queuedVideos);
 
   // Lora is loaded lazily on first mount of the paid screen; while it's
   // resolving we render an ActivityIndicator so the screen never flashes
@@ -206,7 +208,6 @@ function JournalScreenPaid() {
   const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set());
   const [composerState, setComposerState] = useState<ComposerState | null>(null);
   const [expandedEntries, setExpandedEntries] = useState<Set<string>>(new Set());
-  const [readdedIds, setReaddedIds] = useState<Set<string>>(new Set());
   const [localError, setLocalError] = useState<string | null>(null);
 
   const [toastMsg, setToastMsg] = useState("");
@@ -221,7 +222,7 @@ function JournalScreenPaid() {
   useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
 
   const { handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId } =
-    useAddToQueue((ytVideoId) => setReaddedIds(prev => new Set([...prev, ytVideoId])));
+    useAddToQueue();
 
   const loadFeed = useCallback(async () => {
     setLoading(true);
@@ -380,7 +381,7 @@ function JournalScreenPaid() {
           onEntryLongPress={handleEntryLongPress}
           onReadd={handleReadd}
           addingId={addingId}
-          readdedIds={readdedIds}
+          queuedVideos={queuedVideos}
         />
       ) : (
         <HistoryView
@@ -392,7 +393,7 @@ function JournalScreenPaid() {
           onAddEntry={openCreateComposer}
           onReadd={handleReadd}
           addingId={addingId}
-          readdedIds={readdedIds}
+          queuedVideos={queuedVideos}
         />
       )}
 
@@ -500,7 +501,7 @@ interface EntriesViewProps {
   onEntryLongPress: (videoId: string, entry: JournalEntry) => void;
   onReadd: (ytVideoId: string) => void;
   addingId: string | null;
-  readdedIds: Set<string>;
+  queuedVideos: Record<string, { entryId: string; queueId: string; queueName: string; queueEmoji: string | null }>;
 }
 
 function EntriesView(props: EntriesViewProps) {
@@ -510,8 +511,10 @@ function EntriesView(props: EntriesViewProps) {
     monthGroups, loading, onRefresh,
     collapsedMonths, collapsedDays, expandedEntries,
     onToggleMonth, onToggleDay, onToggleExpanded,
-    onAddEntry, onEntryLongPress, onReadd, addingId, readdedIds,
+    onAddEntry, onEntryLongPress, onReadd, addingId, queuedVideos,
   } = props;
+  const listRef = useRef<FlatList | null>(null);
+  useScrollToTopOnTabPress(listRef, "History");
 
   if (!loading && monthGroups.length === 0) {
     return (
@@ -525,6 +528,7 @@ function EntriesView(props: EntriesViewProps) {
 
   return (
     <FlatList
+      ref={listRef}
       data={monthGroups}
       keyExtractor={m => m.monthKey}
       refreshControl={<RefreshControl refreshing={loading} onRefresh={onRefresh} tintColor={colors.ink} />}
@@ -585,7 +589,7 @@ function EntriesView(props: EntriesViewProps) {
                               onLongPress={() => onEntryLongPress(item.video.ytVideoId, entry)}
                               onReadd={() => onReadd(item.video.ytVideoId)}
                               adding={addingId === item.video.ytVideoId}
-                              readded={readdedIds.has(item.video.ytVideoId)}
+                              readded={!!queuedVideos[item.video.ytVideoId]}
                             />
                           ))
                         ) : (
@@ -594,7 +598,7 @@ function EntriesView(props: EntriesViewProps) {
                             onAddEntry={() => onAddEntry(item.video.ytVideoId)}
                             onReadd={() => onReadd(item.video.ytVideoId)}
                             adding={addingId === item.video.ytVideoId}
-                            readded={readdedIds.has(item.video.ytVideoId)}
+                            readded={!!queuedVideos[item.video.ytVideoId]}
                           />
                         )}
                       </View>
@@ -738,7 +742,7 @@ interface HistoryViewProps {
   onAddEntry: (videoId: string) => void;
   onReadd: (ytVideoId: string) => void;
   addingId: string | null;
-  readdedIds: Set<string>;
+  queuedVideos: Record<string, { entryId: string; queueId: string; queueName: string; queueEmoji: string | null }>;
 }
 
 function HistoryView(props: HistoryViewProps) {
@@ -746,8 +750,10 @@ function HistoryView(props: HistoryViewProps) {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const {
     items, loading, onRefresh, expandedEntries,
-    onToggleExpanded, onAddEntry, onReadd, addingId, readdedIds,
+    onToggleExpanded, onAddEntry, onReadd, addingId, queuedVideos,
   } = props;
+  const listRef = useRef<FlatList | null>(null);
+  useScrollToTopOnTabPress(listRef, "History");
 
   if (!loading && items.length === 0) {
     return (
@@ -761,6 +767,7 @@ function HistoryView(props: HistoryViewProps) {
 
   return (
     <FlatList
+      ref={listRef}
       data={items}
       keyExtractor={(item, idx) => `${item.video.ytVideoId}-${idx}`}
       refreshControl={<RefreshControl refreshing={loading} onRefresh={onRefresh} tintColor={colors.ink} />}
@@ -787,7 +794,7 @@ function HistoryView(props: HistoryViewProps) {
               <ReaddCircle
                 onPress={() => onReadd(item.video.ytVideoId)}
                 adding={addingId === item.video.ytVideoId}
-                readded={readdedIds.has(item.video.ytVideoId)}
+                readded={!!queuedVideos[item.video.ytVideoId]}
               />
             </View>
 

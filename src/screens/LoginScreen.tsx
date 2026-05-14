@@ -7,6 +7,7 @@ import * as WebBrowser from "expo-web-browser";
 import * as AuthSession from "expo-auth-session";
 import * as AppleAuthentication from "expo-apple-authentication";
 import Constants from "expo-constants";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "../services/supabase";
 import { Colors, FontFamily, FontSize, Spacing } from "../types/theme";
 import { KewLogo, SansText } from "../components/UI";
@@ -35,11 +36,14 @@ export default function LoginScreen() {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     setError(null);
+    // TEMP diagnostic — remove once we identify why the server rejects exchange
+    let dbg = "";
     try {
       const EAS_PROJECT_ID = "d7d74b72-c5d5-4f5a-95b2-1deacc44b4d4";
       const redirectTo = Constants.appOwnership === "expo"
         ? `exp://u.expo.dev/${EAS_PROJECT_ID}/--/auth/callback`
         : AuthSession.makeRedirectUri({ scheme: "kew", path: "auth/callback" });
+      dbg = `rt=${redirectTo}`;
 
       const { data, error: authError } = await supabase.auth.signInWithOAuth({
         provider: "google",
@@ -52,14 +56,32 @@ export default function LoginScreen() {
 
       if (authError) throw authError;
 
+      // Check verifier at the correct project-derived storage key
+      const VKEY = "sb-piedqhsglgpzcdrvvihk-auth-token-code-verifier";
+      const vAfterSignIn = await AsyncStorage.getItem(VKEY);
+      dbg += ` | v1=${vAfterSignIn?.length ?? 0}`;
+      // also peek at the supabase-generated oauth URL prefix
+      dbg += ` | oa=${data?.url?.substring(0, 60) ?? "null"}`;
+
       if (data?.url) {
         const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+        dbg += ` | rt=${result.type}`;
         if (result.type === "success" && result.url) {
+          dbg += ` | ul=${result.url.length} hasQ=${result.url.includes("?code=") ? "Y" : "N"}`;
+          // peek at what supabase actually redirected back with
+          dbg += ` | back=${result.url.substring(0, 100)}`;
+
           // exchangeCodeForSession wants just the `code` value, not the full callback URL.
           // Passing the URL produces "invalid flow state" because the server tries to
           // match the flow by the literal auth_code string.
           const code = new URL(result.url).searchParams.get("code");
+          dbg += ` | cl=${code?.length ?? 0}`;
           if (!code) throw new Error("No code in callback URL.");
+
+          // Verifier should still be in storage at exchange time
+          const vAtExchange = await AsyncStorage.getItem(VKEY);
+          dbg += ` | v2=${vAtExchange?.length ?? 0}`;
+
           const { data: exchangeData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
           if (exchangeError) throw exchangeError;
 
@@ -101,7 +123,7 @@ export default function LoginScreen() {
         }
       }
     } catch (e: any) {
-      setError(e.message || "Something went wrong. Please try again.");
+      setError(`${e.message || "Something went wrong. Please try again."}\n[dbg: ${dbg}]`);
     } finally {
       setLoading(false);
     }

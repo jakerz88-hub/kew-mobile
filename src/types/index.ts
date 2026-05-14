@@ -59,6 +59,14 @@ export interface Queue {
   queueName: string | null;
 }
 
+export interface QueuedVideo {
+  entryId: string;
+  ytVideoId: string;
+  queueId: string;
+  queueName: string;
+  queueEmoji: string | null;
+}
+
 export interface BrowseVideo {
   ytVideoId: string;
   ytChannelId: string;

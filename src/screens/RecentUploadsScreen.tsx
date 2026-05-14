@@ -17,7 +17,9 @@ import { formatDuration, timeAgo } from "../types";
 export default function RecentUploadsScreen() {
   const navigation = useNavigation<any>();
   const isTablet = useIsTablet();
-  const { queue, error, clearError } = useStore();
+  const { queue, user, error, clearError } = useStore();
+  const queuedVideos = useStore(s => s.queuedVideos);
+  const isPro = user?.plan === "pro";
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId } = useAddToQueue();
@@ -26,8 +28,9 @@ export default function RecentUploadsScreen() {
   const [loading, setLoading]         = useState(false);
   const [refreshing, setRefreshing]   = useState(false);
   const [loadError, setLoadError]     = useState<string | null>(null);
-  const [removeTarget, setRemoveTarget] = useState<{ entryId: string; title: string } | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<{ entryId: string; title: string; queueName: string | null } | null>(null);
 
+  // Active-queue map (free-user fallback for inQueue + entry_id).
   const queueEntryByVideoId = React.useMemo(() => {
     const map: Record<string, string> = {};
     for (const entry of queue?.entries ?? []) {
@@ -88,8 +91,10 @@ export default function RecentUploadsScreen() {
           }
           columnWrapperStyle={isTablet ? styles.gridRow : undefined}
           renderItem={({ item }) => {
-            const entryId = queueEntryByVideoId[item.ytVideoId];
-            const inQueue = !!entryId;
+            const queuedEntry = queuedVideos[item.ytVideoId];
+            const inQueue = !!queuedEntry || !!queueEntryByVideoId[item.ytVideoId];
+            const removeEntryId = queuedEntry?.entryId || queueEntryByVideoId[item.ytVideoId];
+            const queueName = isPro ? queuedEntry?.queueName ?? null : null;
             return (
               <View style={isTablet ? styles.gridItem : undefined}>
                 <VideoCard
@@ -97,7 +102,7 @@ export default function RecentUploadsScreen() {
                   inQueue={inQueue}
                   adding={addingId === item.ytVideoId}
                   onAdd={() => handleAdd(item.ytVideoId)}
-                  onRemove={inQueue && entryId ? () => setRemoveTarget({ entryId, title: item.title }) : undefined}
+                  onRemove={removeEntryId ? () => setRemoveTarget({ entryId: removeEntryId, title: item.title, queueName }) : undefined}
                   isGrid={isTablet}
                 />
               </View>
@@ -120,6 +125,7 @@ export default function RecentUploadsScreen() {
         visible={!!removeTarget}
         entryId={removeTarget?.entryId ?? ""}
         videoTitle={removeTarget?.title ?? ""}
+        queueName={removeTarget?.queueName ?? null}
         onClose={() => setRemoveTarget(null)}
       />
 

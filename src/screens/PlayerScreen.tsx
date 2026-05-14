@@ -61,7 +61,7 @@ export default function PlayerScreen() {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const playerRef  = useRef<any>(null);
 
-  const { queue, user, updateProgress, skipCurrent, fetchQueue } = useStore();
+  const { queue, user, updateProgress, skipCurrent, fetchQueue, markEntryCompleted } = useStore();
   const current         = queue?.current ?? queue?.entries.find(e => e.status === "pending") ?? null;
   const upcomingEntries = queue?.entries.filter(e => e.status === "pending" && e.id !== current?.id) ?? [];
 
@@ -241,6 +241,7 @@ export default function PlayerScreen() {
       suppressFinalSaveRef.current = true;
       await recordEvent("completed", watchedSecs);
       await updateProgress(current.id, watchedSecs);
+      markEntryCompleted(current.id);
       await fetchQueue();
       navigation.replace("Completion", {
         watchedSecs,
@@ -262,6 +263,7 @@ export default function PlayerScreen() {
       suppressFinalSaveRef.current = true;
       await recordEvent("completed", watchedSecs);
       await updateProgress(current.id, current.video.durationSecs ?? watchedSecs);
+      markEntryCompleted(current.id);
       await fetchQueue();
       navigation.replace("Completion", {
         watchedSecs,

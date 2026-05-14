@@ -1,6 +1,6 @@
 import { supabase } from "./supabase";
 import Constants from "expo-constants";
-import type { Queue, BrowseVideo, Channel, User, SkipResult, Playlist, PlaylistVideosResult, ImportResult, KewQueue, Insights, InsightsPeriod, Intentionality, WatchLimits, WatchEventType, JournalEntry, JournalFeedItem } from "../types";
+import type { Queue, BrowseVideo, Channel, User, SkipResult, Playlist, PlaylistVideosResult, ImportResult, KewQueue, Insights, InsightsPeriod, Intentionality, WatchLimits, WatchEventType, JournalEntry, JournalFeedItem, QueuedVideo } from "../types";
 
 // Final fallback: see src/services/supabase.ts — Constants.expoConfig.extra can return null
 // in OTA-delivered manifests, leaving BASE_URL undefined and hanging fetchUser() forever
@@ -140,6 +140,10 @@ export const api = {
 
   getQueue(queueId?: string): Promise<Queue> {
     return request("/v1/queue" + (queueId ? "?queue_id=" + queueId : ""));
+  },
+
+  getQueuedVideos(): Promise<QueuedVideo[]> {
+    return request("/v1/queue/queued-videos");
   },
 
   addToQueue(ytVideoId: string, queueId?: string): Promise<{ message: string }> {

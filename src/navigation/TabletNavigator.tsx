@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { View, TouchableOpacity, SafeAreaView, useWindowDimensions } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { TabletSidebar, TabletTab } from "../components/TabletSidebar";
-import { TabletSidebarProvider } from "../contexts/TabletSidebarContext";
+import { TabletSidebarProvider, useTabletScrollToTopTrigger } from "../contexts/TabletSidebarContext";
 import { useTheme } from "../contexts/ThemeContext";
 import { useStore } from "../store";
 import { SansText, KewLogo, AvatarBubble } from "../components/UI";
@@ -43,32 +43,72 @@ export default function TabletNavigator() {
     </View>
   );
 
+  return (
+    <TabletSidebarProvider switchTab={setActiveTab}>
+      <TabletShell
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        isLandscape={isLandscape}
+        collapsed={collapsed}
+        onToggleCollapse={() => setCollapsed(c => !c)}
+        onProfilePress={() => navigation.navigate("Profile")}
+        screenStack={screenStack}
+      />
+    </TabletSidebarProvider>
+  );
+}
+
+// Renders the tablet chrome inside the Provider so it can reach the
+// scrollToTop registry. Wraps every tab tap so re-taps on the active tab
+// scroll the current screen up instead of triggering a no-op state set.
+function TabletShell({
+  activeTab,
+  setActiveTab,
+  isLandscape,
+  collapsed,
+  onToggleCollapse,
+  onProfilePress,
+  screenStack,
+}: {
+  activeTab: TabletTab;
+  setActiveTab: (tab: TabletTab) => void;
+  isLandscape: boolean;
+  collapsed: boolean;
+  onToggleCollapse: () => void;
+  onProfilePress: () => void;
+  screenStack: React.ReactNode;
+}) {
+  const triggerScrollToTop = useTabletScrollToTopTrigger();
+  const handleTabPress = useCallback((tab: TabletTab) => {
+    if (tab === activeTab) {
+      triggerScrollToTop?.(tab);
+    } else {
+      setActiveTab(tab);
+    }
+  }, [activeTab, setActiveTab, triggerScrollToTop]);
+
   if (isLandscape) {
     return (
-      <TabletSidebarProvider switchTab={setActiveTab}>
-        <View style={{ flex: 1, flexDirection: "row" }}>
-          <TabletSidebar
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            onProfilePress={() => navigation.navigate("Profile")}
-            collapsed={collapsed}
-            onToggleCollapse={() => setCollapsed(c => !c)}
-          />
-          {screenStack}
-        </View>
-      </TabletSidebarProvider>
+      <View style={{ flex: 1, flexDirection: "row" }}>
+        <TabletSidebar
+          activeTab={activeTab}
+          onTabChange={handleTabPress}
+          onProfilePress={onProfilePress}
+          collapsed={collapsed}
+          onToggleCollapse={onToggleCollapse}
+        />
+        {screenStack}
+      </View>
     );
   }
 
   // Portrait: full-width tablet content with top bar + bottom tab bar.
   return (
-    <TabletSidebarProvider switchTab={setActiveTab}>
-      <View style={{ flex: 1 }}>
-        <TabletTopBar onProfilePress={() => navigation.navigate("Profile")} />
-        {screenStack}
-        <TabletBottomTabBar activeTab={activeTab} onTabChange={setActiveTab} />
-      </View>
-    </TabletSidebarProvider>
+    <View style={{ flex: 1 }}>
+      <TabletTopBar onProfilePress={onProfilePress} />
+      {screenStack}
+      <TabletBottomTabBar activeTab={activeTab} onTabChange={handleTabPress} />
+    </View>
   );
 }
 

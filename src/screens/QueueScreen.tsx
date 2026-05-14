@@ -21,6 +21,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import type { QueueEntry } from "../types";
 import { formatDuration, formatProgress, timeAgo, formatDate } from "../types";
 import { useIsTablet } from "../hooks/useIsTablet";
+import { useScrollToTopOnTabPress } from "../hooks/useScrollToTopOnTabPress";
 import { useInTabletSidebar, useTabletSwitchTab } from "../contexts/TabletSidebarContext";
 import { useTooltip } from "../hooks/useTooltip";
 import TooltipOverlay, { TooltipAnchor } from "../components/TooltipOverlay";
@@ -83,6 +84,15 @@ export default function QueueScreen() {
   const { colors } = useTheme();
   const styles  = useMemo(() => makePhoneStyles(colors), [colors]);
   const tStyles = useMemo(() => makeTabletStyles(colors), [colors]);
+
+  // Tab-icon re-tap → scroll the active scrollable back to top. Two refs
+  // because phone uses one outer ScrollView, tablet uses a left-column
+  // FlatList (and the player column ScrollView, which we leave alone since
+  // the user scrolls the queue, not the player).
+  const phoneScrollRef = useRef<ScrollView | null>(null);
+  const tabletListRef = useRef<FlatList | null>(null);
+  useScrollToTopOnTabPress(phoneScrollRef, "Queue");
+  useScrollToTopOnTabPress(tabletListRef, "Queue");
 
   const {
     queue, user, error,
@@ -418,6 +428,7 @@ export default function QueueScreen() {
             {error && <ErrorBanner message={error} onDismiss={clearError} />}
 
             <FlatList
+              ref={tabletListRef}
               data={listPendingEntries}
               keyExtractor={item => item.id}
               refreshControl={
@@ -608,6 +619,7 @@ export default function QueueScreen() {
           visible={!!actionEntry}
           entryId={actionEntry?.id ?? ""}
           videoTitle={actionEntry?.video.title ?? ""}
+          queueName={queue?.queueName ?? null}
           onClose={() => setActionEntry(null)}
           onRemoved={handleRemovedEntry}
         />
@@ -693,6 +705,7 @@ export default function QueueScreen() {
       {error && <ErrorBanner message={error} onDismiss={clearError} />}
 
       <ScrollView
+        ref={phoneScrollRef}
         refreshControl={<RefreshControl refreshing={isManualRefreshing} onRefresh={onRefresh} tintColor={colors.ink} />}
         contentContainerStyle={styles.listContent}
         keyboardShouldPersistTaps="handled"

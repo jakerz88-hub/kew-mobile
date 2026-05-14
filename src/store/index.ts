@@ -7,11 +7,24 @@ export interface KewPlusUpsell {
   body: string;
 }
 
+// Per-video info kept in the queuedVideos map. ytVideoId is implicit (the map key).
+export interface QueuedVideoInfo {
+  entryId: string;
+  queueId: string;
+  queueName: string;
+  queueEmoji: string | null;
+}
+
 interface AppState {
   user: User | null;
   queue: Queue | null;
   queues: KewQueue[];
   activeQueueId: string | null;
+  // Cross-queue map of every pending+watching entry across the user's queues,
+  // keyed by ytVideoId. Powers "✓ In queue" badges on screens that need to
+  // know about non-active queues, plus the entry_id + queue name for the
+  // long-press remove flow. Empty {} for free users (one-queue, no need).
+  queuedVideos: Record<string, QueuedVideoInfo>;
   isLoadingQueue: boolean;
   isLoadingUser: boolean;
   isLoadingQueues: boolean;
@@ -22,6 +35,7 @@ interface AppState {
   fetchUser: () => Promise<void>;
   fetchQueue: () => Promise<void>;
   fetchQueues: () => Promise<void>;
+  fetchQueuedVideos: () => Promise<void>;
   setActiveQueue: (id: string) => Promise<void>;
   createQueue: (name: string, emoji: string | null) => Promise<KewQueue>;
   updateQueue: (id: string, name?: string, emoji?: string | null) => Promise<void>;
@@ -34,9 +48,19 @@ interface AppState {
   shuffleQueue: () => Promise<void>;
   reorderQueue: (entryId: string, newPosition: number, useSkip: boolean) => Promise<{ skipsRemaining: number; skipsMax: number }>;
   updateProgress: (entryId: string, progressSecs: number) => Promise<void>;
+  // Called by PlayerScreen after a video finishes naturally; drops the entry
+  // from queuedVideos so re-add affordances flip back to ↺/+ across screens.
+  markEntryCompleted: (entryId: string) => void;
   skipCurrent: () => Promise<void>;
   clearError: () => void;
   reset: () => void;
+}
+
+// Helper: drop one ytVideoId from the map.
+function dropQueued(map: Record<string, QueuedVideoInfo>, ytVideoId: string): Record<string, QueuedVideoInfo> {
+  if (!(ytVideoId in map)) return map;
+  const { [ytVideoId]: _, ...rest } = map;
+  return rest;
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -44,6 +68,7 @@ export const useStore = create<AppState>((set, get) => ({
   queue: null,
   queues: [],
   activeQueueId: null,
+  queuedVideos: {},
   isLoadingQueue: false,
   isLoadingUser: false,
   isLoadingQueues: false,
@@ -63,6 +88,7 @@ export const useStore = create<AppState>((set, get) => ({
     queue: null,
     queues: [],
     activeQueueId: null,
+    queuedVideos: {},
     isLoadingQueue: false,
     isLoadingUser: false,
     isLoadingQueues: false,
@@ -80,6 +106,11 @@ export const useStore = create<AppState>((set, get) => ({
         isLoadingUser: false,
         activeQueueId: s.activeQueueId ?? user.activeQueueId,
       }));
+      // Pro users get the cross-queue map; free users keep {} and screens
+      // fall back to queue?.entries for inQueue checks.
+      if (user.plan === "pro") {
+        get().fetchQueuedVideos();
+      }
     } catch (e: any) {
       set({ error: e.message, isLoadingUser: false });
     }
@@ -105,6 +136,29 @@ export const useStore = create<AppState>((set, get) => ({
     }
   },
 
+  fetchQueuedVideos: async () => {
+    // Free users only ever have their main queue active, and the inQueue
+    // check on every screen falls back to queue?.entries — no need to hit
+    // the endpoint for them. Pro users (and unknown-plan during bootstrap
+    // race) get the cross-queue map.
+    if (get().user?.plan === "free") return;
+    try {
+      const items = await api.getQueuedVideos();
+      const map: Record<string, QueuedVideoInfo> = {};
+      for (const item of items) {
+        map[item.ytVideoId] = {
+          entryId: item.entryId,
+          queueId: item.queueId,
+          queueName: item.queueName,
+          queueEmoji: item.queueEmoji,
+        };
+      }
+      set({ queuedVideos: map });
+    } catch {
+      // Silent — screens will still work via the queue?.entries fallback.
+    }
+  },
+
   setActiveQueue: async (id: string) => {
     set({ activeQueueId: id });
     api.activateQueue(id).catch(() => { /* fire-and-forget */ });
@@ -120,6 +174,23 @@ export const useStore = create<AppState>((set, get) => ({
   updateQueue: async (id: string, name?: string, emoji?: string | null) => {
     await api.updateQueue(id, { name, emoji });
     await get().fetchQueues();
+    // Update queue name/emoji in place on any queuedVideos entries that
+    // belong to this queue, so the long-press subtitle stays accurate.
+    set(s => {
+      const updatedQueue = s.queues.find(q => q.id === id);
+      if (!updatedQueue) return {};
+      const next: Record<string, QueuedVideoInfo> = {};
+      let changed = false;
+      for (const [ytId, info] of Object.entries(s.queuedVideos)) {
+        if (info.queueId === id && (info.queueName !== updatedQueue.name || info.queueEmoji !== updatedQueue.emoji)) {
+          next[ytId] = { ...info, queueName: updatedQueue.name, queueEmoji: updatedQueue.emoji };
+          changed = true;
+        } else {
+          next[ytId] = info;
+        }
+      }
+      return changed ? { queuedVideos: next } : {};
+    });
   },
 
   pinQueue: async (id: string, pinned: boolean) => {
@@ -140,19 +211,52 @@ export const useStore = create<AppState>((set, get) => ({
     }
     await get().fetchQueues();
     await get().fetchQueue();
+    // Drop all entries that lived in the deleted queue from the cross-queue map.
+    set(s => {
+      const next: Record<string, QueuedVideoInfo> = {};
+      let changed = false;
+      for (const [ytId, info] of Object.entries(s.queuedVideos)) {
+        if (info.queueId === id) { changed = true; continue; }
+        next[ytId] = info;
+      }
+      return changed ? { queuedVideos: next } : {};
+    });
   },
 
   addToQueue: async (ytVideoId: string, queueId?: string) => {
     try {
       await api.addToQueue(ytVideoId, queueId);
-      // Immediately update the chip count for the target queue.
       const targetId = queueId ?? get().activeQueueId;
-      if (targetId) {
-        set(s => ({
-          queues: s.queues.map(q => q.id === targetId ? { ...q, videoCount: q.videoCount + 1 } : q),
-        }));
-      }
+      // Bump chip count + optimistically insert into queuedVideos so all
+      // screens watching the map flip to ✓ immediately. The real entry_id
+      // arrives on the next fetchQueue / fetchQueuedVideos refresh — we
+      // use the ytVideoId as a placeholder so removeFromQueue still works
+      // if the user long-presses before the refetch lands. (In practice
+      // the fetchQueue() call below reconciles the entry_id for the
+      // active queue; non-active-queue entry_ids stay placeholder until
+      // the next fetchQueuedVideos runs.)
+      set(s => {
+        const targetQueue = targetId ? s.queues.find(q => q.id === targetId) : null;
+        const nextQueuedVideos: Record<string, QueuedVideoInfo> = targetQueue
+          ? { ...s.queuedVideos, [ytVideoId]: {
+              entryId: s.queuedVideos[ytVideoId]?.entryId ?? "",
+              queueId: targetQueue.id,
+              queueName: targetQueue.name,
+              queueEmoji: targetQueue.emoji,
+            } }
+          : s.queuedVideos;
+        return {
+          queuedVideos: nextQueuedVideos,
+          queues: targetId
+            ? s.queues.map(q => q.id === targetId ? { ...q, videoCount: q.videoCount + 1 } : q)
+            : s.queues,
+        };
+      });
       await get().fetchQueue();
+      // Refresh the cross-queue map so the optimistic placeholder entry_id
+      // gets replaced with the real one (needed for long-press remove on
+      // non-active queues). Fire-and-forget — UI already flipped.
+      get().fetchQueuedVideos();
     } catch (e: any) {
       // Don't surface queue_limit_reached as a generic error banner —
       // useAddToQueue handles it with a dedicated Alert. Other errors
@@ -168,7 +272,33 @@ export const useStore = create<AppState>((set, get) => ({
     try {
       await api.removeFromQueue(entryId);
       set(s => {
-        if (!s.queue) return {};
+        // Find the ytVideoId for this entry — check active queue first,
+        // then fall back to the cross-queue map (covers non-active queue
+        // removes initiated from Browse/Channel/etc long-press).
+        let removedYtId: string | undefined;
+        if (s.queue?.current?.id === entryId) {
+          removedYtId = s.queue.current.video.ytVideoId;
+        } else if (s.queue) {
+          removedYtId = s.queue.entries.find(e => e.id === entryId)?.video.ytVideoId;
+        }
+        if (!removedYtId) {
+          // Non-active queue remove: look up via queuedVideos
+          const match = Object.entries(s.queuedVideos).find(([, info]) => info.entryId === entryId);
+          if (match) removedYtId = match[0];
+        }
+
+        // Optimistic chip count update for the source queue.
+        const sourceQueueId = removedYtId ? s.queuedVideos[removedYtId]?.queueId ?? s.activeQueueId : s.activeQueueId;
+        const updatedQueues = sourceQueueId
+          ? s.queues.map(q => q.id === sourceQueueId ? { ...q, videoCount: Math.max(0, q.videoCount - 1) } : q)
+          : s.queues;
+
+        const nextQueuedVideos = removedYtId ? dropQueued(s.queuedVideos, removedYtId) : s.queuedVideos;
+
+        if (!s.queue) {
+          return { queuedVideos: nextQueuedVideos, queues: updatedQueues };
+        }
+
         const wasWatching = s.queue.current?.id === entryId;
         const newEntries = s.queue.entries.filter(e => e.id !== entryId);
         let newCurrent = wasWatching ? null : s.queue.current;
@@ -177,7 +307,11 @@ export const useStore = create<AppState>((set, get) => ({
           finalEntries = newEntries.map((e, i) => i === 0 ? { ...e, status: "watching" as const } : e);
           newCurrent = finalEntries[0];
         }
-        return { queue: { ...s.queue, entries: finalEntries, total: finalEntries.length, current: newCurrent } };
+        return {
+          queue: { ...s.queue, entries: finalEntries, total: finalEntries.length, current: newCurrent },
+          queuedVideos: nextQueuedVideos,
+          queues: updatedQueues,
+        };
       });
     } catch (e: any) {
       set({ error: e.message });
@@ -196,7 +330,17 @@ export const useStore = create<AppState>((set, get) => ({
           if (q.id === targetQueueId) return { ...q, videoCount: q.videoCount + 1 };
           return q;
         });
-        if (!s.queue) return { queues: updatedQueues };
+
+        // Update the cross-queue map: the entry now lives in targetQueueId.
+        const targetQueue = s.queues.find(q => q.id === targetQueueId);
+        const movedYtId = s.queue?.current?.id === entryId
+          ? s.queue.current.video.ytVideoId
+          : s.queue?.entries.find(e => e.id === entryId)?.video.ytVideoId;
+        const nextQueuedVideos = (movedYtId && targetQueue && s.queuedVideos[movedYtId])
+          ? { ...s.queuedVideos, [movedYtId]: { ...s.queuedVideos[movedYtId], queueId: targetQueue.id, queueName: targetQueue.name, queueEmoji: targetQueue.emoji } }
+          : s.queuedVideos;
+
+        if (!s.queue) return { queues: updatedQueues, queuedVideos: nextQueuedVideos };
         const wasWatching = s.queue.current?.id === entryId;
         const newEntries = s.queue.entries.filter(e => e.id !== entryId);
         let newCurrent = wasWatching ? null : s.queue.current;
@@ -208,6 +352,7 @@ export const useStore = create<AppState>((set, get) => ({
         return {
           queues: updatedQueues,
           queue: { ...s.queue, entries: finalEntries, total: finalEntries.length, current: newCurrent },
+          queuedVideos: nextQueuedVideos,
         };
       });
     } catch (e: any) {
@@ -289,6 +434,18 @@ export const useStore = create<AppState>((set, get) => ({
     }
   },
 
+  markEntryCompleted: (entryId: string) => {
+    set(s => {
+      // Find the ytVideoId from the active queue (since completion always
+      // happens on queue.current).
+      const ytId = s.queue?.current?.id === entryId
+        ? s.queue.current.video.ytVideoId
+        : s.queue?.entries.find(e => e.id === entryId)?.video.ytVideoId;
+      if (!ytId) return {};
+      return { queuedVideos: dropQueued(s.queuedVideos, ytId) };
+    });
+  },
+
   skipCurrent: async () => {
     const { user } = get();
     if (!user || user.skipsRemaining <= 0) {
@@ -296,9 +453,14 @@ export const useStore = create<AppState>((set, get) => ({
       return;
     }
     try {
+      // Capture the ytVideoId of the soon-to-be-skipped entry BEFORE the API
+      // call, so we can drop it from queuedVideos even if the queue refreshes
+      // mid-flight.
+      const skippedYtId = get().queue?.current?.video.ytVideoId;
       const result = await api.skipCurrent();
       set(s => {
-        if (!s.queue) return {};
+        const nextQueuedVideos = skippedYtId ? dropQueued(s.queuedVideos, skippedYtId) : s.queuedVideos;
+        if (!s.queue) return { queuedVideos: nextQueuedVideos };
         const entries = s.queue.entries;
         const movedEntry = entries.find(e => e.id === result.movedEntryId);
         const rest = entries.filter(e => e.id !== result.movedEntryId);
@@ -311,6 +473,7 @@ export const useStore = create<AppState>((set, get) => ({
         return {
           queue: { ...s.queue, entries: newEntries, current: result.nextEntry ?? null },
           user: s.user ? { ...s.user, skipsRemaining: result.skipsRemaining, skipsMax: result.skipsMax } : null,
+          queuedVideos: nextQueuedVideos,
         };
       });
     } catch (e: any) {
