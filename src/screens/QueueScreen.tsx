@@ -677,6 +677,12 @@ export default function QueueScreen() {
                           />
                         </Svg>
                       </TouchableOpacity>
+
+                      {user && (
+                        <View style={tStyles.ctaSkipCounter}>
+                          <SkipCounter remaining={user.skipsRemaining} max={user.skipsMax} />
+                        </View>
+                      )}
                     </View>
                   );
                 })()}
@@ -1606,6 +1612,7 @@ function makeTabletStyles(c: ColorPalette) {
     ctaChipInteract:     { borderColor: c.accent, backgroundColor: "transparent" },
     ctaChipInteractText: { fontSize: FontSize.sm, color: c.accent, fontFamily: FontFamily.sansMedium },
     ctaSkipCircle:       { width: 40, height: 40, borderRadius: 20, borderWidth: 1.5, borderColor: c.accent, alignItems: "center", justifyContent: "center", flexShrink: 0 },
+    ctaSkipCounter:      { flexShrink: 0, marginLeft: 4 },
     ctaCircle:           { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", flexShrink: 0 },
     markDoneOutline:     { borderWidth: 1.5, borderColor: c.greenText, backgroundColor: "transparent" },
     removeCircle:        { borderWidth: 1.5, borderColor: c.divider, backgroundColor: "transparent" },
