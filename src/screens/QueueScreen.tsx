@@ -68,8 +68,8 @@ const QUEUE_COL_WIDTH = 320;
 
 const QUEUE_TIPS = [
   "This is your queue, where you curate and watch your hand-picked videos.",
-  "Head to Browse to start building your queue.",
   "Or import videos directly from an existing YouTube playlist.",
+  "Head to Browse to start building your queue.",
 ];
 const QUEUE_TIP_PRO_REFLECT = "Add private notes or reflections for your Journal.";
 const QUEUE_TIP_PRO_SWITCHER = "You can create multiple queues to organize your videos. Tap any queue to switch between them.";

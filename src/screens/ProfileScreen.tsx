@@ -445,12 +445,12 @@ export default function ProfileScreen() {
           onPress: async () => {
             try {
               await AsyncStorage.multiRemove([
-                "tooltip_queue_v2",
-                "tooltip_queue_mobile_reflect",
-                "tooltip_queue_mobile_switcher",
-                "tooltip_journal",
-                "tooltip_insights",
-                "tooltip_player",
+                "tooltip_done_queue_v2",
+                "tooltip_done_queue_mobile_reflect",
+                "tooltip_done_queue_mobile_switcher",
+                "tooltip_done_journal_v2",
+                "tooltip_done_insights_v2",
+                "tooltip_done_player_v2",
               ]);
               Alert.alert("Success", "Tutorials cleared. Refresh the screen to see tooltips again.");
             } catch (e: any) {
