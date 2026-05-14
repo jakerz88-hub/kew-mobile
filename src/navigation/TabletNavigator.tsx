@@ -7,7 +7,7 @@ import { TabletSidebarProvider, useTabletScrollToTopTrigger } from "../contexts/
 import { useTheme } from "../contexts/ThemeContext";
 import { useStore } from "../store";
 import { SansText, KewLogo, AvatarBubble } from "../components/UI";
-import { LogoMark, QueueTabIcon, BrowseTabIcon, ExploreTabIcon, JournalTabIcon } from "../components/TabIcons";
+import { LogoMark, QueueTabIcon, BrowseTabIcon, ExploreTabIcon, HistoryTabIcon, JournalTabIcon } from "../components/TabIcons";
 import { Spacing } from "../types/theme";
 import QueueScreen from "../screens/QueueScreen";
 import BrowseScreen from "../screens/BrowseScreen";
@@ -141,14 +141,6 @@ function TabletTopBar({ onProfilePress }: { onProfilePress: () => void }) {
   );
 }
 
-const BOTTOM_TABS: { tab: TabletTab; label: string; icon: (color: string) => React.ReactNode }[] = [
-  { tab: "Queue",   label: "Queue",   icon: (color) => <QueueTabIcon   color={color} /> },
-  { tab: "Browse",  label: "Browse",  icon: (color) => <BrowseTabIcon  color={color} /> },
-  { tab: "Explore", label: "Explore", icon: (color) => <ExploreTabIcon color={color} /> },
-  { tab: "History", label: "Journal", icon: (color) => <JournalTabIcon color={color} /> },
-  { tab: "Import",  label: "Import",  icon: (color) => <Feather name="download" size={20} color={color} /> },
-];
-
 function TabletBottomTabBar({
   activeTab,
   onTabChange,
@@ -157,10 +149,24 @@ function TabletBottomTabBar({
   onTabChange: (tab: TabletTab) => void;
 }) {
   const { colors } = useTheme();
+  // Plan-aware label + icon for the History/Journal slot. Free users see
+  // "History" + clock; paid users see "Journal" + book-open. The internal
+  // tab key stays "History" so route state doesn't churn on plan changes.
+  const user = useStore(s => s.user);
+  const isFree = (user?.plan ?? "free") === "free";
+  const bottomTabs: { tab: TabletTab; label: string; icon: (color: string) => React.ReactNode }[] = [
+    { tab: "Queue",   label: "Queue",   icon: (color) => <QueueTabIcon   color={color} /> },
+    { tab: "Browse",  label: "Browse",  icon: (color) => <BrowseTabIcon  color={color} /> },
+    { tab: "Explore", label: "Explore", icon: (color) => <ExploreTabIcon color={color} /> },
+    isFree
+      ? { tab: "History", label: "History", icon: (color) => <HistoryTabIcon color={color} /> }
+      : { tab: "History", label: "Journal", icon: (color) => <JournalTabIcon color={color} /> },
+    { tab: "Import",  label: "Import",  icon: (color) => <Feather name="download" size={20} color={color} /> },
+  ];
   return (
     <SafeAreaView style={{ backgroundColor: colors.cardBg, borderTopColor: colors.divider, borderTopWidth: 1 }}>
       <View style={{ flexDirection: "row" }}>
-        {BOTTOM_TABS.map(({ tab, label, icon }) => {
+        {bottomTabs.map(({ tab, label, icon }) => {
           const isActive = activeTab === tab;
           const tintColor = isActive ? colors.accent : colors.warmMid;
           return (
