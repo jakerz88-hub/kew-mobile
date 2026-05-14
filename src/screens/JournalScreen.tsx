@@ -207,9 +207,10 @@ function JournalScreenPaid() {
   const journalTip = useTooltip("journal_v2", 2);
   const pageHeaderRef  = useRef<View | null>(null);
   const segmentedRef   = useRef<View | null>(null);
+  const firstMonthRef  = useRef<TouchableOpacity | null>(null);
   const JOURNAL_ANCHORS: TooltipAnchor[] = [
-    { anchorRef: pageHeaderRef, placement: "below" },
     { anchorRef: segmentedRef,  placement: "below" },
+    { anchorRef: firstMonthRef, placement: "above" },
   ];
 
   const [feedItems, setFeedItems] = useState<JournalFeedItem[]>([]);
@@ -557,11 +558,12 @@ function EntriesView(props: EntriesViewProps) {
       keyExtractor={m => m.monthKey}
       refreshControl={<RefreshControl refreshing={loading} onRefresh={onRefresh} tintColor={colors.ink} />}
       contentContainerStyle={styles.listContent}
-      renderItem={({ item: month }) => {
+      renderItem={({ item: month, index }) => {
         const monthCollapsed = collapsedMonths.has(month.monthKey);
         return (
           <View>
             <TouchableOpacity
+              ref={index === 0 ? firstMonthRef : null}
               onPress={() => onToggleMonth(month.monthKey)}
               activeOpacity={0.7}
               style={styles.monthRow}

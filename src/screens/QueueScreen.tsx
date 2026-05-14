@@ -163,8 +163,8 @@ export default function QueueScreen() {
     { anchorRef: skipBtnRef, placement: "above" },
     { anchorRef: interactBtnRef, placement: "above" },
   ] : [
-    { anchorRef: queueHeaderRef, placement: "below" },
-    { anchorRef: importBtnRef, placement: "above" },
+    { anchorRef: queueHeaderRef, placement: "above" },
+    { anchorRef: importBtnRef, placement: "below" },
     { anchorRef: browseTabRef, placement: "above" },
   ];
 
