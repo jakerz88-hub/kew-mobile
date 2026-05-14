@@ -79,7 +79,8 @@ const QUEUE_ANCHORS: TooltipAnchor[] = [
 
 export default function QueueScreen() {
   const navigation = useNavigation<any>();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
+  const isLandscape = width > height;
   const isTablet = useIsTablet();
   const inSidebar = useInTabletSidebar();
   const switchTab = useTabletSwitchTab();
@@ -630,22 +631,41 @@ export default function QueueScreen() {
                         <SansText style={tStyles.ctaChipInteractText}>Interact</SansText>
                       </TouchableOpacity>
 
-                      <TouchableOpacity
-                        onPress={() => setShowSkipModal(true)}
-                        disabled={!user || user.skipsRemaining <= 0}
-                        style={[
-                          tStyles.ctaSkipCircle,
-                          (!user || user.skipsRemaining <= 0) && tStyles.actionBtnDisabled,
-                        ]}
-                        activeOpacity={0.7}
-                        accessibilityRole="button"
-                        accessibilityLabel="Skip"
-                      >
-                        <Svg width={16} height={16} viewBox="0 0 24 24">
-                          <Path d="M5 4 L15 12 L5 20 Z" fill={colors.accent} />
-                          <Path d="M19 5 L19 19" stroke={colors.accent} strokeWidth={2} strokeLinecap="round" />
-                        </Svg>
-                      </TouchableOpacity>
+                      {isLandscape ? (
+                        // Landscape: Skip as text chip (more room in the row)
+                        <TouchableOpacity
+                          onPress={() => setShowSkipModal(true)}
+                          disabled={!user || user.skipsRemaining <= 0}
+                          style={[
+                            tStyles.ctaChip,
+                            tStyles.ctaChipSkip,
+                            (!user || user.skipsRemaining <= 0) && tStyles.actionBtnDisabled,
+                          ]}
+                          activeOpacity={0.7}
+                          accessibilityRole="button"
+                          accessibilityLabel="Skip"
+                        >
+                          <SansText style={tStyles.ctaChipSkipText}>Skip</SansText>
+                        </TouchableOpacity>
+                      ) : (
+                        // Portrait: Skip as 40×40 icon circle (tighter row)
+                        <TouchableOpacity
+                          onPress={() => setShowSkipModal(true)}
+                          disabled={!user || user.skipsRemaining <= 0}
+                          style={[
+                            tStyles.ctaSkipCircle,
+                            (!user || user.skipsRemaining <= 0) && tStyles.actionBtnDisabled,
+                          ]}
+                          activeOpacity={0.7}
+                          accessibilityRole="button"
+                          accessibilityLabel="Skip"
+                        >
+                          <Svg width={16} height={16} viewBox="0 0 24 24">
+                            <Path d="M5 4 L15 12 L5 20 Z" fill={colors.accent} />
+                            <Path d="M19 5 L19 19" stroke={colors.accent} strokeWidth={2} strokeLinecap="round" />
+                          </Svg>
+                        </TouchableOpacity>
+                      )}
 
                       <TouchableOpacity
                         style={[tStyles.ctaCircle, tStyles.markDoneOutline]}
@@ -1611,6 +1631,8 @@ function makeTabletStyles(c: ColorPalette) {
     ctaChipReflectText:  { fontSize: FontSize.sm, color: c.buttonText, fontFamily: FontFamily.sansMedium },
     ctaChipInteract:     { borderColor: c.accent, backgroundColor: "transparent" },
     ctaChipInteractText: { fontSize: FontSize.sm, color: c.accent, fontFamily: FontFamily.sansMedium },
+    ctaChipSkip:         { borderColor: c.accent, backgroundColor: "transparent" },
+    ctaChipSkipText:     { fontSize: FontSize.sm, color: c.accent, fontFamily: FontFamily.sansMedium },
     ctaSkipCircle:       { width: 40, height: 40, borderRadius: 20, borderWidth: 1.5, borderColor: c.accent, alignItems: "center", justifyContent: "center", flexShrink: 0 },
     ctaSkipCounter:      { flexShrink: 0 },
     ctaCircle:           { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", flexShrink: 0 },
