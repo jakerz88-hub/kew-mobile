@@ -57,8 +57,8 @@ export default function InsightsScreen() {
   const barChartRef   = useRef<View | null>(null);
   const intentRef     = useRef<View | null>(null);
   const INSIGHTS_TIPS = [
-    "This chart shows your daily watch time. Use it to spot patterns and see when you're watching most.",
-    "Intentionality tracks how often you stay within your personal limits. Set a limit below to start measuring.",
+    "Use Kew Insights to track your viewing habits over time.",
+    "Or set a personal watch limit to increase your intentionality.",
   ];
   const INSIGHTS_ANCHORS: TooltipAnchor[] = [
     { anchorRef: barChartRef, placement: "above" },

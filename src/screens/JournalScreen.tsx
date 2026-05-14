@@ -435,7 +435,7 @@ function JournalScreenPaid() {
         totalSteps={2}
         body={journalTip.step === 0
           ? "Your journal organizes your reflections by month. Tap any month to expand it and review what you wrote."
-          : "Toggle between Entries — your notes — and History, all videos you've watched."
+          : "Toggle from Journal Entries to view your full Watch History."
         }
         anchor={JOURNAL_ANCHORS[Math.max(0, journalTip.step)] ?? JOURNAL_ANCHORS[0]}
         onNext={journalTip.advance}

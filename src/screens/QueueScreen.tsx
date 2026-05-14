@@ -67,10 +67,12 @@ const PROGRESS_REPORT_INTERVAL = 10 * 1000;
 const QUEUE_COL_WIDTH = 320;
 
 const QUEUE_TIPS = [
-  "This is your Queue — the videos you've hand-picked to watch, in order.",
-  "Tap + Import to add videos directly from your YouTube playlists.",
-  "Tap Browse to start adding videos from your subscribed channels.",
+  "This is your queue, where you curate and watch your hand-picked videos.",
+  "Head to Browse to start building your queue.",
+  "Or import videos directly from an existing YouTube playlist.",
 ];
+const QUEUE_TIP_PRO_REFLECT = "Add private notes or reflections for your Journal.";
+const QUEUE_TIP_PRO_SWITCHER = "You can create multiple queues to organize your videos. Tap any queue to switch between them.";
 
 export default function QueueScreen() {
   const navigation = useNavigation<any>();
@@ -144,15 +146,38 @@ export default function QueueScreen() {
   }, []);
 
   // ── Tooltip journey ──
-  const queueTip = useTooltip("queue_v2", 3);
+  // Phone: 3-step queue (skip/interact in Player); Tablet: 5-step queue (includes skip/interact)
+  const baseSteps = isTablet ? 5 : 3;
+  const queueTip = useTooltip("queue_v2", baseSteps);
   const queueHeaderRef = useRef<View | null>(null);
   const importBtnRef   = useRef<View | null>(null);
   const browseTabRef   = useRef<View | null>(null);
-  const QUEUE_ANCHORS: TooltipAnchor[] = [
+  const skipBtnRef   = useRef<View | null>(null);
+  const interactBtnRef = useRef<View | null>(null);
+  const reflectBtnRef = useRef<View | null>(null);
+
+  const QUEUE_ANCHORS: TooltipAnchor[] = isTablet ? [
     { anchorRef: queueHeaderRef, placement: "below" },
-    { anchorRef: importBtnRef,   placement: "above" },
-    { anchorRef: browseTabRef,   placement: "above" },
+    { anchorRef: importBtnRef, placement: "above" },
+    { anchorRef: browseTabRef, placement: "above" },
+    { anchorRef: skipBtnRef, placement: "above" },
+    { anchorRef: interactBtnRef, placement: "above" },
+  ] : [
+    { anchorRef: queueHeaderRef, placement: "below" },
+    { anchorRef: importBtnRef, placement: "above" },
+    { anchorRef: browseTabRef, placement: "above" },
   ];
+
+  // Pro journeys (tablet only, mirrors web behavior)
+  const isPro = user?.plan === "pro";
+  const baseJourneyDone = typeof AsyncStorage !== "undefined"
+    ? (queueTip.step === -1) // Journey marked complete
+    : false;
+  const reflectTip = useTooltip("queue_mobile_reflect", 1, isTablet && isPro && baseJourneyDone && !queueTip.visible);
+  const proTip = useTooltip("queue_mobile_switcher", 1, isTablet && isPro && baseJourneyDone && !reflectTip.visible);
+
+  const REFLECT_ANCHOR: TooltipAnchor = { anchorRef: reflectBtnRef, placement: "below" };
+  const PRO_ANCHOR: TooltipAnchor = { anchorRef: queueHeaderRef, placement: "below" };
 
   // ── Derived queue values ──
   const allEntries = queue?.entries ?? [];
@@ -615,6 +640,7 @@ export default function QueueScreen() {
                       )}
 
                       <TouchableOpacity
+                        ref={reflectBtnRef}
                         style={[tStyles.ctaChip, tStyles.ctaChipReflect]}
                         onPress={openReflect}
                         activeOpacity={0.7}
@@ -625,6 +651,7 @@ export default function QueueScreen() {
                       </TouchableOpacity>
 
                       <TouchableOpacity
+                        ref={interactBtnRef}
                         style={[tStyles.ctaChip, tStyles.ctaChipInteract]}
                         onPress={openInteract}
                         activeOpacity={0.7}
@@ -637,6 +664,7 @@ export default function QueueScreen() {
                       {isLandscape ? (
                         // Landscape: Skip as text chip (more room in the row)
                         <TouchableOpacity
+                          ref={skipBtnRef}
                           onPress={() => setShowSkipModal(true)}
                           disabled={!user || user.skipsRemaining <= 0}
                           style={[
@@ -653,6 +681,7 @@ export default function QueueScreen() {
                       ) : (
                         // Portrait: Skip as 40×40 icon circle (tighter row)
                         <TouchableOpacity
+                          ref={skipBtnRef}
                           onPress={() => setShowSkipModal(true)}
                           disabled={!user || user.skipsRemaining <= 0}
                           style={[
@@ -1088,11 +1117,31 @@ export default function QueueScreen() {
       <TooltipOverlay
         visible={queueTip.visible}
         step={queueTip.step}
-        totalSteps={3}
+        totalSteps={baseSteps}
         body={QUEUE_TIPS[Math.max(0, queueTip.step)] ?? ""}
         anchor={QUEUE_ANCHORS[Math.max(0, queueTip.step)] ?? QUEUE_ANCHORS[0]}
         onNext={queueTip.advance}
         onDismiss={queueTip.dismiss}
+      />
+      {/* Pro Reflect tip — tablet only, fires after base tour */}
+      <TooltipOverlay
+        visible={reflectTip.visible}
+        step={0}
+        totalSteps={1}
+        body={QUEUE_TIP_PRO_REFLECT}
+        anchor={REFLECT_ANCHOR}
+        onNext={reflectTip.advance}
+        onDismiss={reflectTip.dismiss}
+      />
+      {/* Pro queue-switcher tip — tablet only, fires after reflect tour */}
+      <TooltipOverlay
+        visible={proTip.visible}
+        step={0}
+        totalSteps={1}
+        body={QUEUE_TIP_PRO_SWITCHER}
+        anchor={PRO_ANCHOR}
+        onNext={proTip.advance}
+        onDismiss={proTip.dismiss}
       />
 
       {/* Recently removed tray — anchored to the bottom of the content area */}
