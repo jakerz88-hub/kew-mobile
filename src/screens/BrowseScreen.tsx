@@ -30,11 +30,7 @@ const CHANNEL_COL_WIDTH = 260;
 
 const BROWSE_TIPS = [
   "These are your subscribed channels. Tap one to browse their recent uploads.",
-  "Tap + to add a video into your queue. Hold down ✓ to remove an added video.",
-];
-const BROWSE_ANCHORS: TooltipAnchor[] = [
-  { arrowSide: "top", top: 230, left: 16, arrowOffset: 20 },
-  { arrowSide: "top", top: 280, left: 16, arrowOffset: 20 },
+  "Tap a channel, then tap + to add videos to your queue.",
 ];
 
 export default function BrowseScreen() {
@@ -80,7 +76,12 @@ export default function BrowseScreen() {
   );
 
   // ── Tooltip journey ──
-  const browseTip = useTooltip("browse", 2);
+  const browseTip = useTooltip("browse_v2", 2);
+  const headerRef = useRef<View | null>(null);
+  const BROWSE_ANCHORS: TooltipAnchor[] = [
+    { anchorRef: headerRef, placement: "below" },
+    { anchorRef: headerRef, placement: "below" },
+  ];
 
   const loadChannels = useCallback(async () => {
     try {
@@ -418,7 +419,7 @@ export default function BrowseScreen() {
         }
         ListHeaderComponent={
           <>
-            <View style={styles.pageTitleRow}>
+            <View ref={headerRef} style={styles.pageTitleRow}>
               <SerifText style={styles.pageTitle}>Browse Your Channels</SerifText>
               {channels.length > 0 && (
                 <SansText style={styles.channelCount}>
@@ -512,6 +513,7 @@ export default function BrowseScreen() {
         onNext={browseTip.advance}
         onDismiss={browseTip.dismiss}
       />
+
 
       {/* Android queue picker modal */}
       {Platform.OS !== "ios" && pickerVideoId && (

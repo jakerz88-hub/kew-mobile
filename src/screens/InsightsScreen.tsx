@@ -1,5 +1,7 @@
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { View, ScrollView, SafeAreaView, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import { useTooltip } from "../hooks/useTooltip";
+import TooltipOverlay, { type TooltipAnchor } from "../components/TooltipOverlay";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { useStore } from "../store";
@@ -49,6 +51,19 @@ export default function InsightsScreen() {
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
   const isPro = user?.plan === "pro";
+
+  // ── Tooltip journey ──
+  const insightsTip   = useTooltip("insights_v2", 2);
+  const barChartRef   = useRef<View | null>(null);
+  const intentRef     = useRef<View | null>(null);
+  const INSIGHTS_TIPS = [
+    "This chart shows your daily watch time. Use it to spot patterns and see when you're watching most.",
+    "Intentionality tracks how often you stay within your personal limits. Set a limit below to start measuring.",
+  ];
+  const INSIGHTS_ANCHORS: TooltipAnchor[] = [
+    { anchorRef: barChartRef, placement: "above" },
+    { anchorRef: intentRef,   placement: "above" },
+  ];
 
   const [period, setPeriod] = useState<InsightsPeriod>("week");
   const [insights, setInsights] = useState<Insights | null>(null);
@@ -189,7 +204,7 @@ export default function InsightsScreen() {
             </View>
 
             {/* Bar chart */}
-            <View style={styles.card}>
+            <View ref={barChartRef} style={styles.card}>
               <SansText style={styles.sectionLabel}>Daily watch time</SansText>
               <BarChart breakdown={insights.dailyBreakdown} period={period} colors={colors} styles={styles} />
             </View>
@@ -201,7 +216,7 @@ export default function InsightsScreen() {
 
             {/* Intentionality */}
             {intent && (
-              <View style={styles.card}>
+              <View ref={intentRef} style={styles.card}>
                 <SansText style={styles.sectionLabel}>Intentionality</SansText>
 
                 {/* Personal limits kept — wide cell */}
@@ -292,6 +307,16 @@ export default function InsightsScreen() {
           </>
         ) : null}
       </ScrollView>
+
+      <TooltipOverlay
+        visible={insightsTip.visible}
+        step={insightsTip.step}
+        totalSteps={2}
+        body={INSIGHTS_TIPS[Math.max(0, insightsTip.step)] ?? ""}
+        anchor={INSIGHTS_ANCHORS[Math.max(0, insightsTip.step)] ?? INSIGHTS_ANCHORS[0]}
+        onNext={insightsTip.advance}
+        onDismiss={insightsTip.dismiss}
+      />
     </SafeAreaView>
   );
 }

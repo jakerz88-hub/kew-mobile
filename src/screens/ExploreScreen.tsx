@@ -72,11 +72,8 @@ const SURPRISE_TOPICS = [
 
 const EXPLORE_TIPS = [
   "Search for any topic or channel, even ones you don't subscribe to.",
-  "Not sure where to start? Use these categories as a jumping off point!",
-];
-const EXPLORE_ANCHORS: TooltipAnchor[] = [
-  { arrowSide: "top", top: 168, left: 16, arrowOffset: 20 },
-  { arrowSide: "top", top: 318, left: 16, arrowOffset: 20 },
+  "Not sure where to start? Use these categories as a jumping-off point.",
+  "Feeling adventurous? Tap Surprise me! to discover something unexpected.",
 ];
 
 export default function ExploreScreen() {
@@ -117,7 +114,15 @@ export default function ExploreScreen() {
   useEffect(() => { saveRecentSearches(recentSearches); }, [recentSearches]);
 
   // ── Tooltip journey ──
-  const exploreTip = useTooltip("explore", 2);
+  const exploreTip = useTooltip("explore_v2", 3);
+  const searchBarRef  = useRef<View | null>(null);
+  const chipsRef      = useRef<View | null>(null);
+  const surpriseBtnRef = useRef<View | null>(null);
+  const EXPLORE_ANCHORS: TooltipAnchor[] = [
+    { anchorRef: searchBarRef,   placement: "below" },
+    { anchorRef: chipsRef,       placement: "below" },
+    { anchorRef: surpriseBtnRef, placement: "above" },
+  ];
 
   const performSearch = useCallback(async (q: string) => {
     const trimmed = q.trim();
@@ -209,7 +214,7 @@ export default function ExploreScreen() {
 
       {/* Search bar — always visible */}
       <View style={styles.searchRow}>
-        <View style={styles.searchBar}>
+        <View ref={searchBarRef} style={styles.searchBar}>
           <Feather name="search" size={15} color={colors.warmMid} />
           <TextInput
             ref={inputRef}
@@ -355,7 +360,7 @@ export default function ExploreScreen() {
                 {/* Topic chips */}
                 <View style={styles.section}>
                   <SansText style={styles.sectionLabel}>Start somewhere</SansText>
-                  <View style={styles.chipRow}>
+                  <View ref={chipsRef} style={styles.chipRow}>
                     {CHIPS.map(chip => (
                       <TouchableOpacity
                         key={chip}
@@ -367,6 +372,7 @@ export default function ExploreScreen() {
                       </TouchableOpacity>
                     ))}
                     <TouchableOpacity
+                      ref={surpriseBtnRef}
                       style={styles.surpriseChip}
                       onPress={handleSurprise}
                       activeOpacity={0.7}
@@ -540,7 +546,7 @@ export default function ExploreScreen() {
       <TooltipOverlay
         visible={exploreTip.visible}
         step={exploreTip.step}
-        totalSteps={2}
+        totalSteps={3}
         body={EXPLORE_TIPS[Math.max(0, exploreTip.step)] ?? ""}
         anchor={EXPLORE_ANCHORS[Math.max(0, exploreTip.step)] ?? EXPLORE_ANCHORS[0]}
         onNext={exploreTip.advance}

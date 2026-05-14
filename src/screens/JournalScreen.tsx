@@ -80,6 +80,8 @@ import type { JournalEntry, JournalFeedItem } from "../types";
 
 // Free users keep the legacy History tab UX exactly as it was.
 import HistoryScreen from "./HistoryScreen";
+import { useTooltip } from "../hooks/useTooltip";
+import TooltipOverlay, { type TooltipAnchor } from "../components/TooltipOverlay";
 
 
 // ── Date helpers (hand-rolled to avoid adding a date-fns dep) ─────────────────
@@ -200,6 +202,15 @@ function JournalScreenPaid() {
   // resolving we render an ActivityIndicator so the screen never flashes
   // the system fallback font for the month/day headings.
   const [fontsLoaded] = useFonts({ Lora_400Regular, Lora_400Regular_Italic });
+
+  // ── Tooltip journey ──
+  const journalTip = useTooltip("journal_v2", 2);
+  const pageHeaderRef  = useRef<View | null>(null);
+  const segmentedRef   = useRef<View | null>(null);
+  const JOURNAL_ANCHORS: TooltipAnchor[] = [
+    { anchorRef: pageHeaderRef, placement: "below" },
+    { anchorRef: segmentedRef,  placement: "below" },
+  ];
 
   const [feedItems, setFeedItems] = useState<JournalFeedItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -347,14 +358,14 @@ function JournalScreenPaid() {
       {error && <ErrorBanner message={error} onDismiss={clearError} />}
       {localError && <ErrorBanner message={localError} onDismiss={() => setLocalError(null)} />}
 
-      <View style={styles.pageHeader}>
+      <View ref={pageHeaderRef} style={styles.pageHeader}>
         <SerifText style={styles.pageTitle}>Your Journal</SerifText>
         <SansText style={styles.pageSubtitle}>
           Take a moment to reflect on what you&apos;ve watched.
         </SansText>
       </View>
 
-      <View style={styles.segmentedWrap}>
+      <View ref={segmentedRef} style={styles.segmentedWrap}>
         <SegmentedControl
           options={["Entries", "History"]}
           selected={view}
@@ -417,6 +428,19 @@ function JournalScreenPaid() {
       )}
 
       <Toast message={toastMsg} visible={toastVisible} />
+
+      <TooltipOverlay
+        visible={journalTip.visible}
+        step={journalTip.step}
+        totalSteps={2}
+        body={journalTip.step === 0
+          ? "Your journal organizes your reflections by month. Tap any month to expand it and review what you wrote."
+          : "Toggle between Entries — your notes — and History, all videos you've watched."
+        }
+        anchor={JOURNAL_ANCHORS[Math.max(0, journalTip.step)] ?? JOURNAL_ANCHORS[0]}
+        onNext={journalTip.advance}
+        onDismiss={journalTip.dismiss}
+      />
     </SafeAreaView>
   );
 }
