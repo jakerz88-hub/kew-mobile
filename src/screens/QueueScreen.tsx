@@ -5,15 +5,17 @@ import {
   useWindowDimensions, Share, Animated, PanResponder,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Svg, { Path } from "react-native-svg";
 import { QueueActionSheet } from "../components/QueueActionSheet";
 import { InteractModule } from "../components/InteractModule";
+import { ReflectModule } from "../components/ReflectModule";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import YoutubePlayer from "react-native-youtube-iframe";
 import { useStore } from "../store";
 import { api } from "../services/api";
 import {
   KewLogo, SansText, SerifText, Divider, ThumbPlaceholder,
-  EmptyState, ErrorBanner, AvatarBubble, SkipCounter,
+  EmptyState, ErrorBanner, AvatarBubble, SkipCounter, Toast,
 } from "../components/UI";
 import { LogoMark } from "../components/TabIcons";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
@@ -77,7 +79,8 @@ const QUEUE_ANCHORS: TooltipAnchor[] = [
 
 export default function QueueScreen() {
   const navigation = useNavigation<any>();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
+  const isLandscape = width > height;
   const isTablet = useIsTablet();
   const inSidebar = useInTabletSidebar();
   const switchTab = useTabletSwitchTab();
@@ -119,11 +122,30 @@ export default function QueueScreen() {
   const [descExpanded, setDescExpanded] = useState(false);
   const [interactVisible, setInteractVisible] = useState(false);
   const [interactTs, setInteractTs] = useState(0);
+  const [reflectVisible, setReflectVisible] = useState(false);
+  const [reflectTs, setReflectTs] = useState(0);
+  const [toastMsg, setToastMsg] = useState("");
+  const [toastVisible, setToastVisible] = useState(false);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showToast = useCallback((msg: string) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToastMsg(msg);
+    setToastVisible(true);
+    toastTimer.current = setTimeout(() => setToastVisible(false), 3000);
+  }, []);
+  useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
 
   const openInteract = useCallback(async () => {
     const playerSecs = await playerRef.current?.getCurrentTime().catch(() => null);
     setInteractTs(playerSecs != null ? Math.floor(playerSecs) : 0);
     setInteractVisible(true);
+  }, []);
+
+  const openReflect = useCallback(async () => {
+    const ts = await playerRef.current?.getCurrentTime?.() ?? 0;
+    setReflectTs(Math.max(0, Math.floor(ts)));
+    setPlaying(false);
+    setReflectVisible(true);
   }, []);
 
   // ── Tooltip journey ──
@@ -532,45 +554,159 @@ export default function QueueScreen() {
 
                 <Divider />
 
-                {/* Controls */}
-                <View style={tStyles.controls}>
-                  <TouchableOpacity
-                    style={tStyles.btnInteract}
-                    onPress={openInteract}
-                    activeOpacity={0.8}
-                    accessibilityRole="button"
-                    accessibilityLabel="Interact"
-                  >
-                    <SansText style={tStyles.btnInteractText}>Interact</SansText>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[tStyles.btnSkip, (!user || user.skipsRemaining <= 0) && { opacity: 0.4 }]}
-                    onPress={() => setShowSkipModal(true)}
-                    disabled={!user || user.skipsRemaining <= 0}
-                    activeOpacity={0.8}
-                  >
-                    <SansText style={tStyles.btnSkipText}>Skip</SansText>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={tStyles.btnDone}
-                    onPress={() => setShowDoneModal(true)}
-                    activeOpacity={0.8}
-                  >
-                    <SansText style={tStyles.btnDoneText}>Mark done</SansText>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={tStyles.btnRemove}
-                    onPress={() => setActionEntry(current)}
-                    activeOpacity={0.8}
-                  >
-                    <SansText style={tStyles.btnRemoveText}>Remove</SansText>
-                  </TouchableOpacity>
-                  {user && (
-                    <View style={{ marginLeft: "auto" }}>
-                      <SkipCounter remaining={user.skipsRemaining} max={user.skipsMax} />
+                {/* Controls — restructured based on user plan */}
+                {(() => {
+                  const isFree = (user?.plan ?? "free") === "free";
+
+                  if (isFree) {
+                    // Free users: unchanged row
+                    return (
+                      <View style={tStyles.controls}>
+                        <TouchableOpacity
+                          style={tStyles.btnInteract}
+                          onPress={openInteract}
+                          activeOpacity={0.8}
+                          accessibilityRole="button"
+                          accessibilityLabel="Interact"
+                        >
+                          <SansText style={tStyles.btnInteractText}>Interact</SansText>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[tStyles.btnSkip, (!user || user.skipsRemaining <= 0) && { opacity: 0.4 }]}
+                          onPress={() => setShowSkipModal(true)}
+                          disabled={!user || user.skipsRemaining <= 0}
+                          activeOpacity={0.8}
+                        >
+                          <SansText style={tStyles.btnSkipText}>Skip</SansText>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={tStyles.btnDone}
+                          onPress={() => setShowDoneModal(true)}
+                          activeOpacity={0.8}
+                        >
+                          <SansText style={tStyles.btnDoneText}>Mark done</SansText>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={tStyles.btnRemove}
+                          onPress={() => setActionEntry(current)}
+                          activeOpacity={0.8}
+                        >
+                          <SansText style={tStyles.btnRemoveText}>Remove</SansText>
+                        </TouchableOpacity>
+                        {user && (
+                          <View style={{ marginLeft: "auto" }}>
+                            <SkipCounter remaining={user.skipsRemaining} max={user.skipsMax} />
+                          </View>
+                        )}
+                      </View>
+                    );
+                  }
+
+                  // Paid users: Reflect T1 + restructured row
+                  return (
+                    <View style={tStyles.ctaRow}>
+                      {user && (
+                        <View style={tStyles.ctaSkipCounter}>
+                          <SkipCounter remaining={user.skipsRemaining} max={user.skipsMax} />
+                        </View>
+                      )}
+
+                      <TouchableOpacity
+                        style={[tStyles.ctaChip, tStyles.ctaChipReflect]}
+                        onPress={openReflect}
+                        activeOpacity={0.7}
+                        accessibilityRole="button"
+                        accessibilityLabel="Reflect"
+                      >
+                        <SansText style={tStyles.ctaChipReflectText}>Reflect</SansText>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[tStyles.ctaChip, tStyles.ctaChipInteract]}
+                        onPress={openInteract}
+                        activeOpacity={0.7}
+                        accessibilityRole="button"
+                        accessibilityLabel="Interact"
+                      >
+                        <SansText style={tStyles.ctaChipInteractText}>Interact</SansText>
+                      </TouchableOpacity>
+
+                      {isLandscape ? (
+                        // Landscape: Skip as text chip (more room in the row)
+                        <TouchableOpacity
+                          onPress={() => setShowSkipModal(true)}
+                          disabled={!user || user.skipsRemaining <= 0}
+                          style={[
+                            tStyles.ctaChip,
+                            tStyles.ctaChipSkip,
+                            (!user || user.skipsRemaining <= 0) && tStyles.actionBtnDisabled,
+                          ]}
+                          activeOpacity={0.7}
+                          accessibilityRole="button"
+                          accessibilityLabel="Skip"
+                        >
+                          <SansText style={tStyles.ctaChipSkipText}>Skip</SansText>
+                        </TouchableOpacity>
+                      ) : (
+                        // Portrait: Skip as 40×40 icon circle (tighter row)
+                        <TouchableOpacity
+                          onPress={() => setShowSkipModal(true)}
+                          disabled={!user || user.skipsRemaining <= 0}
+                          style={[
+                            tStyles.ctaSkipCircle,
+                            (!user || user.skipsRemaining <= 0) && tStyles.actionBtnDisabled,
+                          ]}
+                          activeOpacity={0.7}
+                          accessibilityRole="button"
+                          accessibilityLabel="Skip"
+                        >
+                          <Svg width={16} height={16} viewBox="0 0 24 24">
+                            <Path d="M5 4 L15 12 L5 20 Z" fill={colors.accent} />
+                            <Path d="M19 5 L19 19" stroke={colors.accent} strokeWidth={2} strokeLinecap="round" />
+                          </Svg>
+                        </TouchableOpacity>
+                      )}
+
+                      <TouchableOpacity
+                        style={[tStyles.ctaCircle, tStyles.markDoneOutline]}
+                        onPress={() => setShowDoneModal(true)}
+                        activeOpacity={0.7}
+                        accessibilityRole="button"
+                        accessibilityLabel="Mark done"
+                      >
+                        <Svg width={16} height={16} viewBox="0 0 24 24">
+                          <Path
+                            d="M5 12 10 17 19 8"
+                            fill="none"
+                            stroke={colors.greenText}
+                            strokeWidth={2}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </Svg>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={[tStyles.ctaCircle, tStyles.removeCircle]}
+                        onPress={() => setActionEntry(current)}
+                        activeOpacity={0.7}
+                        accessibilityRole="button"
+                        accessibilityLabel="Remove from queue"
+                      >
+                        <Svg width={14} height={14} viewBox="0 0 24 24">
+                          <Path
+                            d="M6 6 18 18 M18 6 6 18"
+                            fill="none"
+                            stroke={colors.warmMid}
+                            strokeWidth={1.8}
+                            strokeLinecap="round"
+                          />
+                        </Svg>
+                      </TouchableOpacity>
                     </View>
-                  )}
-                </View>
+                  );
+                })()}
+
 
                 {/* Up next — single preview of the immediate next video */}
                 {listPendingEntries.length > 0 && (() => {
@@ -679,6 +815,20 @@ export default function QueueScreen() {
             durationSecs={current.video.durationSecs}
           />
         )}
+
+        {current && (
+          <ReflectModule
+            visible={reflectVisible}
+            onClose={() => { setReflectVisible(false); setPlaying(true); }}
+            onSaved={() => showToast("Entry saved")}
+            videoTitle={current.video.title}
+            ytVideoId={current.video.ytVideoId}
+            currentTimestamp={reflectTs}
+            durationSecs={current.video.durationSecs}
+          />
+        )}
+
+        <Toast message={toastMsg} visible={toastVisible} />
       </SafeAreaView>
     );
   }
@@ -1474,6 +1624,21 @@ function makeTabletStyles(c: ColorPalette) {
     btnSkipText:   { color: c.accent, fontSize: FontSize.sm, fontFamily: FontFamily.sansMedium },
     btnRemove:     { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm + 1.5, borderRadius: Radius.pill, backgroundColor: c.ink },
     btnRemoveText: { color: c.cream, fontSize: FontSize.sm, fontFamily: FontFamily.sansMedium },
+    // Paid user CTA row styles (Reflect + Interact + Skip + Mark done + Remove)
+    ctaRow:              { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm + 4 },
+    ctaChip:             { flex: 1, borderRadius: Radius.pill, alignItems: "center", borderWidth: 1.5, paddingVertical: 8, paddingHorizontal: 10 },
+    ctaChipReflect:      { borderColor: c.accent, backgroundColor: c.accent },
+    ctaChipReflectText:  { fontSize: FontSize.sm, color: c.buttonText, fontFamily: FontFamily.sansMedium },
+    ctaChipInteract:     { borderColor: c.accent, backgroundColor: "transparent" },
+    ctaChipInteractText: { fontSize: FontSize.sm, color: c.accent, fontFamily: FontFamily.sansMedium },
+    ctaChipSkip:         { borderColor: c.accent, backgroundColor: "transparent" },
+    ctaChipSkipText:     { fontSize: FontSize.sm, color: c.accent, fontFamily: FontFamily.sansMedium },
+    ctaSkipCircle:       { width: 40, height: 40, borderRadius: 20, borderWidth: 1.5, borderColor: c.accent, alignItems: "center", justifyContent: "center", flexShrink: 0 },
+    ctaSkipCounter:      { flexShrink: 0 },
+    ctaCircle:           { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", flexShrink: 0 },
+    markDoneOutline:     { borderWidth: 1.5, borderColor: c.greenText, backgroundColor: "transparent" },
+    removeCircle:        { borderWidth: 1.5, borderColor: c.divider, backgroundColor: "transparent" },
+    actionBtnDisabled:   { opacity: 0.4 },
     upNext:      { padding: Spacing.md, paddingTop: Spacing.sm },
     upNextLabel: {
       fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase",
