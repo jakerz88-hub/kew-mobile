@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import {
   View, FlatList, TouchableOpacity, StyleSheet,
   SafeAreaView, Image, ActivityIndicator,
@@ -9,6 +9,7 @@ import { useStore } from "../../store";
 import { SansText, SerifText, Divider, EmptyState, ErrorBanner, Toast } from "../../components/UI";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../../types/theme";
 import { useTheme } from "../../contexts/ThemeContext";
+import { useScrollToTopOnTabPress } from "../../hooks/useScrollToTopOnTabPress";
 import { formatDuration } from "../../types";
 import type { Playlist, PlaylistVideo, ImportResult } from "../../types";
 import { handleQueueLimitReached } from "../../utils/kewPlusUpsell";
@@ -55,6 +56,8 @@ function ListView({
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const listRef = useRef<FlatList | null>(null);
+  useScrollToTopOnTabPress(listRef, "Import");
 
   useEffect(() => {
     if (!hasYoutube) { setLoading(false); return; }
@@ -91,6 +94,7 @@ function ListView({
         </View>
       ) : (
         <FlatList
+          ref={listRef}
           data={playlists}
           keyExtractor={item => item.id}
           ListEmptyComponent={
@@ -146,6 +150,8 @@ function PickerView({
   const [skippedCount, setSkipped]  = useState(0);
   const [toastMsg, setToastMsg]     = useState("");
   const [toastVisible, setToastVisible] = useState(false);
+  const pickerListRef = useRef<FlatList | null>(null);
+  useScrollToTopOnTabPress(pickerListRef, "Import");
 
   useEffect(() => {
     setLoading(true);
@@ -245,6 +251,7 @@ function PickerView({
         </View>
       ) : (
         <FlatList
+          ref={pickerListRef}
           data={videos}
           keyExtractor={item => item.ytVideoId}
           ListHeaderComponent={

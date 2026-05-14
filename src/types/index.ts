@@ -59,6 +59,14 @@ export interface Queue {
   queueName: string | null;
 }
 
+export interface QueuedVideo {
+  entryId: string;
+  ytVideoId: string;
+  queueId: string;
+  queueName: string;
+  queueEmoji: string | null;
+}
+
 export interface BrowseVideo {
   ytVideoId: string;
   ytChannelId: string;
@@ -152,6 +160,33 @@ export interface WatchLimits {
   todayMinutes: number;
   consecutiveVideosNow: number;
 }
+
+// ── Journal ──────────────────────────────────────────────────────────────────
+
+export interface JournalEntry {
+  id: string;
+  videoId: string;                          // ytVideoId
+  content: string;
+  videoTimestampSecs: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface JournalFeedItem {
+  completedAt: string;
+  video: {
+    ytVideoId: string;
+    title: string;
+    channelTitle: string;
+    thumbnailUrl: string | null;
+    durationSecs: number | null;
+  };
+  journalEntries: JournalEntry[];
+  // Backend still returns this; the current Journal UI doesn't surface
+  // favorites, but the field is kept on the type so it round-trips cleanly.
+  isFavorited: boolean;
+}
+
 
 export function formatDuration(secs: number | null | undefined): string {
   if (!secs) return "-";

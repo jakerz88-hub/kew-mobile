@@ -25,7 +25,9 @@ export default function ChannelScreen() {
   // Stages: 0=2wk, 1=12wk, 2=36wk, 3=all history (exhausted)
   const STAGE_WEEKS = [2, 12, 36, 0] as const; // 0 = no limit
 
-  const { queue, error, clearError } = useStore();
+  const { queue, user, error, clearError } = useStore();
+  const queuedVideos = useStore(s => s.queuedVideos);
+  const isPro = user?.plan === "pro";
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const { handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId } = useAddToQueue();
@@ -34,9 +36,10 @@ export default function ChannelScreen() {
   const [loading, setLoading]           = useState(false);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [loadError, setLoadError]       = useState<string | null>(null);
-  const [removeTarget, setRemoveTarget] = useState<{ entryId: string; title: string } | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<{ entryId: string; title: string; queueName: string | null } | null>(null);
 
-  // Build a map of ytVideoId → queue entry id for long-press remove
+  // Active-queue map (used as free-user fallback for inQueue + entry_id, and
+  // for pro users when the cross-queue map hasn't loaded yet).
   const queueEntryByVideoId = React.useMemo(() => {
     const map: Record<string, string> = {};
     for (const entry of queue?.entries ?? []) {
@@ -94,15 +97,20 @@ export default function ChannelScreen() {
         keyExtractor={item => item.ytVideoId}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={() => loadVideos(0)} tintColor={colors.ink} />}
         renderItem={({ item }) => {
-          const entryId = queueEntryByVideoId[item.ytVideoId];
-          const inQueue = !!entryId;
+          const queuedEntry = queuedVideos[item.ytVideoId];
+          const inQueue = !!queuedEntry || !!queueEntryByVideoId[item.ytVideoId];
+          // Prefer queuedVideos.entryId (works across all queues for pro);
+          // fall back to active-queue map (free-user single-queue case).
+          const removeEntryId = queuedEntry?.entryId || queueEntryByVideoId[item.ytVideoId];
+          // Subtitle "In your {queueName} queue" only shown for pro users.
+          const queueName = isPro ? queuedEntry?.queueName ?? null : null;
           return (
             <VideoCard
               video={item}
               inQueue={inQueue}
               adding={addingId === item.ytVideoId}
               onAdd={() => handleAdd(item.ytVideoId)}
-              onRemove={inQueue && entryId ? () => setRemoveTarget({ entryId, title: item.title }) : undefined}
+              onRemove={removeEntryId ? () => setRemoveTarget({ entryId: removeEntryId, title: item.title, queueName }) : undefined}
             />
           );
         }}
@@ -116,6 +124,7 @@ export default function ChannelScreen() {
         visible={!!removeTarget}
         entryId={removeTarget?.entryId ?? ""}
         videoTitle={removeTarget?.title ?? ""}
+        queueName={removeTarget?.queueName ?? null}
         onClose={() => setRemoveTarget(null)}
       />
 

@@ -4,7 +4,7 @@ import { Feather } from "@expo/vector-icons";
 import { useStore } from "../store";
 import { useTheme } from "../contexts/ThemeContext";
 import { SansText, KewLogo } from "./UI";
-import { LogoMark, QueueTabIcon, BrowseTabIcon, ExploreTabIcon, HistoryTabIcon } from "./TabIcons";
+import { LogoMark, QueueTabIcon, BrowseTabIcon, ExploreTabIcon, HistoryTabIcon, JournalTabIcon } from "./TabIcons";
 import type { TabletTab } from "../contexts/TabletSidebarContext";
 
 export type { TabletTab };
@@ -33,12 +33,18 @@ export function TabletSidebar({
   const width = collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH;
   const initial = user?.displayName?.charAt(0).toUpperCase() ?? "?";
   const isPro = user?.plan === "pro";
+  // Plan-aware label + icon for the History/Journal slot. Free users see
+  // "History" + clock; paid users see "Journal" + book-open. The tab key
+  // stays "History" so route state doesn't churn on plan changes.
+  const isFree = (user?.plan ?? "free") === "free";
 
   const items: { tab: TabletTab; label: string; icon: (color: string) => React.ReactNode }[] = [
     { tab: "Queue",   label: "Queue",   icon: (color) => <QueueTabIcon   color={color} /> },
     { tab: "Browse",  label: "Browse",  icon: (color) => <BrowseTabIcon  color={color} /> },
     { tab: "Explore", label: "Explore", icon: (color) => <ExploreTabIcon color={color} /> },
-    { tab: "History", label: "History", icon: (color) => <HistoryTabIcon color={color} /> },
+    isFree
+      ? { tab: "History", label: "History", icon: (color) => <HistoryTabIcon color={color} /> }
+      : { tab: "History", label: "Journal", icon: (color) => <JournalTabIcon color={color} /> },
     { tab: "Import",  label: "Import",  icon: (color) => <Feather name="download" size={15} color={color} /> },
   ];
 

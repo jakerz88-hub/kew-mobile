@@ -11,6 +11,11 @@ interface Props {
   visible: boolean;
   entryId: string;
   videoTitle: string;
+  // Name of the queue the entry lives in. When provided AND the user is pro,
+  // shown as muted subtitle ("In your {queueName} queue") so the user knows
+  // which queue they're acting on — important for non-active-queue removes
+  // initiated from Browse / Channel / etc. Hidden for free users (one queue).
+  queueName?: string | null;
   onClose: () => void;
   onActionComplete?: () => void;
   onRemoved?: () => void;   // fires after a successful remove, before close
@@ -21,6 +26,7 @@ export function QueueActionSheet({
   visible,
   entryId,
   videoTitle,
+  queueName,
   onClose,
   onActionComplete,
   onRemoved,
@@ -83,6 +89,9 @@ export function QueueActionSheet({
           {step === "options" && (
             <>
               <SansText style={styles.videoTitle} numberOfLines={2}>{videoTitle}</SansText>
+              {user?.plan === "pro" && queueName && (
+                <SansText style={styles.queueSubtitle}>In your {queueName} queue</SansText>
+              )}
 
               {canMoveToQueue && (
                 <TouchableOpacity style={styles.option} onPress={() => setStep("pick-queue")} activeOpacity={0.7}>
@@ -173,6 +182,7 @@ function makeStyles(c: ColorPalette) {
     overlay:               { flex: 1, backgroundColor: "rgba(26,23,20,0.5)", justifyContent: "flex-end" },
     sheet:                 { backgroundColor: c.cardBg, borderTopLeftRadius: Radius.lg, borderTopRightRadius: Radius.lg, padding: Spacing.lg, gap: Spacing.sm, paddingBottom: Spacing.xl },
     videoTitle:            { fontSize: FontSize.xs, color: c.warmMid, textAlign: "center", marginBottom: Spacing.xs },
+    queueSubtitle:         { fontSize: FontSize.xxs, color: c.queued, textAlign: "center", marginTop: -Spacing.xs, marginBottom: Spacing.xs },
     option:                { paddingVertical: Spacing.md, borderRadius: Radius.md, backgroundColor: c.cardElevated, alignItems: "center", borderWidth: 1, borderColor: c.divider },
     optionText:            { fontSize: FontSize.sm, color: c.ink, fontFamily: FontFamily.sansMedium },
     optionDestructive:     { borderColor: `${c.accent}40` },

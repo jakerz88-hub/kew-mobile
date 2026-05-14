@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { View, FlatList, StyleSheet, SafeAreaView, Image, RefreshControl, TouchableOpacity, Platform } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
@@ -12,6 +12,7 @@ import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/th
 import { useTheme } from "../contexts/ThemeContext";
 import { useIsTablet } from "../hooks/useIsTablet";
 import { useInTabletSidebar } from "../contexts/TabletSidebarContext";
+import { useScrollToTopOnTabPress } from "../hooks/useScrollToTopOnTabPress";
 import { formatDuration, timeAgo } from "../types";
 import type { QueueEntry } from "../types";
 
@@ -30,13 +31,13 @@ export default function HistoryScreen() {
   const isTablet = useIsTablet();
   const inSidebar = useInTabletSidebar();
   const { error, clearError, user } = useStore();
-  const { handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId } = useAddToQueue(
-    (ytVideoId) => setReaddedIds(prev => new Set([...prev, ytVideoId]))
-  );
+  const queuedVideos = useStore(s => s.queuedVideos);
+  const { handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId } = useAddToQueue();
   const [entries, setEntries] = useState<QueueEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [totalSecs, setTotal] = useState(0);
-  const [readdedIds, setReaddedIds] = useState<Set<string>>(new Set());
+  const listRef = useRef<FlatList | null>(null);
+  useScrollToTopOnTabPress(listRef, "History");
 
   const isFree = (user?.plan ?? "free") === "free";
 
@@ -99,6 +100,7 @@ export default function HistoryScreen() {
       {error && <ErrorBanner message={error} onDismiss={clearError} />}
 
       <FlatList
+        ref={listRef}
         data={entries}
         keyExtractor={item => item.id}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={loadHistory} tintColor={colors.ink} />}
@@ -115,7 +117,7 @@ export default function HistoryScreen() {
         renderItem={({ item }) => (
           <HistoryItem
             entry={item}
-            readded={readdedIds.has(item.video.ytVideoId)}
+            readded={!!queuedVideos[item.video.ytVideoId]}
             adding={addingId === item.video.ytVideoId}
             onReadd={() => handleReadd(item)}
           />

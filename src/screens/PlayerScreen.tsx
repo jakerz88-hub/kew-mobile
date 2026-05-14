@@ -6,11 +6,12 @@ import * as WebBrowser from "expo-web-browser";
 import { Feather } from "@expo/vector-icons";
 import { QueueActionSheet } from "../components/QueueActionSheet";
 import { InteractModule } from "../components/InteractModule";
+import { ReflectModule } from "../components/ReflectModule";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import YoutubePlayer from "react-native-youtube-iframe";
 import { useStore } from "../store";
 import { api } from "../services/api";
-import { KewLogo, SansText, SerifText, Divider, ThumbPlaceholder, SkipCounter } from "../components/UI";
+import { KewLogo, SansText, SerifText, Divider, ThumbPlaceholder, SkipCounter, Toast } from "../components/UI";
 import { LogoMark } from "../components/TabIcons";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
@@ -60,7 +61,7 @@ export default function PlayerScreen() {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const playerRef  = useRef<any>(null);
 
-  const { queue, user, updateProgress, skipCurrent, fetchQueue } = useStore();
+  const { queue, user, updateProgress, skipCurrent, fetchQueue, markEntryCompleted } = useStore();
   const current         = queue?.current ?? queue?.entries.find(e => e.status === "pending") ?? null;
   const upcomingEntries = queue?.entries.filter(e => e.status === "pending" && e.id !== current?.id) ?? [];
 
@@ -88,6 +89,18 @@ export default function PlayerScreen() {
   const [actionEntry,   setActionEntry]     = useState<typeof upcomingEntries[0] | null>(null);
   const [interactVisible, setInteractVisible] = useState(false);
   const [interactTs, setInteractTs] = useState(0);
+  const [reflectVisible, setReflectVisible] = useState(false);
+  const [reflectTs, setReflectTs] = useState(0);
+  const [toastMsg, setToastMsg] = useState("");
+  const [toastVisible, setToastVisible] = useState(false);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showToast = useCallback((msg: string) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToastMsg(msg);
+    setToastVisible(true);
+    toastTimer.current = setTimeout(() => setToastVisible(false), 3000);
+  }, []);
+  useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
   // Pre-fill the Mark Done circle to filled-green the moment the user taps it,
   // even though the confirmation modal still gates the actual completion.
   // Reverts on cancel / when a new video starts.
@@ -120,6 +133,17 @@ export default function PlayerScreen() {
     const playerSecs = await playerRef.current?.getCurrentTime().catch(() => null);
     setInteractTs(playerSecs != null ? Math.floor(playerSecs) : 0);
     setInteractVisible(true);
+  }, []);
+
+  // Reflect pauses the video on open and resumes on close (handled by the
+  // parent here + the onClose prop below). This is a deliberate departure
+  // from openInteract — writing a thoughtful note while playback continues
+  // would compete for attention.
+  const openReflect = useCallback(async () => {
+    const ts = await playerRef.current?.getCurrentTime?.() ?? 0;
+    setReflectTs(Math.max(0, Math.floor(ts)));
+    setPlaying(false);
+    setReflectVisible(true);
   }, []);
 
   // Keep queue in sync whenever this screen comes into focus
@@ -217,6 +241,7 @@ export default function PlayerScreen() {
       suppressFinalSaveRef.current = true;
       await recordEvent("completed", watchedSecs);
       await updateProgress(current.id, watchedSecs);
+      markEntryCompleted(current.id);
       await fetchQueue();
       navigation.replace("Completion", {
         watchedSecs,
@@ -238,6 +263,7 @@ export default function PlayerScreen() {
       suppressFinalSaveRef.current = true;
       await recordEvent("completed", watchedSecs);
       await updateProgress(current.id, current.video.durationSecs ?? watchedSecs);
+      markEntryCompleted(current.id);
       await fetchQueue();
       navigation.replace("Completion", {
         watchedSecs,
@@ -401,8 +427,18 @@ export default function PlayerScreen() {
           </View>
         )}
 
-        {/* Interact / Skip / Mark done / Remove */}
+        {/* Reflect / Interact / Skip / Mark done / Remove */}
         <View style={styles.ctaRow}>
+          <TouchableOpacity
+            onPress={openReflect}
+            style={[styles.ctaChip, styles.ctaChipReflect]}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Reflect"
+          >
+            <SansText style={styles.ctaChipReflectText}>Reflect</SansText>
+          </TouchableOpacity>
+
           <TouchableOpacity
             onPress={openInteract}
             style={[styles.ctaChip, styles.ctaChipInteract]}
@@ -417,15 +453,18 @@ export default function PlayerScreen() {
             onPress={() => setShowSkipModal(true)}
             disabled={!user || user.skipsRemaining <= 0}
             style={[
-              styles.ctaChip,
-              styles.ctaChipSkip,
+              styles.ctaSkipCircle,
               (!user || user.skipsRemaining <= 0) && styles.actionBtnDisabled,
             ]}
             activeOpacity={0.7}
             accessibilityRole="button"
             accessibilityLabel="Skip"
           >
-            <SansText style={styles.ctaChipSkipText}>Skip</SansText>
+            {/* Skip-forward: filled triangle + vertical bar (per spec). */}
+            <Svg width={16} height={16} viewBox="0 0 24 24">
+              <Path d="M5 4 L15 12 L5 20 Z" fill={colors.accent} />
+              <Path d="M19 5 L19 19" stroke={colors.accent} strokeWidth={2} strokeLinecap="round" />
+            </Svg>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -528,6 +567,16 @@ export default function PlayerScreen() {
         durationSecs={current.video.durationSecs}
       />
 
+      <ReflectModule
+        visible={reflectVisible}
+        onClose={() => { setReflectVisible(false); setPlaying(true); }}
+        onSaved={() => showToast("Entry saved")}
+        videoTitle={current.video.title}
+        ytVideoId={current.video.ytVideoId}
+        currentTimestamp={reflectTs}
+        durationSecs={current.video.durationSecs}
+      />
+
       <QueueActionSheet
         visible={!!actionEntry}
         entryId={actionEntry?.id ?? ""}
@@ -611,6 +660,8 @@ export default function PlayerScreen() {
           onDismiss={playerTip.dismiss}
         />
       )}
+
+      <Toast message={toastMsg} visible={toastVisible} />
     </SafeAreaView>
   );
 }
@@ -635,10 +686,11 @@ function makeStyles(c: ColorPalette) {
     actionSkipCountText: { fontSize: FontSize.xs, color: c.warmMid, fontFamily: FontFamily.sansMedium },
     ctaRow:              { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 14, paddingTop: 10, paddingBottom: 4 },
     ctaChip:             { flex: 1, borderRadius: Radius.pill, alignItems: "center", borderWidth: 1.5, paddingVertical: 8, paddingHorizontal: 10 },
-    ctaChipInteract:     { borderColor: c.accent, backgroundColor: c.accent },
-    ctaChipInteractText: { fontSize: FontSize.sm, color: c.buttonText, fontFamily: FontFamily.sansMedium },
-    ctaChipSkip:         { borderColor: c.accent, backgroundColor: "transparent" },
-    ctaChipSkipText:     { fontSize: FontSize.sm, color: c.accent, fontFamily: FontFamily.sansMedium },
+    ctaChipReflect:      { borderColor: c.accent, backgroundColor: c.accent },
+    ctaChipReflectText:  { fontSize: FontSize.sm, color: c.buttonText, fontFamily: FontFamily.sansMedium },
+    ctaChipInteract:     { borderColor: c.accent, backgroundColor: "transparent" },
+    ctaChipInteractText: { fontSize: FontSize.sm, color: c.accent, fontFamily: FontFamily.sansMedium },
+    ctaSkipCircle:       { width: 40, height: 40, borderRadius: 20, borderWidth: 1.5, borderColor: c.accent, alignItems: "center", justifyContent: "center", flexShrink: 0 },
     ctaCircle:           { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", flexShrink: 0 },
     markDoneOutline:     { borderWidth: 1.5, borderColor: c.green, backgroundColor: "transparent" },
     markDoneFilled:      { backgroundColor: c.green, borderWidth: 0 },

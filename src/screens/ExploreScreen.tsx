@@ -19,6 +19,7 @@ import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/th
 import { useTheme } from "../contexts/ThemeContext";
 import { useInTabletSidebar } from "../contexts/TabletSidebarContext";
 import { useTooltip } from "../hooks/useTooltip";
+import { useScrollToTopOnTabPress } from "../hooks/useScrollToTopOnTabPress";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import TooltipOverlay, { TooltipAnchor } from "../components/TooltipOverlay";
 
@@ -83,17 +84,15 @@ export default function ExploreScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const inSidebar = useInTabletSidebar();
-  const { user, queue } = useStore();
-  const { handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId } = useAddToQueue(
-    (ytVideoId) => setAddedIds(prev => new Set([...prev, ytVideoId]))
-  );
+  const { user } = useStore();
+  const queuedVideos = useStore(s => s.queuedVideos);
+  const { handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId } = useAddToQueue();
 
   const [query, setQuery]                   = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
   const [results, setResults]               = useState<BrowseVideo[]>([]);
   const [searching, setSearching]           = useState(false);
   const [searchError, setSearchError]       = useState<string | null>(null);
-  const [addedIds, setAddedIds]             = useState<Set<string>>(new Set());
   const [recentSearches, setRecentSearches] = useState<RecentEntry[]>([]);
   const [surpriseMode, setSurpriseMode]     = useState(false);
   const [surpriseTopic, setSurpriseTopic]   = useState("");
@@ -102,6 +101,16 @@ export default function ExploreScreen() {
 
   const inputRef = useRef<TextInput>(null);
   const hasResults = submittedQuery.length > 0;
+
+  // Tab-icon re-tap → scroll to top. Three potential scrollables (landing,
+  // results, surprise-mode); only one is mounted at a time so the others'
+  // refs are null no-ops on trigger.
+  const landingListRef = useRef<FlatList | null>(null);
+  const resultsListRef = useRef<FlatList | null>(null);
+  const surpriseScrollRef = useRef<ScrollView | null>(null);
+  useScrollToTopOnTabPress(landingListRef, "Explore");
+  useScrollToTopOnTabPress(resultsListRef, "Explore");
+  useScrollToTopOnTabPress(surpriseScrollRef, "Explore");
 
   // ── Persist recent searches ──
   useEffect(() => { loadRecentSearches().then(setRecentSearches); }, []);
@@ -172,11 +181,7 @@ export default function ExploreScreen() {
 
   const handleAddToQueue = (video: BrowseVideo) => handleAdd(video.ytVideoId);
 
-  const isInQueue = (ytVideoId: string) =>
-    addedIds.has(ytVideoId) ||
-    (queue?.entries ?? []).some(
-      e => e.video.ytVideoId === ytVideoId && e.status !== "completed"
-    );
+  const isInQueue = (ytVideoId: string) => !!queuedVideos[ytVideoId];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -238,7 +243,7 @@ export default function ExploreScreen() {
       {!hasResults && (
         surpriseMode ? (
           /* ── Surprise reveal ─────────────────────────────────────────────── */
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.surpriseContainer}>
+          <ScrollView ref={surpriseScrollRef} showsVerticalScrollIndicator={false} contentContainerStyle={styles.surpriseContainer}>
             {/* Back link */}
             <TouchableOpacity
               style={styles.backBtn}
@@ -290,9 +295,7 @@ export default function ExploreScreen() {
 
                 {/* Actions — stacked vertically on mobile */}
                 <View style={styles.surpriseActions}>
-                  {(addedIds.has(surpriseVideo.ytVideoId) ||
-                    (queue?.entries ?? []).some(e => e.video.ytVideoId === surpriseVideo.ytVideoId && e.status !== "completed")
-                  ) ? (
+                  {!!queuedVideos[surpriseVideo.ytVideoId] ? (
                     <View style={[styles.surpriseActionBtn, styles.surpriseActionBtnQueued]}>
                       <SansText style={styles.surpriseActionBtnTextQueued}>In queue ✓</SansText>
                     </View>
@@ -333,6 +336,7 @@ export default function ExploreScreen() {
         ) : (
           /* ── Original landing ──────────────────────────────────────────────── */
           <FlatList
+            ref={landingListRef}
             data={[]}
             renderItem={() => null}
             showsVerticalScrollIndicator={false}
@@ -464,6 +468,7 @@ export default function ExploreScreen() {
 
           {!searching && !searchError && (
             <FlatList
+              ref={resultsListRef}
               data={results}
               keyExtractor={item => item.ytVideoId}
               showsVerticalScrollIndicator={false}

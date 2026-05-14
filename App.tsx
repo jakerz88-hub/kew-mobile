@@ -18,7 +18,7 @@ import { configurePurchases, logoutPurchases } from "./src/services/revenuecat";
 import { useStore } from "./src/store";
 import { Colors } from "./src/types/theme";
 import { ThemeProvider, useTheme } from "./src/contexts/ThemeContext";
-import { QueueTabIcon, BrowseTabIcon, ExploreTabIcon, HistoryTabIcon, LogoMark } from "./src/components/TabIcons";
+import { QueueTabIcon, BrowseTabIcon, ExploreTabIcon, HistoryTabIcon, JournalTabIcon, LogoMark } from "./src/components/TabIcons";
 import { KewLogo } from "./src/components/UI";
 import { KewPlusSheet } from "./src/components/KewPlusSheet";
 
@@ -27,7 +27,7 @@ import LoginScreen from "./src/screens/LoginScreen";
 import OnboardingScreen from "./src/screens/OnboardingScreen";
 import QueueScreen from "./src/screens/QueueScreen";
 import BrowseScreen from "./src/screens/BrowseScreen";
-import HistoryScreen from "./src/screens/HistoryScreen";
+import JournalScreen from "./src/screens/JournalScreen";
 import PlayerScreen from "./src/screens/PlayerScreen";
 import CompletionScreen from "./src/screens/CompletionScreen";
 import ProfileScreen from "./src/screens/ProfileScreen";
@@ -69,6 +69,13 @@ function GlobalKewPlusSheet() {
 
 function TabNavigator() {
   const { colors } = useTheme();
+  // Plan-aware label + icon for the fourth tab slot. Free users see
+  // "History" with the clock icon (legacy Watch History). Paid users see
+  // "Journal" with the book-open icon (the new Lora-headed journal feed).
+  // The screen component is the same JournalScreen either way — its
+  // internal gate renders HistoryScreen for free users.
+  const user = useStore(s => s.user);
+  const isFree = (user?.plan ?? "free") === "free";
   return (
     <Tab.Navigator
       screenOptions={{
@@ -104,9 +111,15 @@ function TabNavigator() {
         options={{ tabBarIcon: ({ color }) => <ExploreTabIcon color={color} /> }}
       />
       <Tab.Screen
-        name="History"
-        component={HistoryScreen}
-        options={{ tabBarIcon: ({ color }) => <HistoryTabIcon color={color} /> }}
+        name="Journal"
+        component={JournalScreen}
+        options={{
+          tabBarLabel: isFree ? "History" : "Journal",
+          tabBarIcon: ({ color }) =>
+            isFree
+              ? <HistoryTabIcon color={color} />
+              : <JournalTabIcon color={color} />,
+        }}
       />
     </Tab.Navigator>
   );

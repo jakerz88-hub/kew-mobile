@@ -68,3 +68,8 @@ export function ExploreTabIcon({ color }: { color: string }) {
 export function HistoryTabIcon({ color }: { color: string }) {
   return <Feather name="clock" size={22} color={color} />;
 }
+
+/** Journal tab icon — open book */
+export function JournalTabIcon({ color }: { color: string }) {
+  return <Feather name="book-open" size={22} color={color} />;
+}

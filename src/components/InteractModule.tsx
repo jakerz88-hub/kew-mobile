@@ -36,7 +36,7 @@ interface InteractModuleProps {
   durationSecs?: number | null;
 }
 
-function formatTimestamp(secs: number, durationSecs?: number | null): string {
+export function formatTimestamp(secs: number, durationSecs?: number | null): string {
   const s = Math.max(0, Math.floor(secs));
   const useHours = (durationSecs ?? 0) >= 3600;
   const h = Math.floor(s / 3600);

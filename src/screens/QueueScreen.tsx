@@ -21,6 +21,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import type { QueueEntry } from "../types";
 import { formatDuration, formatProgress, timeAgo, formatDate } from "../types";
 import { useIsTablet } from "../hooks/useIsTablet";
+import { useScrollToTopOnTabPress } from "../hooks/useScrollToTopOnTabPress";
 import { useInTabletSidebar, useTabletSwitchTab } from "../contexts/TabletSidebarContext";
 import { useTooltip } from "../hooks/useTooltip";
 import TooltipOverlay, { TooltipAnchor } from "../components/TooltipOverlay";
@@ -83,6 +84,15 @@ export default function QueueScreen() {
   const { colors } = useTheme();
   const styles  = useMemo(() => makePhoneStyles(colors), [colors]);
   const tStyles = useMemo(() => makeTabletStyles(colors), [colors]);
+
+  // Tab-icon re-tap → scroll the active scrollable back to top. Two refs
+  // because phone uses one outer ScrollView, tablet uses a left-column
+  // FlatList (and the player column ScrollView, which we leave alone since
+  // the user scrolls the queue, not the player).
+  const phoneScrollRef = useRef<ScrollView | null>(null);
+  const tabletListRef = useRef<FlatList | null>(null);
+  useScrollToTopOnTabPress(phoneScrollRef, "Queue");
+  useScrollToTopOnTabPress(tabletListRef, "Queue");
 
   const {
     queue, user, error,
@@ -297,12 +307,20 @@ export default function QueueScreen() {
         ...(pinnedNonMain.length > 0 ? pinnedNonMain.slice(0, 3) : nonMain.slice(0, 3)),
       ];
       return (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={{ paddingVertical: 8, paddingHorizontal: 12 }}
-          contentContainerStyle={{ gap: 8, flexDirection: "row" }}
-        >
+        // Fixed-height outer wrapper pins the strip's vertical extent.
+        // Putting `height` on the ScrollView's own style didn't actually
+        // constrain it on iPad — the strip still stretched to the column
+        // height. The wrapper View bypasses RN's ScrollView sizing edge
+        // cases entirely. (A previous attempt using flexGrow:0 +
+        // alignItems:"center" hung iPad bootstrap on splash, so we avoid
+        // both flex hacks and let the wrapper do the work.)
+        <View style={{ height: 48 }}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ paddingVertical: 8, paddingHorizontal: 12 }}
+            contentContainerStyle={{ gap: 8, flexDirection: "row" }}
+          >
           {chipQueues.map(q => (
             <TouchableOpacity
               key={q.id}
@@ -333,7 +351,8 @@ export default function QueueScreen() {
           >
             <SansText style={{ color: colors.warmMid, fontSize: 12, fontFamily: "DMSans_500Medium" }}>All queues</SansText>
           </TouchableOpacity>
-        </ScrollView>
+          </ScrollView>
+        </View>
       );
     })() : null;
 
@@ -409,6 +428,7 @@ export default function QueueScreen() {
             {error && <ErrorBanner message={error} onDismiss={clearError} />}
 
             <FlatList
+              ref={tabletListRef}
               data={listPendingEntries}
               keyExtractor={item => item.id}
               refreshControl={
@@ -599,6 +619,7 @@ export default function QueueScreen() {
           visible={!!actionEntry}
           entryId={actionEntry?.id ?? ""}
           videoTitle={actionEntry?.video.title ?? ""}
+          queueName={queue?.queueName ?? null}
           onClose={() => setActionEntry(null)}
           onRemoved={handleRemovedEntry}
         />
@@ -684,6 +705,7 @@ export default function QueueScreen() {
       {error && <ErrorBanner message={error} onDismiss={clearError} />}
 
       <ScrollView
+        ref={phoneScrollRef}
         refreshControl={<RefreshControl refreshing={isManualRefreshing} onRefresh={onRefresh} tintColor={colors.ink} />}
         contentContainerStyle={styles.listContent}
         keyboardShouldPersistTaps="handled"
