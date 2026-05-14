@@ -8,10 +8,13 @@ import { useTheme } from "../contexts/ThemeContext";
 const GOLD = "#C49A28";
 
 const FEATURE_BULLETS = [
-  "Unlimited queue length",
   "Multiple queues",
+  "Unlimited queue length",
   "More skips",
+  "Journal",
   "Watch insights & personal limits",
+  "Full watch history",
+  "Premium themes",
 ];
 
 interface Props {

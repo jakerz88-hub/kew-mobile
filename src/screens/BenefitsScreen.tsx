@@ -27,18 +27,6 @@ const ICON_SIZE = 16;
 
 const FEATURES: FeatureRow[] = [
   {
-    key: "queue",
-    title: "Unlimited queue length",
-    subtitle: "Save as many videos as you want",
-    icon: (color, s) => (
-      <Svg width={s} height={s} viewBox="0 0 24 24">
-        <Rect x={3} y={5} width={18} height={2.4} rx={1.2} fill={color} />
-        <Rect x={3} y={11} width={13} height={2.4} rx={1.2} fill={color} />
-        <Rect x={3} y={17} width={8} height={2.4} rx={1.2} fill={color} />
-      </Svg>
-    ),
-  },
-  {
     key: "multi",
     title: "Multiple queues",
     subtitle: "Organize videos into separate, named queues",
@@ -52,6 +40,18 @@ const FEATURES: FeatureRow[] = [
     ),
   },
   {
+    key: "queue",
+    title: "Unlimited queue length",
+    subtitle: "Save as many videos as you want",
+    icon: (color, s) => (
+      <Svg width={s} height={s} viewBox="0 0 24 24">
+        <Rect x={3} y={5} width={18} height={2.4} rx={1.2} fill={color} />
+        <Rect x={3} y={11} width={13} height={2.4} rx={1.2} fill={color} />
+        <Rect x={3} y={17} width={8} height={2.4} rx={1.2} fill={color} />
+      </Svg>
+    ),
+  },
+  {
     key: "skips",
     title: "More skips",
     subtitle: "Higher skip limit, earned by finishing videos",
@@ -60,6 +60,20 @@ const FEATURES: FeatureRow[] = [
         <Polyline points="4,5 11,12 4,19" stroke={color} strokeWidth={2.5} fill="none" strokeLinecap="round" strokeLinejoin="round" />
         <Polyline points="11,5 18,12 11,19" stroke={color} strokeWidth={2.5} fill="none" strokeLinecap="round" strokeLinejoin="round" />
         <Rect x={19} y={5} width={2.4} height={14} rx={1.2} fill={color} />
+      </Svg>
+    ),
+  },
+  {
+    key: "journal",
+    title: "Journal",
+    subtitle: "Add private notes and reflections on the videos you watch",
+    icon: (color, s) => (
+      <Svg width={s} height={s} viewBox="0 0 24 24">
+        <Rect x={5} y={3} width={14} height={18} rx={1.5} stroke={color} strokeWidth={2} fill="none" />
+        <Rect x={5} y={3} width={3} height={18} rx={1.5} fill={color} opacity={0.35} />
+        <Line x1={10} y1={8} x2={16} y2={8} stroke={color} strokeWidth={1.8} strokeLinecap="round" />
+        <Line x1={10} y1={12} x2={16} y2={12} stroke={color} strokeWidth={1.8} strokeLinecap="round" />
+        <Line x1={10} y1={16} x2={14} y2={16} stroke={color} strokeWidth={1.8} strokeLinecap="round" />
       </Svg>
     ),
   },
@@ -91,6 +105,17 @@ const FEATURES: FeatureRow[] = [
     ),
   },
   {
+    key: "history",
+    title: "Full watch history",
+    subtitle: "Access everything you've ever watched in Kew",
+    icon: (color, s) => (
+      <Svg width={s} height={s} viewBox="0 0 24 24">
+        <Circle cx={12} cy={12} r={9} stroke={color} strokeWidth={2} fill="none" />
+        <Polyline points="12,7 12,12 15.5,14" stroke={color} strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      </Svg>
+    ),
+  },
+  {
     key: "themes",
     title: "Premium themes",
     subtitle: "Refresh your layout with curated color palettes",
@@ -99,17 +124,6 @@ const FEATURES: FeatureRow[] = [
         <Rect x={3} y={5}  width={18} height={3} rx={1.2} fill={color} opacity={1} />
         <Rect x={3} y={10.5} width={18} height={3} rx={1.2} fill={color} opacity={0.6} />
         <Rect x={3} y={16} width={18} height={3} rx={1.2} fill={color} opacity={0.3} />
-      </Svg>
-    ),
-  },
-  {
-    key: "history",
-    title: "Full watch history",
-    subtitle: "Access everything you've ever watched in Kew",
-    icon: (color, s) => (
-      <Svg width={s} height={s} viewBox="0 0 24 24">
-        <Circle cx={12} cy={12} r={9} stroke={color} strokeWidth={2} fill="none" />
-        <Polyline points="12,7 12,12 15.5,14" stroke={color} strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round" />
       </Svg>
     ),
   },
