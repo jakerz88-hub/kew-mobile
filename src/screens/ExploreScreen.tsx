@@ -154,10 +154,11 @@ export default function ExploreScreen() {
     if (!submittedQuery) return;
     setLoadingMore(true);
     try {
-      const newLimit = resultLimit + 12;
-      const res = await api.searchYouTube(submittedQuery, newLimit);
+      const limits = [12, 20, 32, 50];
+      const nextLimit = limits.find(l => l > resultLimit) || 50;
+      const res = await api.searchYouTube(submittedQuery, nextLimit);
       setResults(res);
-      setResultLimit(newLimit);
+      setResultLimit(nextLimit);
     } catch (e: any) {
       setSearchError(e.message ?? "Failed to load more results.");
     } finally {
