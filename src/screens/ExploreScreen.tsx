@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import {
   View, TextInput, FlatList, ScrollView, TouchableOpacity, StyleSheet,
-  SafeAreaView, Image, ActivityIndicator, Keyboard, Platform,
+  SafeAreaView, Image, ActivityIndicator, Keyboard, Platform, RefreshControl,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -90,7 +90,9 @@ export default function ExploreScreen() {
   const [submittedQuery, setSubmittedQuery] = useState("");
   const [results, setResults]               = useState<BrowseVideo[]>([]);
   const [searching, setSearching]           = useState(false);
+  const [loadingMore, setLoadingMore]       = useState(false);
   const [searchError, setSearchError]       = useState<string | null>(null);
+  const [resultLimit, setResultLimit]       = useState(12);
   const [recentSearches, setRecentSearches] = useState<RecentEntry[]>([]);
   const [surpriseMode, setSurpriseMode]     = useState(false);
   const [surpriseTopic, setSurpriseTopic]   = useState("");
@@ -125,7 +127,7 @@ export default function ExploreScreen() {
     { anchorRef: surpriseBtnRef, placement: "above" },
   ];
 
-  const performSearch = useCallback(async (q: string) => {
+  const performSearch = useCallback(async (q: string, limit: number = 12) => {
     const trimmed = q.trim();
     if (!trimmed) return;
     Keyboard.dismiss();
@@ -133,12 +135,13 @@ export default function ExploreScreen() {
     setSearchError(null);
     setSubmittedQuery(trimmed);
     setResults([]);
+    setResultLimit(limit);
     setRecentSearches(prev => {
       const deduped = prev.filter(e => !(e.kind === "search" && e.query.toLowerCase() === trimmed.toLowerCase()));
       return [{ kind: "search" as const, query: trimmed, savedAt: new Date().toISOString() }, ...deduped].slice(0, MAX_RECENT);
     });
     try {
-      const res = await api.searchYouTube(trimmed);
+      const res = await api.searchYouTube(trimmed, limit);
       setResults(res);
     } catch (e: any) {
       setSearchError(e.message ?? "Search failed. Please try again.");
@@ -146,6 +149,21 @@ export default function ExploreScreen() {
       setSearching(false);
     }
   }, []);
+
+  const handleLoadMore = useCallback(async () => {
+    if (!submittedQuery) return;
+    setLoadingMore(true);
+    try {
+      const newLimit = resultLimit + 12;
+      const res = await api.searchYouTube(submittedQuery, newLimit);
+      setResults(res);
+      setResultLimit(newLimit);
+    } catch (e: any) {
+      setSearchError(e.message ?? "Failed to load more results.");
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [submittedQuery, resultLimit]);
 
   const handleChipPress = useCallback((chip: string) => {
     setQuery(chip);
@@ -480,6 +498,13 @@ export default function ExploreScreen() {
               keyExtractor={item => item.ytVideoId}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.resultsList}
+              refreshControl={
+                <RefreshControl
+                  refreshing={searching}
+                  onRefresh={() => performSearch(submittedQuery, resultLimit)}
+                  tintColor={colors.accent}
+                />
+              }
               ListHeaderComponent={
                 results.length > 0 ? (
                   <SansText style={styles.resultsLabel}>
@@ -493,6 +518,22 @@ export default function ExploreScreen() {
                     </SansText>
                   </View>
                 )
+              }
+              ListFooterComponent={
+                results.length >= resultLimit ? (
+                  <TouchableOpacity
+                    style={[styles.loadMoreBtn, loadingMore && { opacity: 0.6 }]}
+                    onPress={handleLoadMore}
+                    disabled={loadingMore}
+                    activeOpacity={0.7}
+                  >
+                    {loadingMore ? (
+                      <ActivityIndicator size="small" color={colors.warmMid} />
+                    ) : (
+                      <SansText style={styles.loadMoreText}>Load more</SansText>
+                    )}
+                  </TouchableOpacity>
+                ) : null
               }
               renderItem={({ item }) => {
                 const queued  = isInQueue(item.ytVideoId);
@@ -665,5 +706,7 @@ function makeStyles(c: ColorPalette) {
     addBtnQueued:   { backgroundColor: "transparent", borderWidth: 1.5, borderColor: c.greenText },
     addBtnText:     { fontSize: FontSize.xxs, color: c.buttonText, fontFamily: FontFamily.sansMedium },
     addBtnTextQueued: { color: c.greenText },
+    loadMoreBtn:    { alignSelf: "center", marginVertical: Spacing.md, paddingHorizontal: 16, paddingVertical: 10, borderRadius: Radius.pill, borderWidth: 1.5, borderColor: c.divider },
+    loadMoreText:   { fontSize: FontSize.sm, color: c.warmMid, fontFamily: FontFamily.sansMedium },
   });
 }

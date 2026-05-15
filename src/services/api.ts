@@ -227,8 +227,8 @@ export const api = {
     });
   },
 
-  searchYouTube(q: string): Promise<BrowseVideo[]> {
-    return request(`/v1/explore/search?q=${encodeURIComponent(q)}`);
+  searchYouTube(q: string, limit: number = 12): Promise<BrowseVideo[]> {
+    return request(`/v1/explore/search?q=${encodeURIComponent(q)}&limit=${limit}`);
   },
 
   // ── Insights & Limits ──────────────────────────────────────────────────────
