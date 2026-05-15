@@ -16,6 +16,7 @@ import { useStore } from "../store";
 import { useAddToQueue } from "../hooks/useAddToQueue";
 import { QueuePickerModal } from "../components/QueuePickerModal";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
+import { timeAgo } from "../types";
 import { useTheme } from "../contexts/ThemeContext";
 import { useInTabletSidebar } from "../contexts/TabletSidebarContext";
 import { useTooltip } from "../hooks/useTooltip";
@@ -521,6 +522,11 @@ export default function ExploreScreen() {
                       <SansText style={styles.resultTitle} numberOfLines={2}>
                         {item.title}
                       </SansText>
+                      {item.publishedAt && (
+                        <SansText style={styles.resultDate}>
+                          {timeAgo(item.publishedAt)}
+                        </SansText>
+                      )}
                       <TouchableOpacity
                         style={[styles.addBtn, queued && styles.addBtnQueued]}
                         onPress={() => !queued && handleAddToQueue(item)}
@@ -654,6 +660,7 @@ function makeStyles(c: ColorPalette) {
     resultInfo:     { flex: 1, justifyContent: "center", gap: 3 },
     resultChannel:  { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 0.5 },
     resultTitle:    { fontSize: FontSize.sm, color: c.ink, lineHeight: 17 },
+    resultDate:     { fontSize: FontSize.xxs, color: c.queued },
     addBtn:         { alignSelf: "flex-start", marginTop: 4, paddingHorizontal: 10, paddingVertical: 4, borderRadius: Radius.pill, backgroundColor: c.accent },
     addBtnQueued:   { backgroundColor: "transparent", borderWidth: 1.5, borderColor: c.greenText },
     addBtnText:     { fontSize: FontSize.xxs, color: c.buttonText, fontFamily: FontFamily.sansMedium },
