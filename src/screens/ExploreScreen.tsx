@@ -91,6 +91,11 @@ export default function ExploreScreen() {
   const [results, setResults]               = useState<BrowseVideo[]>([]);
   const [searching, setSearching]           = useState(false);
   const [loadingMore, setLoadingMore]       = useState(false);
+  // Separate state for pull-to-refresh so the FlatList doesn't unmount
+  // mid-refresh. If we reused `searching`, the FlatList's `!searching`
+  // render gate would unmount its parent while RefreshControl is still
+  // animating — iOS crash. Pull-to-refresh keeps results visible.
+  const [refreshing, setRefreshing]         = useState(false);
   const [searchError, setSearchError]       = useState<string | null>(null);
   const [resultLimit, setResultLimit]       = useState(12);
   const [recentSearches, setRecentSearches] = useState<RecentEntry[]>([]);
@@ -163,6 +168,23 @@ export default function ExploreScreen() {
       setSearchError(e.message ?? "Failed to load more results.");
     } finally {
       setLoadingMore(false);
+    }
+  }, [submittedQuery, resultLimit]);
+
+  // Pull-to-refresh re-runs the current query at the current limit, without
+  // toggling `searching` (which would unmount the FlatList mid-refresh and
+  // crash iOS — see the comment on the `refreshing` state above).
+  const handleRefresh = useCallback(async () => {
+    if (!submittedQuery) return;
+    setRefreshing(true);
+    setSearchError(null);
+    try {
+      const res = await api.searchYouTube(submittedQuery, resultLimit);
+      setResults(res);
+    } catch (e: any) {
+      setSearchError(e.message ?? "Refresh failed. Please try again.");
+    } finally {
+      setRefreshing(false);
     }
   }, [submittedQuery, resultLimit]);
 
@@ -501,8 +523,8 @@ export default function ExploreScreen() {
               contentContainerStyle={styles.resultsList}
               refreshControl={
                 <RefreshControl
-                  refreshing={searching}
-                  onRefresh={() => performSearch(submittedQuery, resultLimit)}
+                  refreshing={refreshing}
+                  onRefresh={handleRefresh}
                   tintColor={colors.accent}
                 />
               }
