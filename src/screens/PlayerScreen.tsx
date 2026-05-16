@@ -47,8 +47,12 @@ function parseDescriptionParts(text: string): Array<{ type: "text" | "url"; valu
 }
 
 const PLAYER_TIPS = [
-  "Skip sends this video to the back of your queue. You start with 3 — earn one back each time you finish a video.",
-  "Interact lets you save a thought, link, or quote from whatever you're watching.",
+  "Looking for a refresh? Shuffle the whole queue to reorder all your upcoming videos.",
+  "You can also add to your queue directly from your YouTube playlists!",
+];
+const PLAYER_ANCHORS: TooltipAnchor[] = [
+  { arrowSide: "top", top: 376, left: 16, arrowOffset: 20 },
+  { arrowSide: "top", top: 376, left: 16, arrowOffset: 20 },
 ];
 
 export default function PlayerScreen() {
@@ -73,13 +77,7 @@ export default function PlayerScreen() {
   }, []);
 
   // ── Tooltip journey ──
-  const playerTip = useTooltip("player_v2", 2);
-  const skipBtnRef    = useRef<View | null>(null);
-  const interactBtnRef = useRef<View | null>(null);
-  const PLAYER_ANCHORS: TooltipAnchor[] = [
-    { anchorRef: skipBtnRef,    placement: "above" },
-    { anchorRef: interactBtnRef, placement: "above" },
-  ];
+  const playerTip = useTooltip("player", 2);
 
   const [playing, setPlaying]               = useState(false);
   const [showSkipModal, setShowSkipModal]   = useState(false);
@@ -442,7 +440,6 @@ export default function PlayerScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            ref={interactBtnRef}
             onPress={openInteract}
             style={[styles.ctaChip, styles.ctaChipInteract]}
             activeOpacity={0.7}
@@ -453,7 +450,6 @@ export default function PlayerScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            ref={skipBtnRef}
             onPress={() => setShowSkipModal(true)}
             disabled={!user || user.skipsRemaining <= 0}
             style={[

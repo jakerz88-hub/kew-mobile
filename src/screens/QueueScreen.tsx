@@ -67,9 +67,14 @@ const PROGRESS_REPORT_INTERVAL = 10 * 1000;
 const QUEUE_COL_WIDTH = 320;
 
 const QUEUE_TIPS = [
-  "This is your Queue — the videos you've hand-picked to watch, in order.",
-  "Tap + Import to add videos directly from your YouTube playlists.",
-  "Tap Browse to start adding videos from your subscribed channels.",
+  "This is your queue of hand-picked videos! You'll watch in the order you added them.",
+  "Skipping a video sends it to the back of your queue. You only get 3, but completing a video allows you to earn 1 back.",
+  "Go to the Browse tab to begin building your queue!",
+];
+const QUEUE_ANCHORS: TooltipAnchor[] = [
+  { arrowSide: "top", top: 172, left: 16, arrowOffset: 20 },
+  { arrowSide: "top", top: 172, right: 16, arrowOffset: 170 },
+  { arrowSide: "bottom", top: 622, left: 16, arrowOffset: 110 },
 ];
 
 export default function QueueScreen() {
@@ -144,15 +149,7 @@ export default function QueueScreen() {
   }, []);
 
   // ── Tooltip journey ──
-  const queueTip = useTooltip("queue_v2", 3);
-  const queueHeaderRef = useRef<View | null>(null);
-  const importBtnRef   = useRef<View | null>(null);
-  const browseTabRef   = useRef<View | null>(null);
-  const QUEUE_ANCHORS: TooltipAnchor[] = [
-    { anchorRef: queueHeaderRef, placement: "below" },
-    { anchorRef: importBtnRef,   placement: "above" },
-    { anchorRef: browseTabRef,   placement: "above" },
-  ];
+  const queueTip = useTooltip("queue", 3);
 
   // ── Derived queue values ──
   const allEntries = queue?.entries ?? [];
@@ -865,7 +862,7 @@ export default function QueueScreen() {
         scrollEnabled={!isDragging && !protectedModalEntry}
       >
         {/* Queue header */}
-        <View ref={queueHeaderRef} style={styles.queueHeader}>
+        <View style={styles.queueHeader}>
           <View>
             <SerifText style={styles.queueTitle}>Your Queue</SerifText>
             <SansText style={styles.queueSubtitle}>
@@ -968,7 +965,6 @@ export default function QueueScreen() {
             </TouchableOpacity>
           )}
           <TouchableOpacity
-            ref={importBtnRef}
             style={[styles.actionBtn, styles.importBtn]}
             onPress={() => navigation.navigate("PlaylistList")}
             activeOpacity={0.7}
@@ -1069,20 +1065,6 @@ export default function QueueScreen() {
         shuffling={shuffling}
         onConfirm={handleShuffleConfirm}
         onClose={() => setShowShuffleConfirm(false)}
-      />
-
-      {/* Phantom view anchored at the Browse tab position in the tab bar below.
-          pointerEvents="none" so it never intercepts touches. */}
-      <View
-        ref={browseTabRef}
-        pointerEvents="none"
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: width / 4,
-          width: width / 4,
-          height: 1,
-        }}
       />
 
       <TooltipOverlay
