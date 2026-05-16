@@ -21,17 +21,10 @@ import { useTheme } from "../contexts/ThemeContext";
 import { useIsTablet } from "../hooks/useIsTablet";
 import { useScrollToTopOnTabPress } from "../hooks/useScrollToTopOnTabPress";
 import { useInTabletSidebar } from "../contexts/TabletSidebarContext";
-import { useTooltip } from "../hooks/useTooltip";
 import { useAddToQueue } from "../hooks/useAddToQueue";
 import { QueuePickerModal } from "../components/QueuePickerModal";
-import TooltipOverlay, { TooltipAnchor } from "../components/TooltipOverlay";
 
 const CHANNEL_COL_WIDTH = 260;
-
-const BROWSE_TIPS = [
-  "These are your subscribed channels. Tap one to browse their recent uploads.",
-  "Tap a channel, then tap + to add videos to your queue.",
-];
 
 export default function BrowseScreen() {
   const navigation = useNavigation<any>();
@@ -74,14 +67,6 @@ export default function BrowseScreen() {
   const { handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId } = useAddToQueue(
     (ytVideoId) => setPanelVideos(v => v.map(x => x.ytVideoId === ytVideoId ? { ...x, inQueue: true } : x))
   );
-
-  // ── Tooltip journey ──
-  const browseTip = useTooltip("browse_v2", 2);
-  const headerRef = useRef<View | null>(null);
-  const BROWSE_ANCHORS: TooltipAnchor[] = [
-    { anchorRef: headerRef, placement: "below" },
-    { anchorRef: headerRef, placement: "below" },
-  ];
 
   const loadChannels = useCallback(async () => {
     try {
@@ -419,7 +404,7 @@ export default function BrowseScreen() {
         }
         ListHeaderComponent={
           <>
-            <View ref={headerRef} style={styles.pageTitleRow}>
+            <View style={styles.pageTitleRow}>
               <SerifText style={styles.pageTitle}>Browse Your Channels</SerifText>
               {channels.length > 0 && (
                 <SansText style={styles.channelCount}>
@@ -503,17 +488,6 @@ export default function BrowseScreen() {
         }
         contentContainerStyle={styles.listContent}
       />
-
-      <TooltipOverlay
-        visible={browseTip.visible}
-        step={browseTip.step}
-        totalSteps={2}
-        body={BROWSE_TIPS[Math.max(0, browseTip.step)] ?? ""}
-        anchor={BROWSE_ANCHORS[Math.max(0, browseTip.step)] ?? BROWSE_ANCHORS[0]}
-        onNext={browseTip.advance}
-        onDismiss={browseTip.dismiss}
-      />
-
 
       {/* Android queue picker modal */}
       {Platform.OS !== "ios" && pickerVideoId && (

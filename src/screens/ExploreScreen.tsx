@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from "react";
 import {
   View, TextInput, FlatList, ScrollView, TouchableOpacity, StyleSheet,
-  SafeAreaView, Image, ActivityIndicator, Keyboard, Platform,
+  SafeAreaView, Image, ActivityIndicator, Keyboard, Platform, RefreshControl,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -16,12 +16,11 @@ import { useStore } from "../store";
 import { useAddToQueue } from "../hooks/useAddToQueue";
 import { QueuePickerModal } from "../components/QueuePickerModal";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
+import { timeAgo } from "../types";
 import { useTheme } from "../contexts/ThemeContext";
 import { useInTabletSidebar } from "../contexts/TabletSidebarContext";
-import { useTooltip } from "../hooks/useTooltip";
 import { useScrollToTopOnTabPress } from "../hooks/useScrollToTopOnTabPress";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import TooltipOverlay, { TooltipAnchor } from "../components/TooltipOverlay";
 
 const CHIPS = [
   "Philosophy", "Craft", "Film", "Nature", "Science",
@@ -70,12 +69,6 @@ const SURPRISE_TOPICS = [
   "Entomology", "Cartography", "Weaving", "Volcanology", "Beekeeping",
 ];
 
-const EXPLORE_TIPS = [
-  "Search for any topic or channel, even ones you don't subscribe to.",
-  "Not sure where to start? Use these categories as a jumping-off point.",
-  "Feeling adventurous? Tap Surprise me! to discover something unexpected.",
-];
-
 export default function ExploreScreen() {
   const navigation = useNavigation<any>();
   const { colors } = useTheme();
@@ -89,7 +82,14 @@ export default function ExploreScreen() {
   const [submittedQuery, setSubmittedQuery] = useState("");
   const [results, setResults]               = useState<BrowseVideo[]>([]);
   const [searching, setSearching]           = useState(false);
+  const [loadingMore, setLoadingMore]       = useState(false);
+  // Separate state for pull-to-refresh so the FlatList doesn't unmount
+  // mid-refresh. If we reused `searching`, the FlatList's `!searching`
+  // render gate would unmount its parent while RefreshControl is still
+  // animating — iOS crash. Pull-to-refresh keeps results visible.
+  const [refreshing, setRefreshing]         = useState(false);
   const [searchError, setSearchError]       = useState<string | null>(null);
+  const [resultLimit, setResultLimit]       = useState(12);
   const [recentSearches, setRecentSearches] = useState<RecentEntry[]>([]);
   const [surpriseMode, setSurpriseMode]     = useState(false);
   const [surpriseTopic, setSurpriseTopic]   = useState("");
@@ -113,18 +113,7 @@ export default function ExploreScreen() {
   useEffect(() => { loadRecentSearches().then(setRecentSearches); }, []);
   useEffect(() => { saveRecentSearches(recentSearches); }, [recentSearches]);
 
-  // ── Tooltip journey ──
-  const exploreTip = useTooltip("explore_v2", 3);
-  const searchBarRef  = useRef<View | null>(null);
-  const chipsRef      = useRef<View | null>(null);
-  const surpriseBtnRef = useRef<View | null>(null);
-  const EXPLORE_ANCHORS: TooltipAnchor[] = [
-    { anchorRef: searchBarRef,   placement: "below" },
-    { anchorRef: chipsRef,       placement: "below" },
-    { anchorRef: surpriseBtnRef, placement: "above" },
-  ];
-
-  const performSearch = useCallback(async (q: string) => {
+  const performSearch = useCallback(async (q: string, limit: number = 12) => {
     const trimmed = q.trim();
     if (!trimmed) return;
     Keyboard.dismiss();
@@ -132,12 +121,13 @@ export default function ExploreScreen() {
     setSearchError(null);
     setSubmittedQuery(trimmed);
     setResults([]);
+    setResultLimit(limit);
     setRecentSearches(prev => {
       const deduped = prev.filter(e => !(e.kind === "search" && e.query.toLowerCase() === trimmed.toLowerCase()));
       return [{ kind: "search" as const, query: trimmed, savedAt: new Date().toISOString() }, ...deduped].slice(0, MAX_RECENT);
     });
     try {
-      const res = await api.searchYouTube(trimmed);
+      const res = await api.searchYouTube(trimmed, limit);
       setResults(res);
     } catch (e: any) {
       setSearchError(e.message ?? "Search failed. Please try again.");
@@ -145,6 +135,39 @@ export default function ExploreScreen() {
       setSearching(false);
     }
   }, []);
+
+  const handleLoadMore = useCallback(async () => {
+    if (!submittedQuery) return;
+    setLoadingMore(true);
+    try {
+      const limits = [12, 20, 32, 50];
+      const nextLimit = limits.find(l => l > resultLimit) || 50;
+      const res = await api.searchYouTube(submittedQuery, nextLimit);
+      setResults(res);
+      setResultLimit(nextLimit);
+    } catch (e: any) {
+      setSearchError(e.message ?? "Failed to load more results.");
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [submittedQuery, resultLimit]);
+
+  // Pull-to-refresh re-runs the current query at the current limit, without
+  // toggling `searching` (which would unmount the FlatList mid-refresh and
+  // crash iOS — see the comment on the `refreshing` state above).
+  const handleRefresh = useCallback(async () => {
+    if (!submittedQuery) return;
+    setRefreshing(true);
+    setSearchError(null);
+    try {
+      const res = await api.searchYouTube(submittedQuery, resultLimit);
+      setResults(res);
+    } catch (e: any) {
+      setSearchError(e.message ?? "Refresh failed. Please try again.");
+    } finally {
+      setRefreshing(false);
+    }
+  }, [submittedQuery, resultLimit]);
 
   const handleChipPress = useCallback((chip: string) => {
     setQuery(chip);
@@ -214,7 +237,7 @@ export default function ExploreScreen() {
 
       {/* Search bar — always visible */}
       <View style={styles.searchRow}>
-        <View ref={searchBarRef} style={styles.searchBar}>
+        <View style={styles.searchBar}>
           <Feather name="search" size={15} color={colors.warmMid} />
           <TextInput
             ref={inputRef}
@@ -360,7 +383,7 @@ export default function ExploreScreen() {
                 {/* Topic chips */}
                 <View style={styles.section}>
                   <SansText style={styles.sectionLabel}>Start somewhere</SansText>
-                  <View ref={chipsRef} style={styles.chipRow}>
+                  <View style={styles.chipRow}>
                     {CHIPS.map(chip => (
                       <TouchableOpacity
                         key={chip}
@@ -372,7 +395,6 @@ export default function ExploreScreen() {
                       </TouchableOpacity>
                     ))}
                     <TouchableOpacity
-                      ref={surpriseBtnRef}
                       style={styles.surpriseChip}
                       onPress={handleSurprise}
                       activeOpacity={0.7}
@@ -479,6 +501,13 @@ export default function ExploreScreen() {
               keyExtractor={item => item.ytVideoId}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.resultsList}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={handleRefresh}
+                  tintColor={colors.accent}
+                />
+              }
               ListHeaderComponent={
                 results.length > 0 ? (
                   <SansText style={styles.resultsLabel}>
@@ -492,6 +521,22 @@ export default function ExploreScreen() {
                     </SansText>
                   </View>
                 )
+              }
+              ListFooterComponent={
+                results.length >= resultLimit ? (
+                  <TouchableOpacity
+                    style={[styles.loadMoreBtn, loadingMore && { opacity: 0.6 }]}
+                    onPress={handleLoadMore}
+                    disabled={loadingMore}
+                    activeOpacity={0.7}
+                  >
+                    {loadingMore ? (
+                      <ActivityIndicator size="small" color={colors.warmMid} />
+                    ) : (
+                      <SansText style={styles.loadMoreText}>Load more</SansText>
+                    )}
+                  </TouchableOpacity>
+                ) : null
               }
               renderItem={({ item }) => {
                 const queued  = isInQueue(item.ytVideoId);
@@ -521,6 +566,11 @@ export default function ExploreScreen() {
                       <SansText style={styles.resultTitle} numberOfLines={2}>
                         {item.title}
                       </SansText>
+                      {item.publishedAt && (
+                        <SansText style={styles.resultDate}>
+                          {timeAgo(item.publishedAt)}
+                        </SansText>
+                      )}
                       <TouchableOpacity
                         style={[styles.addBtn, queued && styles.addBtnQueued]}
                         onPress={() => !queued && handleAddToQueue(item)}
@@ -542,16 +592,6 @@ export default function ExploreScreen() {
           )}
         </>
       )}
-
-      <TooltipOverlay
-        visible={exploreTip.visible}
-        step={exploreTip.step}
-        totalSteps={3}
-        body={EXPLORE_TIPS[Math.max(0, exploreTip.step)] ?? ""}
-        anchor={EXPLORE_ANCHORS[Math.max(0, exploreTip.step)] ?? EXPLORE_ANCHORS[0]}
-        onNext={exploreTip.advance}
-        onDismiss={exploreTip.dismiss}
-      />
 
       {Platform.OS !== "ios" && pickerVideoId && (
         <QueuePickerModal
@@ -654,9 +694,12 @@ function makeStyles(c: ColorPalette) {
     resultInfo:     { flex: 1, justifyContent: "center", gap: 3 },
     resultChannel:  { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 0.5 },
     resultTitle:    { fontSize: FontSize.sm, color: c.ink, lineHeight: 17 },
+    resultDate:     { fontSize: FontSize.xxs, color: c.queued },
     addBtn:         { alignSelf: "flex-start", marginTop: 4, paddingHorizontal: 10, paddingVertical: 4, borderRadius: Radius.pill, backgroundColor: c.accent },
     addBtnQueued:   { backgroundColor: "transparent", borderWidth: 1.5, borderColor: c.greenText },
     addBtnText:     { fontSize: FontSize.xxs, color: c.buttonText, fontFamily: FontFamily.sansMedium },
     addBtnTextQueued: { color: c.greenText },
+    loadMoreBtn:    { alignSelf: "center", marginVertical: Spacing.md, paddingHorizontal: 16, paddingVertical: 10, borderRadius: Radius.pill, borderWidth: 1.5, borderColor: c.divider },
+    loadMoreText:   { fontSize: FontSize.sm, color: c.warmMid, fontFamily: FontFamily.sansMedium },
   });
 }

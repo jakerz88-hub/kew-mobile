@@ -15,8 +15,6 @@ import { KewLogo, SansText, SerifText, Divider, ThumbPlaceholder, SkipCounter, T
 import { LogoMark } from "../components/TabIcons";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
-import { useTooltip } from "../hooks/useTooltip";
-import TooltipOverlay, { TooltipAnchor } from "../components/TooltipOverlay";
 import { handleLastSkipUsed } from "../utils/kewPlusUpsell";
 import type { QueueEntry } from "../types";
 import { formatDuration, timeAgo, formatDate } from "../types";
@@ -46,11 +44,6 @@ function parseDescriptionParts(text: string): Array<{ type: "text" | "url"; valu
   return parts;
 }
 
-const PLAYER_TIPS = [
-  "Skipping sends a video to the back of your queue. Finish videos to replenish skips.",
-  "Add comments and likes directly to YouTube.",
-];
-
 export default function PlayerScreen() {
   const navigation = useNavigation<any>();
   const { colors } = useTheme();
@@ -71,15 +64,6 @@ export default function PlayerScreen() {
       ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
     };
   }, []);
-
-  // ── Tooltip journey ──
-  const playerTip = useTooltip("player_v2", 2);
-  const skipBtnRef    = useRef<View | null>(null);
-  const interactBtnRef = useRef<View | null>(null);
-  const PLAYER_ANCHORS: TooltipAnchor[] = [
-    { anchorRef: skipBtnRef,    placement: "above" },
-    { anchorRef: interactBtnRef, placement: "above" },
-  ];
 
   const [playing, setPlaying]               = useState(false);
   const [showSkipModal, setShowSkipModal]   = useState(false);
@@ -442,7 +426,6 @@ export default function PlayerScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            ref={interactBtnRef}
             onPress={openInteract}
             style={[styles.ctaChip, styles.ctaChipInteract]}
             activeOpacity={0.7}
@@ -453,7 +436,6 @@ export default function PlayerScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            ref={skipBtnRef}
             onPress={() => setShowSkipModal(true)}
             disabled={!user || user.skipsRemaining <= 0}
             style={[
@@ -652,18 +634,6 @@ export default function PlayerScreen() {
           </View>
         </View>
       </Modal>
-
-      {!isLandscape && (
-        <TooltipOverlay
-          visible={playerTip.visible}
-          step={playerTip.step}
-          totalSteps={2}
-          body={PLAYER_TIPS[Math.max(0, playerTip.step)] ?? ""}
-          anchor={PLAYER_ANCHORS[Math.max(0, playerTip.step)] ?? PLAYER_ANCHORS[0]}
-          onNext={playerTip.advance}
-          onDismiss={playerTip.dismiss}
-        />
-      )}
 
       <Toast message={toastMsg} visible={toastVisible} />
     </SafeAreaView>
