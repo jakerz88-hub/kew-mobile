@@ -19,10 +19,8 @@ import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/th
 import { timeAgo } from "../types";
 import { useTheme } from "../contexts/ThemeContext";
 import { useInTabletSidebar } from "../contexts/TabletSidebarContext";
-import { useTooltip } from "../hooks/useTooltip";
 import { useScrollToTopOnTabPress } from "../hooks/useScrollToTopOnTabPress";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import TooltipOverlay, { TooltipAnchor } from "../components/TooltipOverlay";
 
 const CHIPS = [
   "Philosophy", "Craft", "Film", "Nature", "Science",
@@ -71,15 +69,6 @@ const SURPRISE_TOPICS = [
   "Entomology", "Cartography", "Weaving", "Volcanology", "Beekeeping",
 ];
 
-const EXPLORE_TIPS = [
-  "Search for any topic or channel, even ones you don't subscribe to.",
-  "Not sure where to start? Use these categories as a jumping off point!",
-];
-const EXPLORE_ANCHORS: TooltipAnchor[] = [
-  { arrowSide: "top", top: 168, left: 16, arrowOffset: 20 },
-  { arrowSide: "top", top: 318, left: 16, arrowOffset: 20 },
-];
-
 export default function ExploreScreen() {
   const navigation = useNavigation<any>();
   const { colors } = useTheme();
@@ -123,9 +112,6 @@ export default function ExploreScreen() {
   // ── Persist recent searches ──
   useEffect(() => { loadRecentSearches().then(setRecentSearches); }, []);
   useEffect(() => { saveRecentSearches(recentSearches); }, [recentSearches]);
-
-  // ── Tooltip journey ──
-  const exploreTip = useTooltip("explore", 2);
 
   const performSearch = useCallback(async (q: string, limit: number = 12) => {
     const trimmed = q.trim();
@@ -606,16 +592,6 @@ export default function ExploreScreen() {
           )}
         </>
       )}
-
-      <TooltipOverlay
-        visible={exploreTip.visible}
-        step={exploreTip.step}
-        totalSteps={2}
-        body={EXPLORE_TIPS[Math.max(0, exploreTip.step)] ?? ""}
-        anchor={EXPLORE_ANCHORS[Math.max(0, exploreTip.step)] ?? EXPLORE_ANCHORS[0]}
-        onNext={exploreTip.advance}
-        onDismiss={exploreTip.dismiss}
-      />
 
       {Platform.OS !== "ios" && pickerVideoId && (
         <QueuePickerModal

@@ -25,8 +25,6 @@ import { formatDuration, formatProgress, timeAgo, formatDate } from "../types";
 import { useIsTablet } from "../hooks/useIsTablet";
 import { useScrollToTopOnTabPress } from "../hooks/useScrollToTopOnTabPress";
 import { useInTabletSidebar, useTabletSwitchTab } from "../contexts/TabletSidebarContext";
-import { useTooltip } from "../hooks/useTooltip";
-import TooltipOverlay, { TooltipAnchor } from "../components/TooltipOverlay";
 import { Feather } from "@expo/vector-icons";
 
 // ── Recently-removed storage ──────────────────────────────────────────────────
@@ -65,17 +63,6 @@ async function saveRemoved(entry: RemovedEntry, existing: RemovedEntry[]): Promi
 // ── Component ─────────────────────────────────────────────────────────────────
 const PROGRESS_REPORT_INTERVAL = 10 * 1000;
 const QUEUE_COL_WIDTH = 320;
-
-const QUEUE_TIPS = [
-  "This is your queue of hand-picked videos! You'll watch in the order you added them.",
-  "Skipping a video sends it to the back of your queue. You only get 3, but completing a video allows you to earn 1 back.",
-  "Go to the Browse tab to begin building your queue!",
-];
-const QUEUE_ANCHORS: TooltipAnchor[] = [
-  { arrowSide: "top", top: 172, left: 16, arrowOffset: 20 },
-  { arrowSide: "top", top: 172, right: 16, arrowOffset: 170 },
-  { arrowSide: "bottom", top: 622, left: 16, arrowOffset: 110 },
-];
 
 export default function QueueScreen() {
   const navigation = useNavigation<any>();
@@ -147,9 +134,6 @@ export default function QueueScreen() {
     setPlaying(false);
     setReflectVisible(true);
   }, []);
-
-  // ── Tooltip journey ──
-  const queueTip = useTooltip("queue", 3);
 
   // ── Derived queue values ──
   const allEntries = queue?.entries ?? [];
@@ -1065,16 +1049,6 @@ export default function QueueScreen() {
         shuffling={shuffling}
         onConfirm={handleShuffleConfirm}
         onClose={() => setShowShuffleConfirm(false)}
-      />
-
-      <TooltipOverlay
-        visible={queueTip.visible}
-        step={queueTip.step}
-        totalSteps={3}
-        body={QUEUE_TIPS[Math.max(0, queueTip.step)] ?? ""}
-        anchor={QUEUE_ANCHORS[Math.max(0, queueTip.step)] ?? QUEUE_ANCHORS[0]}
-        onNext={queueTip.advance}
-        onDismiss={queueTip.dismiss}
       />
 
       {/* Recently removed tray — anchored to the bottom of the content area */}

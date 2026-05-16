@@ -21,21 +21,10 @@ import { useTheme } from "../contexts/ThemeContext";
 import { useIsTablet } from "../hooks/useIsTablet";
 import { useScrollToTopOnTabPress } from "../hooks/useScrollToTopOnTabPress";
 import { useInTabletSidebar } from "../contexts/TabletSidebarContext";
-import { useTooltip } from "../hooks/useTooltip";
 import { useAddToQueue } from "../hooks/useAddToQueue";
 import { QueuePickerModal } from "../components/QueuePickerModal";
-import TooltipOverlay, { TooltipAnchor } from "../components/TooltipOverlay";
 
 const CHANNEL_COL_WIDTH = 260;
-
-const BROWSE_TIPS = [
-  "These are your subscribed channels. Tap one to browse their recent uploads.",
-  "Tap + to add a video into your queue. Hold down ✓ to remove an added video.",
-];
-const BROWSE_ANCHORS: TooltipAnchor[] = [
-  { arrowSide: "top", top: 230, left: 16, arrowOffset: 20 },
-  { arrowSide: "top", top: 280, left: 16, arrowOffset: 20 },
-];
 
 export default function BrowseScreen() {
   const navigation = useNavigation<any>();
@@ -78,9 +67,6 @@ export default function BrowseScreen() {
   const { handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId } = useAddToQueue(
     (ytVideoId) => setPanelVideos(v => v.map(x => x.ytVideoId === ytVideoId ? { ...x, inQueue: true } : x))
   );
-
-  // ── Tooltip journey ──
-  const browseTip = useTooltip("browse", 2);
 
   const loadChannels = useCallback(async () => {
     try {
@@ -501,16 +487,6 @@ export default function BrowseScreen() {
             : null
         }
         contentContainerStyle={styles.listContent}
-      />
-
-      <TooltipOverlay
-        visible={browseTip.visible}
-        step={browseTip.step}
-        totalSteps={2}
-        body={BROWSE_TIPS[Math.max(0, browseTip.step)] ?? ""}
-        anchor={BROWSE_ANCHORS[Math.max(0, browseTip.step)] ?? BROWSE_ANCHORS[0]}
-        onNext={browseTip.advance}
-        onDismiss={browseTip.dismiss}
       />
 
       {/* Android queue picker modal */}

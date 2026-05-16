@@ -15,8 +15,6 @@ import { KewLogo, SansText, SerifText, Divider, ThumbPlaceholder, SkipCounter, T
 import { LogoMark } from "../components/TabIcons";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
-import { useTooltip } from "../hooks/useTooltip";
-import TooltipOverlay, { TooltipAnchor } from "../components/TooltipOverlay";
 import { handleLastSkipUsed } from "../utils/kewPlusUpsell";
 import type { QueueEntry } from "../types";
 import { formatDuration, timeAgo, formatDate } from "../types";
@@ -46,15 +44,6 @@ function parseDescriptionParts(text: string): Array<{ type: "text" | "url"; valu
   return parts;
 }
 
-const PLAYER_TIPS = [
-  "Looking for a refresh? Shuffle the whole queue to reorder all your upcoming videos.",
-  "You can also add to your queue directly from your YouTube playlists!",
-];
-const PLAYER_ANCHORS: TooltipAnchor[] = [
-  { arrowSide: "top", top: 376, left: 16, arrowOffset: 20 },
-  { arrowSide: "top", top: 376, left: 16, arrowOffset: 20 },
-];
-
 export default function PlayerScreen() {
   const navigation = useNavigation<any>();
   const { colors } = useTheme();
@@ -75,9 +64,6 @@ export default function PlayerScreen() {
       ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
     };
   }, []);
-
-  // ── Tooltip journey ──
-  const playerTip = useTooltip("player", 2);
 
   const [playing, setPlaying]               = useState(false);
   const [showSkipModal, setShowSkipModal]   = useState(false);
@@ -648,18 +634,6 @@ export default function PlayerScreen() {
           </View>
         </View>
       </Modal>
-
-      {!isLandscape && (
-        <TooltipOverlay
-          visible={playerTip.visible}
-          step={playerTip.step}
-          totalSteps={2}
-          body={PLAYER_TIPS[Math.max(0, playerTip.step)] ?? ""}
-          anchor={PLAYER_ANCHORS[Math.max(0, playerTip.step)] ?? PLAYER_ANCHORS[0]}
-          onNext={playerTip.advance}
-          onDismiss={playerTip.dismiss}
-        />
-      )}
 
       <Toast message={toastMsg} visible={toastVisible} />
     </SafeAreaView>
