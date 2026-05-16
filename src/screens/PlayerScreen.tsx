@@ -47,8 +47,8 @@ function parseDescriptionParts(text: string): Array<{ type: "text" | "url"; valu
 }
 
 const PLAYER_TIPS = [
-  "Skipping sends a video to the back of your queue. Finish videos to replenish skips.",
-  "Add comments and likes directly to YouTube.",
+  "Skip sends this video to the back of your queue. You start with 3 — earn one back each time you finish a video.",
+  "Interact lets you save a thought, link, or quote from whatever you're watching.",
 ];
 
 export default function PlayerScreen() {
