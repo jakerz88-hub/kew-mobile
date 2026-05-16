@@ -68,8 +68,8 @@ const QUEUE_COL_WIDTH = 320;
 
 const QUEUE_TIPS = [
   "This is your queue, where you curate and watch your hand-picked videos.",
-  "Head to Browse to start building your queue.",
   "Or import videos directly from an existing YouTube playlist.",
+  "Head to Browse to start building your queue.",
 ];
 const QUEUE_TIP_PRO_REFLECT = "Add private notes or reflections for your Journal.";
 const QUEUE_TIP_PRO_SWITCHER = "You can create multiple queues to organize your videos. Tap any queue to switch between them.";
@@ -158,14 +158,14 @@ export default function QueueScreen() {
 
   const QUEUE_ANCHORS: TooltipAnchor[] = isTablet ? [
     { anchorRef: queueHeaderRef, placement: "below" },
-    { anchorRef: browseTabRef, placement: "above" },
     { anchorRef: importBtnRef, placement: "above" },
+    { anchorRef: browseTabRef, placement: "above" },
     { anchorRef: skipBtnRef, placement: "above" },
     { anchorRef: interactBtnRef, placement: "above" },
   ] : [
     { anchorRef: queueHeaderRef, placement: "above" },
-    { anchorRef: browseTabRef, placement: "above" },
     { anchorRef: importBtnRef, placement: "below" },
+    { anchorRef: browseTabRef, placement: "above" },
   ];
 
   // Pro journeys (tablet only, mirrors web behavior)
@@ -173,8 +173,8 @@ export default function QueueScreen() {
   const baseJourneyDone = typeof AsyncStorage !== "undefined"
     ? (queueTip.step === -1) // Journey marked complete
     : false;
-  const reflectTip = useTooltip("queue_mobile_reflect", 1, !isTablet && isPro && baseJourneyDone && !queueTip.visible);
-  const proTip = useTooltip("queue_mobile_switcher", 1, isTablet && isPro && baseJourneyDone && !reflectTip.visible);
+  const reflectTip = useTooltip("queue_mobile_reflect", 1, false); // Temporarily disabled to debug tablet crash
+  const proTip = useTooltip("queue_mobile_switcher", 1, false); // Temporarily disabled to debug tablet crash
 
   const REFLECT_ANCHOR: TooltipAnchor = { anchorRef: reflectBtnRef, placement: "below" };
   const PRO_ANCHOR: TooltipAnchor = { anchorRef: queueHeaderRef, placement: "below" };
