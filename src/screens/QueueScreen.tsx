@@ -173,8 +173,8 @@ export default function QueueScreen() {
   const baseJourneyDone = typeof AsyncStorage !== "undefined"
     ? (queueTip.step === -1) // Journey marked complete
     : false;
-  const reflectTip = useTooltip("queue_mobile_reflect", 1, false); // Temporarily disabled to debug tablet crash
-  const proTip = useTooltip("queue_mobile_switcher", 1, false); // Temporarily disabled to debug tablet crash
+  const reflectTip = useTooltip("queue_mobile_reflect", 1, isTablet && isPro && baseJourneyDone && !queueTip.visible);
+  const proTip = useTooltip("queue_mobile_switcher", 1, isTablet && isPro && baseJourneyDone && !reflectTip.visible);
 
   const REFLECT_ANCHOR: TooltipAnchor = { anchorRef: reflectBtnRef, placement: "below" };
   const PRO_ANCHOR: TooltipAnchor = { anchorRef: queueHeaderRef, placement: "below" };
