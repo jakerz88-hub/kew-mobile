@@ -5,6 +5,7 @@ import { Feather } from "@expo/vector-icons";
 import { SansText, SerifText, Divider } from "../components/UI";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
+import { useStore } from "../store";
 
 // Article body is stored as an array of paragraphs.
 // Use { text, italic } tuples within a paragraph for inline italic runs.
@@ -14,7 +15,7 @@ type ArticleBody = Paragraph[];
 
 const ARTICLES: Record<string, ArticleBody> = {
   "How do skips work?": [
-    "Maybe you're not feeling the video you're watching. Skips let you send it to the end of your queue for later. You start with a set number of skips, and each finished video earns you one skip back (until you hit your max).",
+    "Maybe you're not feeling the video you're watching. Skips let you send it to the end of your queue for later. You start with 3 skips (5 with Kew+), and each finished video earns you one back, up to your max.",
     "The limit gives you a chance to pause before skipping, to increase intention and decrease distraction.",
   ],
   "Arranging your queue": [
@@ -59,6 +60,7 @@ const ARTICLES: Record<string, ArticleBody> = {
   ],
   "Changing the app theme": [
     "Kew supports light and dark mode color themes, or can automatically follow your device settings. You can change your theme on the profile screen under Appearance.",
+    "With Kew+, you also get access to a selection of premium color themes, each with a light and dark mode variant.",
   ],
   "Signing out": [
     "To sign out, scroll to the bottom of the profile screen and tap Sign out. You'll be returned to the login screen.",
@@ -84,6 +86,29 @@ const ARTICLES: Record<string, ArticleBody> = {
     "Once a video is in your queue, head to the Queue tab to start watching.",
     "YouTube Watch Later playlists are not available, only playlists you created yourself.",
   ],
+  "Liking or commenting on a video": [
+    "The Interact button on the player screen lets you like a video or leave a comment on YouTube without leaving Kew. Tap it while a video is playing, and a sheet will appear where you can do either or both.",
+    "Likes and comments go directly to YouTube and show up on the video just as they would if you'd used YouTube itself.",
+  ],
+  "Managing multiple queues": [
+    "With Kew+, you can create as many queues as you like and organize them however works for you.",
+    "To create a new queue, tap the + button on the Queues screen. Give it a name and optionally pick an emoji to go with it. Your main queue is always at the top and can't be deleted or renamed.",
+    "To pin a queue, tap the ... button and select Pin. Pinned queues appear near the top of your list for easy access. You can have up to 3 pinned queues at a time.",
+    "To move a video from one queue to another, long-press it to open the menu, tap \"Move to another queue,\" and choose your destination.",
+  ],
+  "Adding or editing a Journal entry": [
+    "Journal entries are attached to individual videos and are completely private. To add one, find the video under the Journal tab and tap the entry area to open the composer. Entries are capped at 750 characters.",
+    "You can edit an entry at any time by tapping it again. Entries are grouped by day and month, and sit alongside your watch history so you can see what you wrote in context.",
+  ],
+  "Understanding your Insights": [
+    "The Insights screen shows your watching data across three time windows: this week, this month, and this year. Switch between them at the top of the screen.",
+    "The stats shown are videos watched, total watch time, completion rate, and skips used. Each includes a comparison to the previous period so you can see how your habits are shifting. A daily bar chart below breaks your watch time down day by day.",
+    "Insights are a mirror, not a report card. There are no scores, no streaks, and no comparisons to other users.",
+  ],
+  "Setting a Watch Limit": [
+    "Watch limits are personal targets you set for yourself on the Insights & Limits screen. You can set limits on daily videos watched, daily watch time, or consecutive videos watched.",
+    "Kew will not prevent you from exceeding your personal limits. These limits are a tool to help you hold yourself accountable.",
+  ],
 };
 
 const SECTIONS = [
@@ -93,7 +118,7 @@ const SECTIONS = [
   },
   {
     title: "Managing your queue",
-    items: ["How do skips work?", "Arranging your queue", "Shuffling your queue", "Removing videos from your queue", "Importing from a playlist", "Sharing your queue"],
+    items: ["How do skips work?", "Arranging your queue", "Shuffling your queue", "Removing videos from your queue", "Importing from a playlist", "Sharing your queue", "Liking or commenting on a video"],
   },
   {
     title: "Browsing & exploring",
@@ -102,6 +127,18 @@ const SECTIONS = [
   {
     title: "Account & settings",
     items: ["Updating your Kew profile", "Changing the app theme", "Signing out"],
+  },
+];
+
+const KEW_PLUS_SECTIONS = [
+  {
+    title: "Kew+",
+    items: [
+      "Managing multiple queues",
+      "Adding or editing a Journal entry",
+      "Understanding your Insights",
+      "Setting a Watch Limit",
+    ],
   },
 ];
 
@@ -129,6 +166,7 @@ export default function HelpScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const [openArticle, setOpenArticle] = useState<string | null>(null);
+  const { user } = useStore();
 
   function toggleArticle(item: string) {
     setOpenArticle((prev) => (prev === item ? null : item));
@@ -147,6 +185,37 @@ export default function HelpScreen() {
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {SECTIONS.map((section) => (
+          <View key={section.title} style={styles.section}>
+            <SansText style={styles.sectionTitle}>{section.title}</SansText>
+            {section.items.map((item, i) => {
+              const isOpen = openArticle === item;
+              const hasArticle = !!ARTICLES[item];
+              const isLast = i === section.items.length - 1;
+              return (
+                <View key={item}>
+                  <TouchableOpacity
+                    onPress={() => hasArticle && toggleArticle(item)}
+                    activeOpacity={hasArticle ? 0.6 : 1}
+                    style={[styles.row, !isOpen && !isLast && styles.rowBorder]}
+                  >
+                    <SansText style={styles.rowText}>{item}</SansText>
+                    <Feather
+                      name={isOpen ? "chevron-down" : "chevron-right"}
+                      size={15}
+                      color={colors.warmMid}
+                    />
+                  </TouchableOpacity>
+                  {isOpen && hasArticle && (
+                    <View style={[styles.articleContainer, !isLast && styles.rowBorder]}>
+                      <ArticleBody body={ARTICLES[item]} styles={styles} />
+                    </View>
+                  )}
+                </View>
+              );
+            })}
+          </View>
+        ))}
+        {user?.plan === "pro" && KEW_PLUS_SECTIONS.map((section) => (
           <View key={section.title} style={styles.section}>
             <SansText style={styles.sectionTitle}>{section.title}</SansText>
             {section.items.map((item, i) => {
