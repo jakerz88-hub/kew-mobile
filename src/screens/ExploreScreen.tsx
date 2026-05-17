@@ -15,6 +15,7 @@ import { LogoMark } from "../components/TabIcons";
 import { useStore } from "../store";
 import { useAddToQueue } from "../hooks/useAddToQueue";
 import { QueuePickerModal } from "../components/QueuePickerModal";
+import { ChannelSheet } from "../components/ChannelSheet";
 import { DurationBadge } from "../components/DurationBadge";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { timeAgo } from "../types";
@@ -96,6 +97,8 @@ export default function ExploreScreen() {
   const [surpriseTopic, setSurpriseTopic]   = useState("");
   const [surpriseVideo, setSurpriseVideo]   = useState<BrowseVideo | null>(null);
   const [surpriseSearching, setSurpriseSearching] = useState(false);
+  const [channelSheetVisible, setChannelSheetVisible] = useState(false);
+  const [selectedChannel, setSelectedChannel] = useState<{ ytChannelId: string; title: string } | null>(null);
 
   const inputRef = useRef<TextInput>(null);
   const hasResults = submittedQuery.length > 0;
@@ -550,32 +553,44 @@ export default function ExploreScreen() {
                       <DurationBadge seconds={item.durationSecs} />
                     </View>
 
-                    <View style={styles.resultInfo}>
-                      <SansText style={styles.resultChannel} numberOfLines={1}>
-                        {item.channelTitle}
-                      </SansText>
-                      <SansText style={styles.resultTitle} numberOfLines={2}>
-                        {item.title}
-                      </SansText>
-                      {item.publishedAt && (
-                        <SansText style={styles.resultDate}>
-                          {timeAgo(item.publishedAt)}
+                    <View style={{ flexDirection: "row", flex: 1, alignItems: "flex-start" }}>
+                      <View style={[styles.resultInfo, { flex: 1 }]}>
+                        <SansText style={styles.resultChannel} numberOfLines={1}>
+                          {item.channelTitle}
                         </SansText>
-                      )}
+                        <SansText style={styles.resultTitle} numberOfLines={2}>
+                          {item.title}
+                        </SansText>
+                        {item.publishedAt && (
+                          <SansText style={styles.resultDate}>
+                            {timeAgo(item.publishedAt)}
+                          </SansText>
+                        )}
+                      </View>
                       <TouchableOpacity
-                        style={[styles.addBtn, queued && styles.addBtnQueued]}
-                        onPress={() => !queued && handleAddToQueue(item)}
-                        disabled={queued || adding}
-                        activeOpacity={0.75}
+                        onPress={() => {
+                          setSelectedChannel({ ytChannelId: item.ytChannelId, title: item.channelTitle });
+                          setChannelSheetVisible(true);
+                        }}
+                        activeOpacity={0.6}
+                        style={{ padding: Spacing.sm, justifyContent: "flex-start" }}
                       >
-                        {adding
-                          ? <ActivityIndicator size="small" color={colors.buttonText} />
-                          : <SansText style={[styles.addBtnText, queued && styles.addBtnTextQueued]}>
-                              {queued ? "In queue ✓" : "+ Add to queue"}
-                            </SansText>
-                        }
+                        <Feather name="info" size={16} color={colors.warmMid} />
                       </TouchableOpacity>
                     </View>
+                    <TouchableOpacity
+                      style={[styles.addBtn, queued && styles.addBtnQueued]}
+                      onPress={() => !queued && handleAddToQueue(item)}
+                      disabled={queued || adding}
+                      activeOpacity={0.75}
+                    >
+                      {adding
+                        ? <ActivityIndicator size="small" color={colors.buttonText} />
+                        : <SansText style={[styles.addBtnText, queued && styles.addBtnTextQueued]}>
+                            {queued ? "In queue ✓" : "+ Add to queue"}
+                          </SansText>
+                      }
+                    </TouchableOpacity>
                   </View>
                 );
               }}
@@ -588,6 +603,15 @@ export default function ExploreScreen() {
         <QueuePickerModal
           onSelect={(queueId) => { const vid = pickerVideoId; setPickerVideoId(null); doAddVideo(vid, queueId); }}
           onDismiss={() => setPickerVideoId(null)}
+        />
+      )}
+
+      {selectedChannel && (
+        <ChannelSheet
+          visible={channelSheetVisible}
+          onClose={() => setChannelSheetVisible(false)}
+          ytChannelId={selectedChannel.ytChannelId}
+          channelTitle={selectedChannel.title}
         />
       )}
     </SafeAreaView>

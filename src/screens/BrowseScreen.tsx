@@ -24,6 +24,7 @@ import { useScrollToTopOnTabPress } from "../hooks/useScrollToTopOnTabPress";
 import { useInTabletSidebar } from "../contexts/TabletSidebarContext";
 import { useAddToQueue } from "../hooks/useAddToQueue";
 import { QueuePickerModal } from "../components/QueuePickerModal";
+import { ChannelSheet } from "../components/ChannelSheet";
 
 const CHANNEL_COL_WIDTH = 260;
 
@@ -53,6 +54,8 @@ export default function BrowseScreen() {
   const STAGE_WEEKS = [2, 12, 36, 0] as const;
   const [panelStage, setPanelStage]             = useState(0);
   const [panelLoadingOlder, setPanelLoadingOlder] = useState(false);
+  const [channelSheetVisible, setChannelSheetVisible] = useState(false);
+  const [selectedChannel, setSelectedChannel] = useState<{ ytChannelId: string; title: string; thumbnailUrl?: string } | null>(null);
 
   // Tab-icon re-tap → scroll to top. Phone uses the channels FlatList;
   // tablet has both the left channel column and the right video panel —
@@ -278,28 +281,31 @@ export default function BrowseScreen() {
                 </TouchableOpacity>
               }
               renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[tStyles.channelRow, selectedChannelId === item.ytChannelId && tStyles.channelRowActive]}
-                  onPress={() => setSelectedChannelId(item.ytChannelId)}
-                  activeOpacity={0.7}
-                >
-                  {item.thumbnailUrl
-                    ? <Image source={{ uri: item.thumbnailUrl }} style={tStyles.channelAvatar} />
-                    : (
-                      <View style={[tStyles.channelAvatar, { backgroundColor: colors.green, alignItems: "center", justifyContent: "center" }]}>
-                        <SansText style={{ color: "white", fontSize: FontSize.xs, fontFamily: FontFamily.sansMedium }}>
-                          {item.title.charAt(0).toUpperCase()}
-                        </SansText>
-                      </View>
-                    )
-                  }
-                  <SansText
-                    style={[tStyles.channelName, selectedChannelId === item.ytChannelId && tStyles.channelNameActive]}
-                    numberOfLines={1}
+                <View style={[tStyles.channelRow, selectedChannelId === item.ytChannelId && tStyles.channelRowActive]}>
+                  <TouchableOpacity
+                    style={{ flex: 1, flexDirection: "row", alignItems: "center" }}
+                    onPress={() => setSelectedChannelId(item.ytChannelId)}
+                    activeOpacity={0.7}
                   >
-                    {item.title}
-                  </SansText>
-                </TouchableOpacity>
+                    {item.thumbnailUrl
+                      ? <Image source={{ uri: item.thumbnailUrl }} style={tStyles.channelAvatar} />
+                      : (
+                        <View style={[tStyles.channelAvatar, { backgroundColor: colors.green, alignItems: "center", justifyContent: "center" }]}>
+                          <SansText style={{ color: "white", fontSize: FontSize.xs, fontFamily: FontFamily.sansMedium }}>
+                            {item.title.charAt(0).toUpperCase()}
+                          </SansText>
+                        </View>
+                      )
+                    }
+                    <SansText
+                      style={[tStyles.channelName, selectedChannelId === item.ytChannelId && tStyles.channelNameActive]}
+                      numberOfLines={1}
+                    >
+                      {item.title}
+                    </SansText>
+                  </TouchableOpacity>
+                  <Feather name="chevron-right" size={16} color={colors.warmMid} style={{ paddingRight: Spacing.sm }} />
+                </View>
               )}
               ItemSeparatorComponent={() => <View style={{ height: 1, backgroundColor: colors.divider, marginLeft: 48 }} />}
               ListEmptyComponent={
@@ -317,8 +323,24 @@ export default function BrowseScreen() {
 
           {/* ── Right: Video grid ── */}
           <View style={tStyles.videoCol}>
-            <View style={tStyles.videoColHeader}>
+            <View style={[tStyles.videoColHeader, { flexDirection: "row", alignItems: "center", justifyContent: "space-between" }]}>
               <SansText style={tStyles.videoColTitle}>{selectedChannelTitle}</SansText>
+              {selectedChannelId && (() => {
+                const ch = channels.find(c => c.ytChannelId === selectedChannelId);
+                if (!ch) return null;
+                return (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setSelectedChannel({ ytChannelId: ch.ytChannelId, title: ch.title, thumbnailUrl: ch.thumbnailUrl || undefined });
+                      setChannelSheetVisible(true);
+                    }}
+                    activeOpacity={0.6}
+                    style={{ padding: 6, minWidth: 32, minHeight: 32, justifyContent: "center", alignItems: "center" }}
+                  >
+                    <Feather name="info" size={16} color={colors.warmMid} />
+                  </TouchableOpacity>
+                );
+              })()}
             </View>
             <Divider />
 
@@ -371,6 +393,17 @@ export default function BrowseScreen() {
             )}
           </View>
         </View>
+
+        {/* Channel sheet modal */}
+        {selectedChannel && (
+          <ChannelSheet
+            visible={channelSheetVisible}
+            onClose={() => setChannelSheetVisible(false)}
+            ytChannelId={selectedChannel.ytChannelId}
+            channelTitle={selectedChannel.title}
+            channelThumbnailUrl={selectedChannel.thumbnailUrl}
+          />
+        )}
       </SafeAreaView>
     );
   }
@@ -495,6 +528,17 @@ export default function BrowseScreen() {
           onDismiss={() => setPickerVideoId(null)}
         />
       )}
+
+      {/* Channel sheet modal */}
+      {selectedChannel && (
+        <ChannelSheet
+          visible={channelSheetVisible}
+          onClose={() => setChannelSheetVisible(false)}
+          ytChannelId={selectedChannel.ytChannelId}
+          channelTitle={selectedChannel.title}
+          channelThumbnailUrl={selectedChannel.thumbnailUrl}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -553,7 +597,7 @@ function ChannelRow({ channel, onPress }: { channel: Channel; onPress: () => voi
           </View>
       }
       <SansText style={styles.channelName} numberOfLines={1}>{channel.title}</SansText>
-      <Feather name="chevron-right" size={16} color={colors.warmMid} />
+      <Feather name="chevron-right" size={20} color={colors.warmMid} />
     </TouchableOpacity>
   );
 }

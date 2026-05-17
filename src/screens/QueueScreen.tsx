@@ -9,6 +9,7 @@ import Svg, { Path } from "react-native-svg";
 import { QueueActionSheet } from "../components/QueueActionSheet";
 import { InteractModule } from "../components/InteractModule";
 import { ReflectModule } from "../components/ReflectModule";
+import { ChannelSheet } from "../components/ChannelSheet";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import YoutubePlayer from "react-native-youtube-iframe";
 import { useStore } from "../store";
@@ -111,6 +112,8 @@ export default function QueueScreen() {
   const [interactTs, setInteractTs] = useState(0);
   const [reflectVisible, setReflectVisible] = useState(false);
   const [reflectTs, setReflectTs] = useState(0);
+  const [channelSheetVisible, setChannelSheetVisible] = useState(false);
+  const [selectedChannel, setSelectedChannel] = useState<{ ytChannelId: string; title: string; thumbnailUrl?: string } | null>(null);
   const [toastMsg, setToastMsg] = useState("");
   const [toastVisible, setToastVisible] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -443,7 +446,17 @@ export default function QueueScreen() {
               ListHeaderComponent={
                 current ? (
                   <>
-                    <TabletNowPlayingRow entry={current} />
+                    <TabletNowPlayingRow
+                      entry={current}
+                      onMorePress={() => {
+                        setSelectedChannel({
+                          ytChannelId: current.video.ytChannelId,
+                          title: current.video.channelTitle,
+                          thumbnailUrl: current.video.thumbnailUrl || undefined,
+                        });
+                        setChannelSheetVisible(true);
+                      }}
+                    />
                     {listPendingEntries.length > 0 && <Divider style={{ marginHorizontal: 0 }} />}
                   </>
                 ) : null
@@ -459,7 +472,26 @@ export default function QueueScreen() {
                 ) : null
               }
               renderItem={({ item }) => (
-                <QueueItem entry={item} onLongPress={() => setActionEntry(item)} />
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <QueueItem
+                    entry={item}
+                    onLongPress={() => setActionEntry(item)}
+                  />
+                  <TouchableOpacity
+                    onPress={() => {
+                      setSelectedChannel({
+                        ytChannelId: item.video.ytChannelId,
+                        title: item.video.channelTitle,
+                        thumbnailUrl: item.video.thumbnailUrl || undefined,
+                      });
+                      setChannelSheetVisible(true);
+                    }}
+                    activeOpacity={0.6}
+                    style={{ padding: 6, minWidth: 32, minHeight: 32, justifyContent: 'center', alignItems: 'center' }}
+                  >
+                    <Feather name="info" size={14} color={colors.ink} />
+                  </TouchableOpacity>
+                </View>
               )}
               ItemSeparatorComponent={() => <Divider style={{ marginHorizontal: 0 }} />}
               contentContainerStyle={{ paddingBottom: removedList.length > 0 ? 60 : 40 }}
@@ -508,7 +540,19 @@ export default function QueueScreen() {
 
                 {/* Video info */}
                 <View style={tStyles.videoInfo}>
-                  <SansText style={tStyles.videoChannel}>{current.video.channelTitle}</SansText>
+                  <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                    <SansText style={tStyles.videoChannel}>{current.video.channelTitle}</SansText>
+                    <TouchableOpacity onPress={() => {
+                      setSelectedChannel({
+                        ytChannelId: current.video.ytChannelId,
+                        title: current.video.channelTitle,
+                        thumbnailUrl: current.video.thumbnailUrl || undefined,
+                      });
+                      setChannelSheetVisible(true);
+                    }} activeOpacity={0.6} style={{ padding: 4 }}>
+                      <Feather name="info" size={14} color={colors.warmMid} />
+                    </TouchableOpacity>
+                  </View>
                   <SerifText style={tStyles.videoTitle}>{current.video.title}</SerifText>
                   {current.video.publishedAt && (
                     <SansText style={tStyles.videoMeta}>Uploaded on {formatDate(current.video.publishedAt)}</SansText>
@@ -813,6 +857,16 @@ export default function QueueScreen() {
         )}
 
         <Toast message={toastMsg} visible={toastVisible} />
+
+        {selectedChannel && (
+          <ChannelSheet
+            visible={channelSheetVisible}
+            onClose={() => setChannelSheetVisible(false)}
+            ytChannelId={selectedChannel.ytChannelId}
+            channelTitle={selectedChannel.title}
+            channelThumbnailUrl={selectedChannel.thumbnailUrl}
+          />
+        )}
       </SafeAreaView>
     );
   }
@@ -970,6 +1024,14 @@ export default function QueueScreen() {
             colors={colors}
             styles={styles}
             onLongPress={setActionEntry}
+            onChannelPress={(entry) => {
+              setSelectedChannel({
+                ytChannelId: entry.video.ytChannelId,
+                title: entry.video.channelTitle,
+                thumbnailUrl: entry.video.thumbnailUrl || undefined,
+              });
+              setChannelSheetVisible(true);
+            }}
             onDragActiveChange={setIsDragging}
             onReorder={(entry, toIdx, useSkip) => {
               if (useSkip) {
@@ -1059,13 +1121,23 @@ export default function QueueScreen() {
           onReadd={handleReadd}
         />
       )}
+
+      {selectedChannel && (
+        <ChannelSheet
+          visible={channelSheetVisible}
+          onClose={() => setChannelSheetVisible(false)}
+          ytChannelId={selectedChannel.ytChannelId}
+          channelTitle={selectedChannel.title}
+          channelThumbnailUrl={selectedChannel.thumbnailUrl}
+        />
+      )}
     </SafeAreaView>
   );
 }
 
 // ── Sub-components ─────────────────────────────────────────────
 
-function TabletNowPlayingRow({ entry }: { entry: QueueEntry }) {
+function TabletNowPlayingRow({ entry, onMorePress }: { entry: QueueEntry; onMorePress?: () => void }) {
   const { colors } = useTheme();
   const tStyles = useMemo(() => makeTabletStyles(colors), [colors]);
   const progress = entry.video.durationSecs
@@ -1126,13 +1198,12 @@ function NowPlayingCard({ entry, onPress }: { entry: QueueEntry; onPress: () => 
   );
 }
 
-function QueueItem({ entry, onPress, onLongPress }: { entry: QueueEntry; onPress?: () => void; onLongPress?: () => void }) {
+function QueueItem({ entry, onLongPress }: { entry: QueueEntry; onLongPress?: () => void }) {
   const { colors } = useTheme();
   const styles = useMemo(() => makePhoneStyles(colors), [colors]);
   return (
     <TouchableOpacity
-      style={[styles.queueItem, onPress && styles.queueItemTappable]}
-      onPress={onPress}
+      style={[styles.queueItem, { flex: 1 }]}
       onLongPress={onLongPress}
       delayLongPress={400}
       activeOpacity={0.7}
@@ -1144,7 +1215,7 @@ function QueueItem({ entry, onPress, onLongPress }: { entry: QueueEntry; onPress
         }
       </View>
       <View style={styles.queueInfo}>
-        <SansText style={styles.queueChannel} numberOfLines={1}>{entry.video.channelTitle}</SansText>
+        <SansText style={[styles.queueChannel]} numberOfLines={1}>{entry.video.channelTitle}</SansText>
         <SansText style={styles.queueTitleText} numberOfLines={2}>{entry.video.title}</SansText>
         <SansText style={styles.queueStatus}>Queued up · {formatDuration(entry.video.durationSecs)}</SansText>
       </View>
@@ -1162,12 +1233,13 @@ interface DraggableQueueListProps {
   colors: ColorPalette;
   styles: ReturnType<typeof makePhoneStyles>;
   onLongPress: (entry: QueueEntry) => void;
+  onChannelPress?: (entry: QueueEntry) => void;
   onReorder: (entry: QueueEntry, toIdx: number, useSkip: boolean) => void;
   onDragActiveChange?: (active: boolean) => void;
 }
 
 function DraggableQueueList({
-  entries, isWatching, colors, onLongPress, onReorder, onDragActiveChange,
+  entries, isWatching, colors, onLongPress, onChannelPress, onReorder, onDragActiveChange,
 }: DraggableQueueListProps) {
   const [fromIdx, setFromIdx] = useState<number | null>(null);
   const [toIdx, setToIdx] = useState<number | null>(null);
@@ -1254,6 +1326,7 @@ function DraggableQueueList({
                 entry={entry} idx={idx} colors={colors}
                 isBeingDragged={true}
                 onLongPress={onLongPress}
+                onChannelPress={onChannelPress}
                 onDragStart={onDragStart}
                 onDragMove={onDragMove}
                 onDragEnd={onDragEnd}
@@ -1271,6 +1344,7 @@ function DraggableQueueList({
               entry={entry} idx={idx} colors={colors}
               isBeingDragged={false}
               onLongPress={onLongPress}
+              onChannelPress={onChannelPress}
               onDragStart={onDragStart}
               onDragMove={onDragMove}
               onDragEnd={onDragEnd}
@@ -1318,6 +1392,7 @@ interface DraggableRowProps {
   colors: ColorPalette;
   isBeingDragged: boolean;
   onLongPress: (entry: QueueEntry) => void;
+  onChannelPress?: (entry: QueueEntry) => void;
   onDragStart: (idx: number) => void;
   onDragMove: (startIdx: number, dy: number) => void;
   onDragEnd: () => void;
@@ -1325,7 +1400,7 @@ interface DraggableRowProps {
 
 function DraggableRow({
   entry, idx, colors, isBeingDragged,
-  onLongPress, onDragStart, onDragMove, onDragEnd,
+  onLongPress, onChannelPress, onDragStart, onDragMove, onDragEnd,
 }: DraggableRowProps) {
   const idxRef = useRef(idx);
   useEffect(() => { idxRef.current = idx; }, [idx]);
@@ -1400,6 +1475,12 @@ function DraggableRow({
           {formatDuration(entry.video.durationSecs)}
         </SansText>
       </TouchableOpacity>
+
+      {onChannelPress && (
+        <TouchableOpacity onPress={() => onChannelPress(entry)} activeOpacity={0.6} style={{ padding: 6, minWidth: 32, minHeight: 32, justifyContent: 'center', alignItems: 'center' }}>
+          <Feather name="info" size={12} color={colors.warmMid} />
+        </TouchableOpacity>
+      )}
     </View>
   );
 }

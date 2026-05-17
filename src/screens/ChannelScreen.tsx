@@ -8,6 +8,7 @@ import type { BrowseVideo } from "../types";
 import { SansText, Divider, ThumbPlaceholder, EmptyState, ErrorBanner } from "../components/UI";
 import { QueueActionSheet } from "../components/QueueActionSheet";
 import { QueuePickerModal } from "../components/QueuePickerModal";
+import { ChannelSheet } from "../components/ChannelSheet";
 import { DurationBadge } from "../components/DurationBadge";
 import { useAddToQueue } from "../hooks/useAddToQueue";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
@@ -38,6 +39,7 @@ export default function ChannelScreen() {
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [loadError, setLoadError]       = useState<string | null>(null);
   const [removeTarget, setRemoveTarget] = useState<{ entryId: string; title: string; queueName: string | null } | null>(null);
+  const [channelSheetVisible, setChannelSheetVisible] = useState(false);
 
   // Active-queue map (used as free-user fallback for inQueue + entry_id, and
   // for pro users when the cross-queue map hasn't loaded yet).
@@ -74,10 +76,10 @@ export default function ChannelScreen() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()} activeOpacity={0.7}>
+        <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7} style={{ padding: 4 }}>
           <Feather name="arrow-left" size={20} color={colors.warmMid} />
         </TouchableOpacity>
-        <View style={styles.channelInfo}>
+        <View style={[styles.channelInfo, { flex: 1 }]}>
           {thumbnailUrl
             ? <Image source={{ uri: thumbnailUrl }} style={styles.avatar} />
             : <View style={styles.avatarFallback}>
@@ -86,7 +88,9 @@ export default function ChannelScreen() {
           }
           <SansText style={styles.channelName} numberOfLines={1}>{channelTitle}</SansText>
         </View>
-        <View style={{ flex: 1 }} />
+        <TouchableOpacity onPress={() => setChannelSheetVisible(true)} activeOpacity={0.6} style={{ padding: 6, minWidth: 32, minHeight: 32, justifyContent: 'center', alignItems: 'center' }}>
+          <Feather name="info" size={20} color={colors.warmMid} />
+        </TouchableOpacity>
       </View>
       <Divider />
 
@@ -133,6 +137,16 @@ export default function ChannelScreen() {
         <QueuePickerModal
           onSelect={(queueId) => { const vid = pickerVideoId; setPickerVideoId(null); doAddVideo(vid, queueId); }}
           onDismiss={() => setPickerVideoId(null)}
+        />
+      )}
+
+      {channelSheetVisible && (
+        <ChannelSheet
+          visible={channelSheetVisible}
+          onClose={() => setChannelSheetVisible(false)}
+          ytChannelId={channelId}
+          channelTitle={channelTitle}
+          channelThumbnailUrl={thumbnailUrl || undefined}
         />
       )}
     </SafeAreaView>
