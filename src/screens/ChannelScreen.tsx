@@ -8,6 +8,7 @@ import type { BrowseVideo } from "../types";
 import { SansText, Divider, ThumbPlaceholder, EmptyState, ErrorBanner } from "../components/UI";
 import { QueueActionSheet } from "../components/QueueActionSheet";
 import { QueuePickerModal } from "../components/QueuePickerModal";
+import { DurationBadge } from "../components/DurationBadge";
 import { useAddToQueue } from "../hooks/useAddToQueue";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
@@ -207,9 +208,7 @@ function VideoCard({ video, inQueue, adding, onAdd, onRemove }: {
           ? <Image source={{ uri: video.thumbnailUrl }} style={StyleSheet.absoluteFill} resizeMode="cover" />
           : <ThumbPlaceholder seed={video.ytVideoId} style={StyleSheet.absoluteFill} />
         }
-        <View style={styles.durationBadge}>
-          <SansText style={styles.durationText}>{formatDuration(video.durationSecs)}</SansText>
-        </View>
+        <DurationBadge seconds={video.durationSecs} />
       </View>
       <View style={styles.cardBody}>
         <View style={styles.cardText}>
@@ -246,8 +245,6 @@ function makeStyles(c: ColorPalette) {
     listContent:    { paddingBottom: 80, paddingTop: Spacing.sm },
     card:           { marginHorizontal: Spacing.md, backgroundColor: c.cardBg, borderWidth: 1, borderColor: c.divider, borderRadius: Radius.md, overflow: "hidden" },
     thumbContainer: { width: "100%", height: 120, position: "relative" },
-    durationBadge:  { position: "absolute", bottom: 8, right: 8, backgroundColor: "rgba(26,23,20,0.75)", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-    durationText:   { color: "white", fontSize: FontSize.xxs },
     cardBody:       { flexDirection: "row", alignItems: "flex-start", padding: Spacing.sm, gap: Spacing.sm },
     cardText:       { flex: 1, minWidth: 0 },
     cardTitle:      { fontSize: FontSize.sm, color: c.ink, lineHeight: 18, marginBottom: 4 },

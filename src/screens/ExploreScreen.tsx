@@ -15,6 +15,7 @@ import { LogoMark } from "../components/TabIcons";
 import { useStore } from "../store";
 import { useAddToQueue } from "../hooks/useAddToQueue";
 import { QueuePickerModal } from "../components/QueuePickerModal";
+import { DurationBadge } from "../components/DurationBadge";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { timeAgo } from "../types";
 import { useTheme } from "../contexts/ThemeContext";
@@ -303,13 +304,7 @@ export default function ExploreScreen() {
                         />
                       : <ThumbPlaceholder seed={surpriseVideo.ytVideoId} style={StyleSheet.absoluteFill} />
                     }
-                    {surpriseVideo.durationSecs > 0 && (
-                      <View style={styles.durationBadge}>
-                        <SansText style={styles.durationText}>
-                          {formatDuration(surpriseVideo.durationSecs)}
-                        </SansText>
-                      </View>
-                    )}
+                    <DurationBadge seconds={surpriseVideo.durationSecs} />
                   </View>
                   <View style={styles.surpriseInfo}>
                     <SansText style={styles.surpriseChannel} numberOfLines={1}>
@@ -552,11 +547,7 @@ export default function ExploreScreen() {
                           />
                         : <ThumbPlaceholder seed={item.ytVideoId} style={StyleSheet.absoluteFill} />
                       }
-                      <View style={styles.durationBadge}>
-                        <SansText style={styles.durationText}>
-                          {formatDuration(item.durationSecs)}
-                        </SansText>
-                      </View>
+                      <DurationBadge seconds={item.durationSecs} />
                     </View>
 
                     <View style={styles.resultInfo}>
@@ -689,8 +680,6 @@ function makeStyles(c: ColorPalette) {
     // Result card
     resultCard:     { flexDirection: "row", gap: Spacing.sm, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderBottomWidth: 0.5, borderBottomColor: c.divider },
     resultThumb:    { width: 100, height: 64, borderRadius: Radius.sm, overflow: "hidden", flexShrink: 0 },
-    durationBadge:  { position: "absolute", bottom: 4, right: 4, backgroundColor: "rgba(26,23,20,0.78)", borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1 },
-    durationText:   { fontSize: 10, color: "white", fontFamily: FontFamily.sansMedium },
     resultInfo:     { flex: 1, justifyContent: "center", gap: 3 },
     resultChannel:  { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 0.5 },
     resultTitle:    { fontSize: FontSize.sm, color: c.ink, lineHeight: 17 },

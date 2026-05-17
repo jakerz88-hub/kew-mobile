@@ -8,6 +8,7 @@ import type { BrowseVideo } from "../types";
 import { SansText, SerifText, Divider, ThumbPlaceholder, EmptyState, ErrorBanner } from "../components/UI";
 import { QueueActionSheet } from "../components/QueueActionSheet";
 import { QueuePickerModal } from "../components/QueuePickerModal";
+import { DurationBadge } from "../components/DurationBadge";
 import { useStore } from "../store";
 import { useAddToQueue } from "../hooks/useAddToQueue";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
@@ -156,9 +157,7 @@ function VideoCard({ video, inQueue, adding, onAdd, onRemove, isGrid }: {
           ? <Image source={{ uri: video.thumbnailUrl }} style={StyleSheet.absoluteFill} resizeMode="cover" />
           : <ThumbPlaceholder seed={video.ytVideoId} style={StyleSheet.absoluteFill} />
         }
-        <View style={styles.durationBadge}>
-          <SansText style={styles.durationText}>{formatDuration(video.durationSecs)}</SansText>
-        </View>
+        <DurationBadge seconds={video.durationSecs} />
       </View>
       <View style={styles.cardBody}>
         <View style={styles.cardText}>
@@ -197,8 +196,6 @@ function makeStyles(c: ColorPalette) {
     cardGrid:        { marginHorizontal: 0 },
     thumbContainer:  { width: "100%", height: 120, position: "relative" },
     thumbGrid:       { width: "100%", aspectRatio: 16 / 9, position: "relative" },
-    durationBadge:   { position: "absolute", bottom: 8, right: 8, backgroundColor: "rgba(26,23,20,0.75)", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-    durationText:    { color: "white", fontSize: FontSize.xxs },
     cardBody:        { flexDirection: "row", alignItems: "flex-start", padding: Spacing.sm, gap: Spacing.sm },
     cardText:        { flex: 1, minWidth: 0 },
     cardChannel:     { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2, fontFamily: FontFamily.sansMedium },

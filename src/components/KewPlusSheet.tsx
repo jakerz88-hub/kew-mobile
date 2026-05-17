@@ -75,8 +75,8 @@ export function KewPlusSheet({ visible, onClose, headline, body, onExplore }: Pr
 
 function makeStyles(c: ColorPalette) {
   return StyleSheet.create({
-    overlay:      { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
-    sheet:        { backgroundColor: c.cardBg, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingHorizontal: Spacing.lg, paddingTop: Spacing.sm + 2, paddingBottom: Spacing.xl, alignItems: "center" },
+    overlay:      { flex: 1, backgroundColor: "rgba(26,23,20,0.5)", justifyContent: "flex-end" },
+    sheet:        { backgroundColor: c.cardBg, borderTopLeftRadius: Radius.lg, borderTopRightRadius: Radius.lg, paddingHorizontal: Spacing.lg, paddingTop: Spacing.sm + 2, paddingBottom: Spacing.xl, alignItems: "center" },
     handle:       { width: 36, height: 4, borderRadius: 2, backgroundColor: c.divider, marginBottom: Spacing.md },
     iconWrap:     { marginBottom: Spacing.sm },
     headline:     { fontSize: FontSize.lg, color: c.ink, textAlign: "center", marginTop: Spacing.xs },

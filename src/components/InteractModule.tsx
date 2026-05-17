@@ -484,7 +484,7 @@ function makeStyles(c: ColorPalette) {
     root: { flex: 1 },
     backdrop: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: "#000",
+      backgroundColor: "rgba(26,23,20,0.5)",
     },
     kbContainer: {
       flex: 1,
@@ -504,8 +504,8 @@ function makeStyles(c: ColorPalette) {
     },
     handle: {
       alignSelf: "center",
-      width: 32,
-      height: 3,
+      width: 36,
+      height: 4,
       borderRadius: 999,
       backgroundColor: c.divider,
       marginBottom: 4,

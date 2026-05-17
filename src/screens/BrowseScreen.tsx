@@ -15,6 +15,7 @@ import {
   EmptyState, ErrorBanner, AvatarBubble,
 } from "../components/UI";
 import { LogoMark } from "../components/TabIcons";
+import { DurationBadge } from "../components/DurationBadge";
 import { useStore } from "../store";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
@@ -434,9 +435,7 @@ export default function BrowseScreen() {
                           ? <Image source={{ uri: video.thumbnailUrl }} style={[StyleSheet.absoluteFill, { borderRadius: Radius.sm }]} resizeMode="cover" />
                           : <ThumbPlaceholder seed={video.ytVideoId} style={StyleSheet.absoluteFill} />
                         }
-                        <View style={styles.recentDurationBadge}>
-                          <SansText style={styles.recentDurationText}>{formatDuration(video.durationSecs)}</SansText>
-                        </View>
+                        <DurationBadge seconds={video.durationSecs} />
                       </View>
                       <SansText style={styles.recentCreator} numberOfLines={1}>{video.channelTitle}</SansText>
                     </TouchableOpacity>
@@ -517,9 +516,7 @@ function BrowseVideoCard({ video, inQueue, adding, onAdd }: {
           ? <Image source={{ uri: video.thumbnailUrl }} style={StyleSheet.absoluteFill} resizeMode="cover" />
           : <ThumbPlaceholder seed={video.ytVideoId} style={StyleSheet.absoluteFill} />
         }
-        <View style={tStyles.durationBadge}>
-          <SansText style={tStyles.durationText}>{formatDuration(video.durationSecs)}</SansText>
-        </View>
+        <DurationBadge seconds={video.durationSecs} />
       </View>
       <View style={tStyles.videoCardBody}>
         <View style={{ flex: 1, minWidth: 0 }}>
@@ -638,8 +635,6 @@ function makeTabletStyles(c: ColorPalette) {
     videoCardChannel: { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2, fontFamily: FontFamily.sansMedium },
     videoCardTitle:   { fontSize: FontSize.sm, color: c.ink, lineHeight: 18 },
     videoCardMeta:    { fontSize: FontSize.xxs, color: c.queued },
-    durationBadge:    { position: "absolute", bottom: 6, right: 6, backgroundColor: "rgba(26,23,20,0.75)", paddingHorizontal: 5, paddingVertical: 2, borderRadius: 3 },
-    durationText:     { color: "white", fontSize: FontSize.xxs },
     addBtn:           { paddingHorizontal: 10, paddingVertical: 4, backgroundColor: c.accent, borderRadius: Radius.pill },
     addBtnQueued:     { backgroundColor: "transparent", borderWidth: 1.5, borderColor: c.greenText },
     addBtnText:       { fontSize: FontSize.xxs, color: c.buttonText, fontFamily: FontFamily.sansMedium },
@@ -666,8 +661,6 @@ function makePhoneStyles(c: ColorPalette) {
     recentCards:          { flexDirection: "row", gap: 8, paddingRight: Spacing.md },
     recentCard:           { width: 106 },
     recentThumb:          { aspectRatio: 16/10, borderRadius: Radius.sm, overflow: "hidden", backgroundColor: c.divider, marginBottom: 4, position: "relative" },
-    recentDurationBadge:  { position: "absolute", bottom: 4, right: 4, backgroundColor: "rgba(26,23,20,0.75)", paddingHorizontal: 4, paddingVertical: 1, borderRadius: 3 },
-    recentDurationText:   { color: "white", fontSize: FontSize.xxs },
     recentCreator:        { fontSize: FontSize.xxs, color: c.warmMid, fontFamily: FontFamily.sansMedium },
     searchRow:            { flexDirection: "row", alignItems: "center", marginHorizontal: Spacing.md, marginBottom: Spacing.sm, marginTop: Spacing.sm, paddingHorizontal: Spacing.sm, paddingVertical: 8, backgroundColor: c.cardBg, borderRadius: Radius.md, borderWidth: 1, borderColor: c.divider, gap: 8 },
     searchInput:          { flex: 1, fontSize: FontSize.sm, color: c.ink, fontFamily: FontFamily.sans, padding: 0 },

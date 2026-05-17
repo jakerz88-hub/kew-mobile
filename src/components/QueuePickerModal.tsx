@@ -3,7 +3,7 @@ import { View, TouchableOpacity, Modal, FlatList } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useStore } from "../store";
 import { SansText } from "./UI";
-import { FontFamily, FontSize, Spacing } from "../types/theme";
+import { FontFamily, FontSize, Radius, Spacing } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
 
 /**
@@ -32,11 +32,11 @@ export function QueuePickerModal({
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onDismiss}>
       <TouchableOpacity
-        style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" }}
+        style={{ flex: 1, backgroundColor: "rgba(26,23,20,0.5)", justifyContent: "flex-end" }}
         activeOpacity={1}
         onPress={onDismiss}
       >
-        <View style={{ backgroundColor: colors.cardBg, borderTopLeftRadius: 16, borderTopRightRadius: 16, paddingBottom: 32 }}>
+        <View style={{ backgroundColor: colors.cardBg, borderTopLeftRadius: Radius.lg, borderTopRightRadius: Radius.lg, paddingBottom: 32 }}>
           <View style={{ padding: Spacing.md, paddingBottom: Spacing.sm }}>
             <SansText style={{ fontSize: FontSize.xs, color: colors.warmMid, fontFamily: FontFamily.sansMedium, textTransform: "uppercase", letterSpacing: 0.8 }}>
               Add to queue
