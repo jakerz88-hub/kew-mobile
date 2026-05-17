@@ -95,8 +95,8 @@ export function QueueActionSheet({
 
               <View style={styles.btnRow}>
                 {canMoveToQueue ? (
-                  <TouchableOpacity style={[styles.btn, styles.btnCancel]} onPress={() => setStep("pick-queue")} activeOpacity={0.7}>
-                    <SansText style={styles.btnCancelText}>Move to queue</SansText>
+                  <TouchableOpacity style={[styles.btn, styles.btnMoveEntry]} onPress={() => setStep("pick-queue")} activeOpacity={0.7}>
+                    <SansText style={styles.btnMoveEntryText}>Move to another queue</SansText>
                   </TouchableOpacity>
                 ) : (
                   <TouchableOpacity style={[styles.btn, styles.btnCancel]} onPress={handleClose} activeOpacity={0.7}>
@@ -191,6 +191,8 @@ function makeStyles(c: ColorPalette) {
     videoTitle:            { fontSize: FontSize.xs, color: c.warmMid, textAlign: "center", marginBottom: Spacing.xs },
     queueSubtitle:         { fontSize: FontSize.xxs, color: c.queued, textAlign: "center", marginTop: -Spacing.xs, marginBottom: Spacing.xs },
     cancelOption:          { paddingVertical: Spacing.md, alignItems: "center" },
+    btnMoveEntry:          { backgroundColor: "transparent", borderWidth: 1, borderColor: c.accent },
+    btnMoveEntryText:      { fontSize: FontSize.sm, color: c.accent, fontFamily: FontFamily.sansMedium },
     btnRemoveEntry:        { backgroundColor: "transparent", borderWidth: 1, borderColor: `${c.accent}60` },
     btnRemoveEntryText:    { fontSize: FontSize.sm, color: c.accent, fontFamily: FontFamily.sansMedium },
     cancelText:            { fontSize: FontSize.sm, color: c.warmMid },
