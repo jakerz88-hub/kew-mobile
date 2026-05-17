@@ -154,7 +154,7 @@ function AppNavigator() {
 export default function App() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [onboardingDone, setOnboardingDone] = useState<boolean | undefined>(undefined);
-  const { fetchUser, fetchQueue, fetchQueues, user } = useStore();
+  const { fetchUser, fetchQueue, fetchQueues, user, isLoadingUser } = useStore();
 
   const [fontsLoaded, fontError] = useFonts({
     DMSans_400Regular,
@@ -260,8 +260,8 @@ export default function App() {
           <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="Login" component={LoginScreen} />
           </Stack.Navigator>
-        ) : user === null ? (
-          // Session exists but user not yet loaded — show splash
+        ) : (user === null && isLoadingUser) ? (
+          // fetchUser in-flight — show splash
           <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: Colors.cream, gap: 32 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
               <LogoMark size={44} />
@@ -269,6 +269,11 @@ export default function App() {
             </View>
             <ActivityIndicator color={Colors.accent} size="small" />
           </View>
+        ) : user === null ? (
+          // fetchUser failed (expired token, 403, network error) — send to Login
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="Login" component={LoginScreen} />
+          </Stack.Navigator>
         ) : onboardingDone ? (
           <AppNavigator />
         ) : (
