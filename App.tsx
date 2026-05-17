@@ -44,11 +44,13 @@ import InsightsScreen from "./src/screens/InsightsScreen";
 import BenefitsScreen from "./src/screens/BenefitsScreen";
 import AppIconScreen from "./src/screens/AppIconScreen";
 import SharedQueueScreen from "./src/screens/SharedQueueScreen";
+import KewPlusWelcomeScreen from "./src/screens/KewPlusWelcomeScreen";
 import TabletNavigator from "./src/navigation/TabletNavigator";
 import { useIsTablet } from "./src/hooks/useIsTablet";
 
-const NUX_KEY         = "kew_nux_done";
-const ONBOARDING_KEY  = "kew_onboarding_done";
+const NUX_KEY              = "kew_nux_done";
+const ONBOARDING_KEY       = "kew_onboarding_done";
+const KEW_PLUS_WELCOME_KEY = "kew_plus_welcome_shown";
 
 const Tab   = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -186,6 +188,7 @@ function AppInner() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [nuxDone, setNuxDone] = useState<boolean | undefined>(undefined);
   const [onboardingDone, setOnboardingDone] = useState<boolean | undefined>(undefined);
+  const [kewPlusWelcomeDone, setKewPlusWelcomeDone] = useState<boolean | undefined>(undefined);
   const { fetchUser, fetchQueue, fetchQueues, user, isLoadingUser } = useStore();
 
   const [fontsLoaded, fontError] = useFonts({
@@ -234,8 +237,10 @@ function AppInner() {
         useStore.getState().reset();
         AsyncStorage.removeItem(NUX_KEY).catch(() => {});
         AsyncStorage.removeItem(ONBOARDING_KEY).catch(() => {});
+        AsyncStorage.removeItem(KEW_PLUS_WELCOME_KEY).catch(() => {});
         setNuxDone(undefined);
         setOnboardingDone(undefined);
+        setKewPlusWelcomeDone(undefined);
         logoutPurchases();
       }
     });
@@ -270,6 +275,15 @@ function AppInner() {
         setOnboardingDone(onbVal === "true");
       }
     });
+
+    // Kew+ welcome: only pro users see it, and only once per device
+    if (user.plan === "pro") {
+      AsyncStorage.getItem(KEW_PLUS_WELCOME_KEY).then((val) => {
+        setKewPlusWelcomeDone(val === "true");
+      });
+    } else {
+      setKewPlusWelcomeDone(true);
+    }
   }, [user]);
 
   const markNuxDone = () => {
@@ -282,10 +296,15 @@ function AppInner() {
     setOnboardingDone(true);
   };
 
+  const markKewPlusWelcomeDone = () => {
+    AsyncStorage.setItem(KEW_PLUS_WELCOME_KEY, "true").catch(() => {});
+    setKewPlusWelcomeDone(true);
+  };
+
   const isLoading =
     (!fontsLoaded && !fontError) ||
     session === undefined ||
-    (session !== null && user !== null && (nuxDone === undefined || onboardingDone === undefined));
+    (session !== null && user !== null && (nuxDone === undefined || onboardingDone === undefined || kewPlusWelcomeDone === undefined));
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -317,6 +336,12 @@ function AppInner() {
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="Onboarding">
             {() => <OnboardingScreen onDone={markOnboardingDone} />}
+          </Stack.Screen>
+        </Stack.Navigator>
+      ) : (user.plan === "pro" && !kewPlusWelcomeDone) ? (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="KewPlusWelcome">
+            {() => <KewPlusWelcomeScreen onDone={markKewPlusWelcomeDone} />}
           </Stack.Screen>
         </Stack.Navigator>
       ) : (
