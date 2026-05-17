@@ -354,7 +354,7 @@ export default function ExploreScreen() {
               /* No video found */
               <View style={styles.surpriseEmpty}>
                 <SansText style={styles.surpriseEmptyTitle}>No video found</SansText>
-                <SansText style={styles.surpriseEmptySubtitle}>Try again — the internet is vast.</SansText>
+                <SansText style={styles.surpriseEmptySubtitle}>Try again. The internet is vast.</SansText>
                 <TouchableOpacity style={styles.surpriseActionBtn} onPress={handleSurprise} activeOpacity={0.75}>
                   <SansText style={styles.surpriseActionBtnText}>Try again</SansText>
                 </TouchableOpacity>
