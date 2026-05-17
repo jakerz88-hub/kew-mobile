@@ -132,13 +132,30 @@ export function SkipCounter({ remaining, max }: { remaining: number; max: number
   );
 }
 
-export function EmptyState({ icon, title, subtitle }: { icon: string; title: string; subtitle?: string }) {
+export function EmptyState({ icon, title, subtitle, action }: {
+  icon: string;
+  title: string;
+  subtitle?: string;
+  action?: { label: string; onPress: () => void; loading?: boolean };
+}) {
   const { colors } = useTheme();
   return (
     <View style={staticStyles.emptyState}>
       <Text style={staticStyles.emptyIcon}>{icon}</Text>
       <SerifText style={staticStyles.emptyTitle}>{title}</SerifText>
       {subtitle && <SansText style={[staticStyles.emptySubtitle, { color: colors.warmMid }]}>{subtitle}</SansText>}
+      {action && (
+        <TouchableOpacity
+          onPress={action.onPress}
+          disabled={action.loading}
+          activeOpacity={0.8}
+          style={[staticStyles.emptyAction, { backgroundColor: colors.accent }]}
+        >
+          <SansText style={staticStyles.emptyActionText}>
+            {action.loading ? "Loading…" : action.label}
+          </SansText>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -253,6 +270,8 @@ const staticStyles = StyleSheet.create({
   emptyIcon:     { fontSize: 40, marginBottom: Spacing.md },
   emptyTitle:    { fontSize: FontSize.lg, textAlign: "center", marginBottom: Spacing.sm },
   emptySubtitle: { fontSize: FontSize.sm, textAlign: "center", lineHeight: 20 },
+  emptyAction:   { marginTop: Spacing.lg, paddingVertical: Spacing.sm + 2, paddingHorizontal: Spacing.xl, borderRadius: Radius.pill },
+  emptyActionText: { fontSize: FontSize.sm, color: "white", fontFamily: FontFamily.sansMedium },
   errorBanner:   { padding: Spacing.sm, margin: Spacing.md, borderRadius: Radius.sm, flexDirection: "row", alignItems: "center", gap: Spacing.sm },
   errorText:     { fontSize: FontSize.xs, textAlign: "center" },
   errorActionBtn:  { borderWidth: 1.5, borderRadius: Radius.pill, paddingVertical: 4, paddingHorizontal: 12, flexShrink: 0 },
