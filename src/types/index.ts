@@ -25,6 +25,7 @@ export interface Channel {
   title: string;
   thumbnailUrl: string | null;
   lastSyncedAt: string | null;
+  subscriptionId: string | null;
 }
 
 export interface Video {

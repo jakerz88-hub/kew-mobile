@@ -91,6 +91,18 @@ export const api = {
     return request("/v1/channels/sync", { method: "POST" });
   },
 
+  getChannel(ytChannelId: string): Promise<{ ytChannelId: string; title: string; thumbnailUrl: string | null; description: string; recentVideos: { ytVideoId: string; title: string; thumbnailUrl: string | null; publishedAt: string | null; durationSecs: number | null }[] }> {
+    return request(`/v1/channel/${ytChannelId}`);
+  },
+
+  subscribeChannel(ytChannelId: string): Promise<{ subscriptionId: string }> {
+    return request(`/v1/channels/${ytChannelId}/subscribe`, { method: "POST" });
+  },
+
+  unsubscribeChannel(subscriptionId: string): Promise<void> {
+    return request(`/v1/channels/subscriptions/${subscriptionId}`, { method: "DELETE" });
+  },
+
   browseFeed(channelId?: string, weeks: number = 2): Promise<BrowseVideo[]> {
     const params = new URLSearchParams();
     if (channelId) params.set("channel_id", channelId);
