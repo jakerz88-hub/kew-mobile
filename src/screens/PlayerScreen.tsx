@@ -593,8 +593,8 @@ export default function PlayerScreen() {
               <TouchableOpacity style={[styles.modalBtn, styles.modalBtnCancel]} onPress={() => setShowRemoveModal(false)}>
                 <SansText style={styles.modalBtnCancelText}>Keep it</SansText>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.modalBtn, styles.modalBtnConfirm]} onPress={handleRemoveConfirm} disabled={removing}>
-                <SansText style={styles.modalBtnConfirmText}>{removing ? "..." : "Remove"}</SansText>
+              <TouchableOpacity style={[styles.modalBtn, styles.modalBtnDestructive]} onPress={handleRemoveConfirm} disabled={removing}>
+                <SansText style={styles.modalBtnDestructiveText}>{removing ? "..." : "Remove"}</SansText>
               </TouchableOpacity>
             </View>
           </View>
@@ -714,7 +714,9 @@ function makeStyles(c: ColorPalette) {
     modalBtn:            { flex: 1, height: 48, borderRadius: Radius.pill, alignItems: "center", justifyContent: "center" },
     modalBtnCancel:      { backgroundColor: c.divider },
     modalBtnCancelText:  { fontSize: FontSize.sm, color: c.ink },
-    modalBtnConfirm:     { backgroundColor: c.accent },
-    modalBtnConfirmText: { fontSize: FontSize.sm, color: c.buttonText, fontFamily: FontFamily.sansMedium },
+    modalBtnConfirm:        { backgroundColor: c.accent },
+    modalBtnConfirmText:    { fontSize: FontSize.sm, color: c.buttonText, fontFamily: FontFamily.sansMedium },
+    modalBtnDestructive:    { backgroundColor: c.ink },
+    modalBtnDestructiveText:{ fontSize: FontSize.sm, color: c.cream, fontFamily: FontFamily.sansMedium },
   });
 }
