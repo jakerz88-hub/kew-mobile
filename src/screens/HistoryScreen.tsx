@@ -197,7 +197,7 @@ function HistoryItem({ entry, readded, adding, onReadd }: {
         activeOpacity={0.7}
       >
         <SansText style={[styles.readdBtnText, readded && styles.readdBtnTextDone]}>
-          {adding ? "..." : readded ? "✓" : "↺"}
+          {adding ? "..." : readded ? "✓" : "+"}
         </SansText>
       </TouchableOpacity>
     </View>
