@@ -93,19 +93,26 @@ export function QueueActionSheet({
                 <SansText style={styles.queueSubtitle}>In your {queueName} queue</SansText>
               )}
 
+              <View style={styles.btnRow}>
+                {canMoveToQueue ? (
+                  <TouchableOpacity style={[styles.btn, styles.btnCancel]} onPress={() => setStep("pick-queue")} activeOpacity={0.7}>
+                    <SansText style={styles.btnCancelText}>Move to queue</SansText>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity style={[styles.btn, styles.btnCancel]} onPress={handleClose} activeOpacity={0.7}>
+                    <SansText style={styles.btnCancelText}>Cancel</SansText>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity style={[styles.btn, styles.btnRemoveEntry]} onPress={() => setStep("confirm-remove")} activeOpacity={0.7}>
+                  <SansText style={styles.btnRemoveEntryText}>Remove</SansText>
+                </TouchableOpacity>
+              </View>
+
               {canMoveToQueue && (
-                <TouchableOpacity style={styles.option} onPress={() => setStep("pick-queue")} activeOpacity={0.7}>
-                  <SansText style={styles.optionText}>Move to another queue</SansText>
+                <TouchableOpacity style={styles.cancelOption} onPress={handleClose} activeOpacity={0.7}>
+                  <SansText style={styles.cancelText}>Cancel</SansText>
                 </TouchableOpacity>
               )}
-
-              <TouchableOpacity style={[styles.option, styles.optionDestructive]} onPress={() => setStep("confirm-remove")} activeOpacity={0.7}>
-                <SansText style={styles.optionDestructiveText}>Remove from queue</SansText>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.cancelOption} onPress={handleClose} activeOpacity={0.7}>
-                <SansText style={styles.cancelText}>Cancel</SansText>
-              </TouchableOpacity>
             </>
           )}
 
@@ -183,11 +190,9 @@ function makeStyles(c: ColorPalette) {
     sheet:                 { backgroundColor: c.cardBg, borderTopLeftRadius: Radius.lg, borderTopRightRadius: Radius.lg, padding: Spacing.lg, gap: Spacing.sm, paddingBottom: Spacing.xl },
     videoTitle:            { fontSize: FontSize.xs, color: c.warmMid, textAlign: "center", marginBottom: Spacing.xs },
     queueSubtitle:         { fontSize: FontSize.xxs, color: c.queued, textAlign: "center", marginTop: -Spacing.xs, marginBottom: Spacing.xs },
-    option:                { paddingVertical: Spacing.md, borderRadius: Radius.md, backgroundColor: c.cardElevated, alignItems: "center", borderWidth: 1, borderColor: c.divider },
-    optionText:            { fontSize: FontSize.sm, color: c.ink, fontFamily: FontFamily.sansMedium },
-    optionDestructive:     { borderColor: `${c.accent}40` },
-    optionDestructiveText: { fontSize: FontSize.sm, color: c.accent, fontFamily: FontFamily.sansMedium },
     cancelOption:          { paddingVertical: Spacing.md, alignItems: "center" },
+    btnRemoveEntry:        { backgroundColor: "transparent", borderWidth: 1, borderColor: `${c.accent}60` },
+    btnRemoveEntryText:    { fontSize: FontSize.sm, color: c.accent, fontFamily: FontFamily.sansMedium },
     cancelText:            { fontSize: FontSize.sm, color: c.warmMid },
     confirmTitle:          { fontSize: FontSize.lg, textAlign: "center" },
     confirmBody:           { fontSize: FontSize.sm, color: c.warmMid, textAlign: "center", lineHeight: 20 },
