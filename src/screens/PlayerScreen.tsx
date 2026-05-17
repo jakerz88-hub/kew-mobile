@@ -7,6 +7,7 @@ import { Feather } from "@expo/vector-icons";
 import { QueueActionSheet } from "../components/QueueActionSheet";
 import { InteractModule } from "../components/InteractModule";
 import { ReflectModule } from "../components/ReflectModule";
+import { ChannelSheet } from "../components/ChannelSheet";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import YoutubePlayer from "react-native-youtube-iframe";
 import { useStore } from "../store";
@@ -77,6 +78,7 @@ export default function PlayerScreen() {
   const [interactTs, setInteractTs] = useState(0);
   const [reflectVisible, setReflectVisible] = useState(false);
   const [reflectTs, setReflectTs] = useState(0);
+  const [channelSheetVisible, setChannelSheetVisible] = useState(false);
   const [toastMsg, setToastMsg] = useState("");
   const [toastVisible, setToastVisible] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -362,7 +364,16 @@ export default function PlayerScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
         <View style={styles.metaSection}>
-          <SansText style={styles.channelName}>{current.video.channelTitle}</SansText>
+          <View style={styles.channelRow}>
+            <SansText style={styles.channelName}>{current.video.channelTitle}</SansText>
+            <TouchableOpacity
+              onPress={() => setChannelSheetVisible(true)}
+              activeOpacity={0.6}
+              style={styles.channelMenuButton}
+            >
+              <Feather name="info" size={16} color={colors.warmMid} />
+            </TouchableOpacity>
+          </View>
           <SerifText style={styles.videoTitle}>{current.video.title}</SerifText>
           {current.video.publishedAt && (
             <SansText style={styles.metaText}>Uploaded on {formatDate(current.video.publishedAt)}</SansText>
@@ -601,7 +612,7 @@ export default function PlayerScreen() {
             </SansText>
             <View style={styles.modalBtns}>
               <TouchableOpacity style={[styles.modalBtn, styles.modalBtnCancel]} onPress={() => setShowSkipModal(false)}>
-                <SansText style={styles.modalBtnCancelText}>Never mind.</SansText>
+                <SansText style={styles.modalBtnCancelText}>Never mind</SansText>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.modalBtn, styles.modalBtnConfirm]} onPress={handleSkipConfirm}>
                 <SansText style={styles.modalBtnConfirmText}>Skip this video</SansText>
@@ -635,6 +646,16 @@ export default function PlayerScreen() {
         </View>
       </Modal>
 
+      {current && (
+        <ChannelSheet
+          visible={channelSheetVisible}
+          onClose={() => setChannelSheetVisible(false)}
+          ytChannelId={current.video.ytChannelId}
+          channelTitle={current.video.channelTitle}
+          channelThumbnailUrl={current.video.thumbnailUrl}
+        />
+      )}
+
       <Toast message={toastMsg} visible={toastVisible} />
     </SafeAreaView>
   );
@@ -648,7 +669,10 @@ function makeStyles(c: ColorPalette) {
     navLockup:           { flexDirection: "row", alignItems: "center", gap: 6 },
     scrollContent:       { paddingBottom: 60 },
     metaSection:         { padding: Spacing.md },
-    channelName:         { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: Spacing.xs },
+    channelRow:          { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: Spacing.xs },
+    channelName:         { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 0.7, flex: 1 },
+    channelMenuButton:   { padding: Spacing.xs, marginLeft: Spacing.sm },
+    channelMenuIcon:     { fontSize: 18, color: c.warmMid },
     videoTitle:          { fontSize: FontSize.lg, lineHeight: 26 },
     metaRow:             { flexDirection: "row", gap: Spacing.md, marginTop: Spacing.xs },
     metaText:            { fontSize: FontSize.xxs, color: c.warmMid },
