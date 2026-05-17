@@ -111,6 +111,13 @@ const ARTICLES: Record<string, ArticleBody> = {
   ],
 };
 
+const KEW_PLUS_ARTICLES = new Set([
+  "Managing multiple queues",
+  "Adding or editing a Journal entry",
+  "Understanding your Insights",
+  "Setting a Watch Limit",
+]);
+
 const SECTIONS = [
   {
     title: "Getting started",
@@ -118,27 +125,19 @@ const SECTIONS = [
   },
   {
     title: "Managing your queue",
-    items: ["How do skips work?", "Arranging your queue", "Shuffling your queue", "Removing videos from your queue", "Importing from a playlist", "Sharing your queue", "Liking or commenting on a video"],
+    items: ["How do skips work?", "Arranging your queue", "Shuffling your queue", "Managing multiple queues", "Removing videos from your queue", "Importing from a playlist", "Sharing your queue"],
   },
   {
     title: "Browsing & exploring",
     items: ["Browsing your subscribed channels", "Using the Explore tab", "What is the 'Surprise me!' button?"],
   },
   {
-    title: "Account & settings",
-    items: ["Updating your Kew profile", "Changing the app theme", "Signing out"],
+    title: "Interacting & Reflecting",
+    items: ["Liking or commenting on a video", "Adding or editing a Journal entry"],
   },
-];
-
-const KEW_PLUS_SECTIONS = [
   {
-    title: "Kew+",
-    items: [
-      "Managing multiple queues",
-      "Adding or editing a Journal entry",
-      "Understanding your Insights",
-      "Setting a Watch Limit",
-    ],
+    title: "Account & settings",
+    items: ["Updating your Kew profile", "Understanding your Insights", "Setting a Watch Limit", "Changing the app theme", "Signing out"],
   },
 ];
 
@@ -184,68 +183,41 @@ export default function HelpScreen() {
       <Divider />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {SECTIONS.map((section) => (
-          <View key={section.title} style={styles.section}>
-            <SansText style={styles.sectionTitle}>{section.title}</SansText>
-            {section.items.map((item, i) => {
-              const isOpen = openArticle === item;
-              const hasArticle = !!ARTICLES[item];
-              const isLast = i === section.items.length - 1;
-              return (
-                <View key={item}>
-                  <TouchableOpacity
-                    onPress={() => hasArticle && toggleArticle(item)}
-                    activeOpacity={hasArticle ? 0.6 : 1}
-                    style={[styles.row, !isOpen && !isLast && styles.rowBorder]}
-                  >
-                    <SansText style={styles.rowText}>{item}</SansText>
-                    <Feather
-                      name={isOpen ? "chevron-down" : "chevron-right"}
-                      size={15}
-                      color={colors.warmMid}
-                    />
-                  </TouchableOpacity>
-                  {isOpen && hasArticle && (
-                    <View style={[styles.articleContainer, !isLast && styles.rowBorder]}>
-                      <ArticleBody body={ARTICLES[item]} styles={styles} />
-                    </View>
-                  )}
-                </View>
-              );
-            })}
-          </View>
-        ))}
-        {user?.plan === "pro" && KEW_PLUS_SECTIONS.map((section) => (
-          <View key={section.title} style={styles.section}>
-            <SansText style={styles.sectionTitle}>{section.title}</SansText>
-            {section.items.map((item, i) => {
-              const isOpen = openArticle === item;
-              const hasArticle = !!ARTICLES[item];
-              const isLast = i === section.items.length - 1;
-              return (
-                <View key={item}>
-                  <TouchableOpacity
-                    onPress={() => hasArticle && toggleArticle(item)}
-                    activeOpacity={hasArticle ? 0.6 : 1}
-                    style={[styles.row, !isOpen && !isLast && styles.rowBorder]}
-                  >
-                    <SansText style={styles.rowText}>{item}</SansText>
-                    <Feather
-                      name={isOpen ? "chevron-down" : "chevron-right"}
-                      size={15}
-                      color={colors.warmMid}
-                    />
-                  </TouchableOpacity>
-                  {isOpen && hasArticle && (
-                    <View style={[styles.articleContainer, !isLast && styles.rowBorder]}>
-                      <ArticleBody body={ARTICLES[item]} styles={styles} />
-                    </View>
-                  )}
-                </View>
-              );
-            })}
-          </View>
-        ))}
+        {SECTIONS.map((section) => {
+          const visibleItems = section.items.filter(item => !KEW_PLUS_ARTICLES.has(item) || user?.plan === "pro");
+          if (visibleItems.length === 0) return null;
+          return (
+            <View key={section.title} style={styles.section}>
+              <SansText style={styles.sectionTitle}>{section.title}</SansText>
+              {visibleItems.map((item, i) => {
+                const isOpen = openArticle === item;
+                const hasArticle = !!ARTICLES[item];
+                const isLast = i === visibleItems.length - 1;
+                return (
+                  <View key={item}>
+                    <TouchableOpacity
+                      onPress={() => hasArticle && toggleArticle(item)}
+                      activeOpacity={hasArticle ? 0.6 : 1}
+                      style={[styles.row, !isOpen && !isLast && styles.rowBorder]}
+                    >
+                      <SansText style={styles.rowText}>{item}</SansText>
+                      <Feather
+                        name={isOpen ? "chevron-down" : "chevron-right"}
+                        size={15}
+                        color={colors.warmMid}
+                      />
+                    </TouchableOpacity>
+                    {isOpen && hasArticle && (
+                      <View style={[styles.articleContainer, !isLast && styles.rowBorder]}>
+                        <ArticleBody body={ARTICLES[item]} styles={styles} />
+                      </View>
+                    )}
+                  </View>
+                );
+              })}
+            </View>
+          );
+        })}
       </ScrollView>
     </SafeAreaView>
   );
