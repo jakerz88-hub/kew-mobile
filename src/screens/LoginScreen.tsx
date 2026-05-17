@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import {
   View, Text, TextInput, StyleSheet, SafeAreaView, ScrollView,
   TouchableOpacity, ActivityIndicator, Platform, KeyboardAvoidingView,
@@ -8,7 +8,8 @@ import * as AuthSession from "expo-auth-session";
 import * as AppleAuthentication from "expo-apple-authentication";
 import Constants from "expo-constants";
 import { supabase } from "../services/supabase";
-import { Colors, FontFamily, FontSize, Spacing } from "../types/theme";
+import { ColorPalette, FontFamily, FontSize, Spacing } from "../types/theme";
+import { useTheme } from "../contexts/ThemeContext";
 import { KewLogo, SansText } from "../components/UI";
 import { LogoMark } from "../components/TabIcons";
 
@@ -18,6 +19,9 @@ WebBrowser.maybeCompleteAuthSession();
 type EmailStep = "idle" | "enter_email" | "enter_code";
 
 export default function LoginScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   // Google / Apple loading
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState<string | null>(null);
@@ -243,7 +247,7 @@ export default function LoginScreen() {
               activeOpacity={0.8}
             >
               {loading
-                ? <ActivityIndicator color={Colors.cream} />
+                ? <ActivityIndicator color={colors.cream} />
                 : (
                   <>
                     <Text style={styles.googleIcon}>G</Text>
@@ -283,7 +287,7 @@ export default function LoginScreen() {
                   value={emailInput}
                   onChangeText={setEmailInput}
                   placeholder="your@email.com"
-                  placeholderTextColor={Colors.warmMid}
+                  placeholderTextColor={colors.warmMid}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -299,7 +303,7 @@ export default function LoginScreen() {
                   activeOpacity={0.8}
                 >
                   {emailLoading
-                    ? <ActivityIndicator color={Colors.cream} size="small" />
+                    ? <ActivityIndicator color={colors.cream} size="small" />
                     : <SansText style={styles.emailSubmitBtnText}>Send code</SansText>
                   }
                 </TouchableOpacity>
@@ -320,7 +324,7 @@ export default function LoginScreen() {
                   value={codeInput}
                   onChangeText={setCodeInput}
                   placeholder="000000"
-                  placeholderTextColor={Colors.warmMid}
+                  placeholderTextColor={colors.warmMid}
                   keyboardType="number-pad"
                   maxLength={6}
                   onSubmitEditing={handleVerifyCode}
@@ -334,7 +338,7 @@ export default function LoginScreen() {
                   activeOpacity={0.8}
                 >
                   {emailLoading
-                    ? <ActivityIndicator color={Colors.cream} size="small" />
+                    ? <ActivityIndicator color={colors.cream} size="small" />
                     : <SansText style={styles.emailSubmitBtnText}>Sign in</SansText>
                   }
                 </TouchableOpacity>
@@ -361,47 +365,49 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container:    { flex: 1, backgroundColor: Colors.cream },
-  inner:        { flexGrow: 1, paddingHorizontal: Spacing.lg, justifyContent: "space-between", paddingVertical: Spacing.xl },
-  logoSection:  { alignItems: "center", paddingTop: Spacing.xxl, gap: Spacing.md },
-  logoLockup:   { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
-  tagline:      { fontSize: FontSize.lg, color: Colors.warmMid, textAlign: "center", lineHeight: 28, fontFamily: FontFamily.sansLight },
-  howItWorks:   { gap: Spacing.lg, paddingHorizontal: Spacing.sm },
-  howItem:      { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.md },
-  howIcon:      { fontSize: 22, textAlign: "center", marginTop: 1 },
-  howText:      { fontSize: FontSize.md, color: Colors.warmMid, lineHeight: 22, textAlign: "center" },
-  ctaSection:   { gap: Spacing.md, alignSelf: "center", width: "100%", maxWidth: 340 },
+function makeStyles(c: ColorPalette) {
+  return StyleSheet.create({
+    container:    { flex: 1, backgroundColor: c.cream },
+    inner:        { flexGrow: 1, paddingHorizontal: Spacing.lg, justifyContent: "space-between", paddingVertical: Spacing.xl },
+    logoSection:  { alignItems: "center", paddingTop: Spacing.xxl, gap: Spacing.md },
+    logoLockup:   { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
+    tagline:      { fontSize: FontSize.lg, color: c.warmMid, textAlign: "center", lineHeight: 28, fontFamily: FontFamily.sansLight },
+    howItWorks:   { gap: Spacing.lg, paddingHorizontal: Spacing.sm },
+    howItem:      { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.md },
+    howIcon:      { fontSize: 22, textAlign: "center", marginTop: 1 },
+    howText:      { fontSize: FontSize.md, color: c.warmMid, lineHeight: 22, textAlign: "center" },
+    ctaSection:   { gap: Spacing.md, alignSelf: "center", width: "100%", maxWidth: 340 },
 
-  // Google
-  googleBtn:      { backgroundColor: Colors.ink, borderRadius: 999, height: 52, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.sm },
-  googleIcon:     { fontFamily: FontFamily.serif, fontSize: FontSize.md, color: Colors.cream },
-  googleBtnLabel: { fontFamily: FontFamily.sansMedium, fontSize: FontSize.sm, color: Colors.cream, letterSpacing: 0.3 },
+    // Google
+    googleBtn:      { backgroundColor: c.accent, borderRadius: 999, height: 52, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.sm },
+    googleIcon:     { fontFamily: FontFamily.serif, fontSize: FontSize.md, color: c.cream },
+    googleBtnLabel: { fontFamily: FontFamily.sansMedium, fontSize: FontSize.sm, color: c.cream, letterSpacing: 0.3 },
 
-  // Apple
-  appleBtn: { height: 46, width: "100%" },
+    // Apple
+    appleBtn: { height: 46, width: "100%" },
 
-  // Email toggle link
-  emailToggle:     { alignItems: "center", paddingVertical: 2 },
-  emailToggleText: { fontSize: FontSize.xs, color: Colors.warmMid, fontFamily: FontFamily.sans },
+    // Email toggle link
+    emailToggle:     { alignItems: "center", paddingVertical: 2 },
+    emailToggleText: { fontSize: FontSize.xs, color: c.warmMid, fontFamily: FontFamily.sans },
 
-  // Email form (shared by enter_email and enter_code steps)
-  emailForm:     { gap: Spacing.sm },
-  emailSentHint: { fontSize: FontSize.xs, color: Colors.warmMid, textAlign: "center" },
-  emailInput:    {
-    height: 46, borderWidth: 1.5, borderColor: Colors.warmMid, borderRadius: 999,
-    paddingHorizontal: Spacing.md, fontSize: FontSize.sm, fontFamily: FontFamily.sans,
-    color: Colors.ink, backgroundColor: Colors.cream, textAlign: "left",
-  },
-  codeInput:     { textAlign: "center", letterSpacing: 6, fontSize: FontSize.md },
-  emailSubmitBtn:         { backgroundColor: Colors.ink, borderRadius: 999, height: 46, alignItems: "center", justifyContent: "center" },
-  emailSubmitBtnDisabled: { opacity: 0.45 },
-  emailSubmitBtnText:     { fontFamily: FontFamily.sansMedium, fontSize: FontSize.sm, color: Colors.cream, letterSpacing: 0.3 },
-  emailFooterRow:  { flexDirection: "row", justifyContent: "space-between" },
-  emailCancelBtn:  { alignItems: "center" },
-  emailCancelText: { fontSize: FontSize.xs, color: Colors.warmMid },
+    // Email form (shared by enter_email and enter_code steps)
+    emailForm:     { gap: Spacing.sm },
+    emailSentHint: { fontSize: FontSize.xs, color: c.warmMid, textAlign: "center" },
+    emailInput:    {
+      height: 46, borderWidth: 1.5, borderColor: c.warmMid, borderRadius: 999,
+      paddingHorizontal: Spacing.md, fontSize: FontSize.sm, fontFamily: FontFamily.sans,
+      color: c.ink, backgroundColor: c.cream, textAlign: "left",
+    },
+    codeInput:     { textAlign: "center", letterSpacing: 6, fontSize: FontSize.md },
+    emailSubmitBtn:         { backgroundColor: c.ink, borderRadius: 999, height: 46, alignItems: "center", justifyContent: "center" },
+    emailSubmitBtnDisabled: { opacity: 0.45 },
+    emailSubmitBtnText:     { fontFamily: FontFamily.sansMedium, fontSize: FontSize.sm, color: c.cream, letterSpacing: 0.3 },
+    emailFooterRow:  { flexDirection: "row", justifyContent: "space-between" },
+    emailCancelBtn:  { alignItems: "center" },
+    emailCancelText: { fontSize: FontSize.xs, color: c.warmMid },
 
-  // Shared
-  errorText:   { color: Colors.accent, fontSize: FontSize.xs, textAlign: "center" },
-  disclaimer:  { fontSize: FontSize.xxs, color: Colors.queued, textAlign: "center", lineHeight: 16 },
-});
+    // Shared
+    errorText:   { color: c.accent, fontSize: FontSize.xs, textAlign: "center" },
+    disclaimer:  { fontSize: FontSize.xxs, color: c.queued, textAlign: "center", lineHeight: 16 },
+  });
+}
