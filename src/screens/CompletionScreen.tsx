@@ -74,14 +74,14 @@ export default function CompletionScreen() {
 
         {nextEntry ? (
           <View style={styles.nextSection}>
-            <SansText style={styles.nextLabel}>Up Next - Ready</SansText>
+            <SansText style={styles.nextLabel}>Up next</SansText>
             <TouchableOpacity style={styles.nextCard} onPress={() => navigation.replace("Player")} activeOpacity={0.85}>
               <View style={styles.nextThumbArea}>
                 {nextEntry.video.thumbnailUrl
                   ? <Image source={{ uri: nextEntry.video.thumbnailUrl }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
                   : <ThumbPlaceholder seed={nextEntry.video.ytVideoId} style={StyleSheet.absoluteFillObject} />}
                 <View style={styles.readyTag}>
-                  <SansText style={styles.readyTagText}>Ready to watch the next one?</SansText>
+                  <SansText style={styles.readyTagText}>What would you like to do now?</SansText>
                 </View>
               </View>
               <View style={styles.nextInfo}>

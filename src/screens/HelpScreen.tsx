@@ -103,7 +103,7 @@ const ARTICLES: Record<string, ArticleBody> = {
   "Understanding your Insights": [
     "The Insights screen shows your watching data across three time windows: this week, this month, and this year. Switch between them at the top of the screen.",
     "The stats shown are videos watched, total watch time, completion rate, and skips used. Each includes a comparison to the previous period so you can see how your habits are shifting. A daily bar chart below breaks your watch time down day by day.",
-    "Insights are a mirror, not a report card. There are no scores, no streaks, and no comparisons to other users.",
+    "No leaderboards, no comparisons to other users.",
   ],
   "Setting a Watch Limit": [
     "Watch limits are personal targets you set for yourself on the Insights & Limits screen. You can set limits on daily videos watched, daily watch time, or consecutive videos watched.",

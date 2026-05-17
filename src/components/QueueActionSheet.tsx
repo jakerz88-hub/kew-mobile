@@ -202,7 +202,7 @@ function makeStyles(c: ColorPalette) {
     btnCancel:             { backgroundColor: c.divider },
     btnCancelText:         { fontSize: FontSize.sm, color: c.ink },
     btnConfirmText:        { fontSize: FontSize.sm, color: c.cream, fontFamily: FontFamily.sansMedium },
-    btnDestructive:        { backgroundColor: c.accent },
+    btnDestructive:        { backgroundColor: c.ink },
     errorMsg:              { fontSize: FontSize.xs, color: c.accent, textAlign: "center", marginTop: Spacing.xs },
   });
 }
