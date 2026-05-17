@@ -172,6 +172,7 @@ export function AvatarBubble({
 }
 
 export function Toast({ message, visible }: { message: string; visible: boolean }) {
+  const { colors } = useTheme();
   const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -185,10 +186,9 @@ export function Toast({ message, visible }: { message: string; visible: boolean 
   }, [visible]);
 
   if (!visible) return null;
-  // Toast is intentionally always dark — it's a floating overlay, not a surface
   return (
-    <Animated.View style={[staticStyles.toast, { opacity }]}>
-      <SansText style={staticStyles.toastText}>{message}</SansText>
+    <Animated.View style={[staticStyles.toast, { opacity, backgroundColor: colors.ink }]}>
+      <SansText style={[staticStyles.toastText, { color: colors.cream }]}>{message}</SansText>
     </Animated.View>
   );
 }
@@ -259,12 +259,11 @@ const staticStyles = StyleSheet.create({
   errorActionText: { fontSize: FontSize.xs, fontFamily: FontFamily.sansMedium },
   avatarBubbleBg:      { alignItems: "center", justifyContent: "center" },
   avatarBubbleInitial: { fontFamily: FontFamily.sansMedium },
-  // Toast stays intentionally dark in both modes
   toast: {
     position: "absolute", bottom: 32, left: Spacing.lg, right: Spacing.lg,
-    backgroundColor: "#1A1714", borderRadius: Radius.md,
+    borderRadius: Radius.md,
     paddingVertical: Spacing.sm + 2, paddingHorizontal: Spacing.md,
     zIndex: 99,
   },
-  toastText: { color: "#F5F0E8", fontSize: FontSize.xs, textAlign: "center", lineHeight: 18 },
+  toastText: { fontSize: FontSize.xs, textAlign: "center", lineHeight: 18 },
 });
