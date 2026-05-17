@@ -342,11 +342,11 @@ function makeStyles(c: ColorPalette) {
     },
     // Android action sheet modal
     modalOverlay: {
-      flex: 1, backgroundColor: "rgba(0,0,0,0.4)",
+      flex: 1, backgroundColor: "rgba(26,23,20,0.5)",
       justifyContent: "flex-end",
     },
     modalCard: {
-      backgroundColor: c.cardBg, borderTopLeftRadius: 16, borderTopRightRadius: 16,
+      backgroundColor: c.cardBg, borderTopLeftRadius: Radius.lg, borderTopRightRadius: Radius.lg,
       paddingBottom: Spacing.lg,
     },
     modalQueueName: {
