@@ -136,7 +136,7 @@ export default function HistoryScreen() {
                   <Feather name="info" size={14} color={KEW_PLUS_GOLD} />
                 </View>
                 <SansText style={styles.cutoffText}>
-                  You're seeing the last 30 days. Kew+ unlocks your full watch history.
+                  With Kew+, you can access your full watch history beyond 30 days.
                 </SansText>
               </View>
               <TouchableOpacity
