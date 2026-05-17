@@ -86,7 +86,7 @@ function makeStyles(c: ColorPalette) {
     bulletDot:    { width: 6, height: 6, borderRadius: 3, backgroundColor: GOLD },
     bulletText:   { fontSize: FontSize.sm, color: c.ink },
     exploreBtn:   { width: "100%", backgroundColor: GOLD, borderRadius: Radius.pill, paddingVertical: Spacing.md - 2, alignItems: "center", justifyContent: "center", marginTop: Spacing.lg },
-    exploreBtnText:{ fontSize: FontSize.sm, color: "#FFFFFF", fontFamily: FontFamily.sansMedium, letterSpacing: 0.3 },
+    exploreBtnText:{ fontSize: FontSize.sm, color: c.buttonText, fontFamily: FontFamily.sansMedium, letterSpacing: 0.3 },
     notNowBtn:    { marginTop: Spacing.sm, paddingVertical: Spacing.sm, alignItems: "center" },
     notNowText:   { fontSize: FontSize.xs, color: c.warmMid, fontFamily: FontFamily.sansMedium },
   });
