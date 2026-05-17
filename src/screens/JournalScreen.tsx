@@ -860,7 +860,7 @@ function ReaddCircle({
           readded && { color: "white", fontSize: FontSize.sm, marginTop: 0 },
         ]}
       >
-        {adding ? "..." : readded ? "✓" : "↺"}
+        {adding ? "..." : readded ? "✓" : "+"}
       </SansText>
     </TouchableOpacity>
   );
