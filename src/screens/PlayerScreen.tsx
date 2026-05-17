@@ -173,13 +173,13 @@ export default function PlayerScreen() {
         let hit: { title: string; body: string } | null = null;
         if (l.dailyVideos != null && l.todayVideos >= l.dailyVideos) {
           hit = { title: "Daily video limit reached",
-                  body: `You've watched ${l.todayVideos} videos today, your personal limit. Reward yourself by taking a break!` };
+                  body: `You've watched ${l.todayVideos} videos today, your personal limit. What would you like to do now?` };
         } else if (l.dailyMinutes != null && l.todayMinutes >= l.dailyMinutes) {
           hit = { title: "Daily watch time reached",
-                  body: `You've hit your personal limit of ${l.dailyMinutes} minutes today. Reward yourself by taking a break!` };
+                  body: `You've hit your personal limit of ${l.dailyMinutes} minutes today. Your time is your own.` };
         } else if (l.consecutiveVideos != null && l.consecutiveVideosNow >= l.consecutiveVideos) {
-          hit = { title: "Time for a break",
-                  body: `You've watched ${l.consecutiveVideosNow} videos in a row, your personal limit. Reward yourself by taking a break!` };
+          hit = { title: "Consecutive video limit reached",
+                  body: `You've watched ${l.consecutiveVideosNow} videos in a row, your personal limit. A good place to stop.` };
         }
         if (hit) {
           setLimitHit(hit);
