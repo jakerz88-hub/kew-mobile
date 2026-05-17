@@ -23,7 +23,7 @@ export default function OnboardingScreen({ onDone }: Props) {
         <View style={styles.centerSection}>
           <SerifText style={styles.title}>Watch intentionally.</SerifText>
           <SansText style={styles.subtitle}>
-            Kew is a calm place to watch videos from the creators you actually like.
+            Kew is a distraction-free place to watch videos from the creators you actually like.
             No algorithm. No autoplay. Just your queue.
           </SansText>
         </View>
