@@ -26,13 +26,14 @@ export default function CompletionScreen() {
   useEffect(() => { fetchUser().then(() => setUserLoaded(true)); }, []);
 
   const watchedSecs: number = route.params?.watchedSecs ?? 0;
+  const skipsBefore: number = route.params?.skipsBefore ?? 0;
   const completedVideo: CompletedVideoParam | undefined = route.params?.completedVideo;
   // The backend promotes the next entry to "watching" on completion, so the
   // up-next card should show queue.current — not the first pending, which
   // would be one entry too far ahead.
   const nextEntry = queue?.current ?? queue?.entries.find(e => e.status === "watching") ?? null;
   const watchedDisplay = watchedSecs > 0 ? formatDuration(watchedSecs) : "0:00";
-  const earnedSkip = userLoaded && user != null && user.skipsRemaining < user.skipsMax;
+  const earnedSkip = userLoaded && user != null && user.skipsRemaining > skipsBefore;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -44,7 +45,7 @@ export default function CompletionScreen() {
           <SerifText style={styles.heroTitle}>Complete!</SerifText>
           {earnedSkip && (
             <SansText style={styles.heroSub} numberOfLines={3}>
-              You earned 1 skip!
+              You earned a skip back.
             </SansText>
           )}
         </View>

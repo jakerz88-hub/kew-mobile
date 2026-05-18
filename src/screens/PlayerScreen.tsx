@@ -227,12 +227,14 @@ export default function PlayerScreen() {
       const playerSecs = await playerRef.current?.getCurrentTime().catch(() => null);
       const watchedSecs = playerSecs != null ? Math.floor(playerSecs) : (current.video.durationSecs ?? 0);
       suppressFinalSaveRef.current = true;
+      const skipsBefore = user?.skipsRemaining ?? 0;
       await recordEvent("completed", watchedSecs);
       await updateProgress(current.id, watchedSecs);
       markEntryCompleted(current.id);
       await fetchQueue();
       navigation.replace("Completion", {
         watchedSecs,
+        skipsBefore,
         completedVideo: {
           ytVideoId: current.video.ytVideoId,
           title: current.video.title,
@@ -240,7 +242,7 @@ export default function PlayerScreen() {
         },
       });
     }
-  }, [current, recordEvent]);
+  }, [current, recordEvent, user]);
 
   const handleMarkDone = useCallback(async () => {
     if (!current) return;
@@ -249,12 +251,14 @@ export default function PlayerScreen() {
     const watchedSecs = playerSecs != null ? Math.floor(playerSecs) : (current.video.durationSecs ?? 0);
     try {
       suppressFinalSaveRef.current = true;
+      const skipsBefore = user?.skipsRemaining ?? 0;
       await recordEvent("completed", watchedSecs);
       await updateProgress(current.id, current.video.durationSecs ?? watchedSecs);
       markEntryCompleted(current.id);
       await fetchQueue();
       navigation.replace("Completion", {
         watchedSecs,
+        skipsBefore,
         completedVideo: {
           ytVideoId: current.video.ytVideoId,
           title: current.video.title,
