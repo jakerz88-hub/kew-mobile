@@ -16,6 +16,10 @@ interface BottomSheetProps {
   onClose: () => void;
   children: React.ReactNode;
   handle?: boolean;
+  /** Spacing below the drag handle. Tight (4) for input-bearing sheets
+   *  whose first child has its own paddingTop; default (Spacing.md) for
+   *  simple sheets that need breathing room before the content. */
+  handleMarginBottom?: number;
   keyboardAvoiding?: boolean;
   maxHeightPct?: number;
   contentStyle?: ViewStyle;
@@ -26,6 +30,7 @@ export function BottomSheet({
   onClose,
   children,
   handle = true,
+  handleMarginBottom = Spacing.md,
   keyboardAvoiding = true,
   maxHeightPct = 0.85,
   contentStyle,
@@ -98,7 +103,7 @@ export function BottomSheet({
       <TouchableWithoutFeedback>
         <View style={[staticStyles.content, contentStyle]}>
           {handle && (
-            <View style={[staticStyles.handle, { backgroundColor: colors.divider }]} />
+            <View style={[staticStyles.handle, { backgroundColor: colors.divider, marginBottom: handleMarginBottom }]} />
           )}
           {children}
         </View>
@@ -144,7 +149,6 @@ const staticStyles = StyleSheet.create({
     width: 36,
     height: 4,
     borderRadius: 2,
-    marginBottom: Spacing.md,
     alignSelf: "center",
   },
 });

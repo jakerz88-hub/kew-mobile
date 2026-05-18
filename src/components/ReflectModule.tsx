@@ -3,30 +3,23 @@
  * journal entry while watching a video. Persists via POST /v1/journal/entries
  * (api.createJournalEntry).
  *
- * Modeled on InteractModule: identical animation contract (translateY 0→1,
- * backdrop fade), identical KeyboardAvoidingView wrapper, identical drag
- * handle and header layout. Re-uses InteractModule's exported
- * `formatTimestamp` helper rather than redefining it.
- *
  * Behavior contract owned by the parent (PlayerScreen):
  *   - Pause-on-open / resume-on-close (parent calls setPlaying(false) before
  *     toggling visible=true and setPlaying(true) inside onClose).
  *   - currentTimestamp is captured by the parent at the moment the sheet
  *     opens — Reflect doesn't poll the player.
+ *
+ * Sheet shell (scrim + corner radius + drag handle + slide animation +
+ * KeyboardAvoidingView) is delegated to <BottomSheet>. This file owns the
+ * Reflect-specific content and the entry-save state machine.
  */
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Animated,
-  Easing,
   Keyboard,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
@@ -34,15 +27,10 @@ import Svg, { Path } from "react-native-svg";
 import { ColorPalette, FontFamily, FontSize, Radius } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
 import { SansText, ErrorBanner } from "./UI";
+import { BottomSheet } from "./BottomSheet";
 import { formatTimestamp } from "./InteractModule";
 import { api } from "../services/api";
 
-
-// ── Animation constants — match InteractModule for visual consistency ─────────
-const SHEET_ANIM_IN_MS  = 280;
-const SHEET_ANIM_OUT_MS = 220;
-const BACKDROP_OPACITY  = 0.35;
-const SHEET_EASING      = Easing.bezier(0.32, 0.72, 0, 1);
 
 const ENTRY_MAX_CHARS = 750;
 
@@ -92,10 +80,7 @@ export function ReflectModule({
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
-  const translateY = useRef(new Animated.Value(1)).current;     // 1 = off-screen
-  const backdropOpacity = useRef(new Animated.Value(0)).current;
   const inputRef = useRef<TextInput>(null);
-  const [mounted, setMounted] = useState(visible);
 
   const [text, setText] = useState("");
   const [chipTapped, setChipTapped] = useState(false);
@@ -104,44 +89,19 @@ export function ReflectModule({
 
   const tsLabel = formatTimestamp(currentTimestamp, durationSecs);
 
+  // Reset every time the sheet opens — a stale draft from the previous
+  // video would be a bad surprise.
   useEffect(() => {
     if (visible) {
-      setMounted(true);
-      // Reset every time the sheet opens — a stale draft from the previous
-      // video would be a bad surprise.
       setText("");
       setChipTapped(false);
       setError(null);
-      translateY.setValue(1);
-      backdropOpacity.setValue(0);
-      Animated.parallel([
-        Animated.timing(translateY, {
-          toValue: 0, duration: SHEET_ANIM_IN_MS, easing: SHEET_EASING, useNativeDriver: true,
-        }),
-        Animated.timing(backdropOpacity, {
-          toValue: BACKDROP_OPACITY, duration: 200, useNativeDriver: true,
-        }),
-      ]).start(() => {
-        // Focus only after the slide-in completes — autoFocus races the
-        // keyboard against the slide and makes the sheet feel laggy on open.
-        inputRef.current?.focus();
-      });
     }
   }, [visible]);
 
-  const runClose = () => {
+  const requestClose = () => {
     Keyboard.dismiss();
-    Animated.parallel([
-      Animated.timing(translateY, {
-        toValue: 1, duration: SHEET_ANIM_OUT_MS, easing: SHEET_EASING, useNativeDriver: true,
-      }),
-      Animated.timing(backdropOpacity, {
-        toValue: 0, duration: SHEET_ANIM_OUT_MS, useNativeDriver: true,
-      }),
-    ]).start(() => {
-      setMounted(false);
-      onClose();
-    });
+    onClose();
   };
 
   /**
@@ -168,7 +128,7 @@ export function ReflectModule({
       const ts = chipTapped ? Math.max(0, Math.floor(currentTimestamp)) : null;
       await api.createJournalEntry(ytVideoId, trimmed, ts);
       onSaved?.();
-      runClose();
+      requestClose();
     } catch (e: any) {
       setError(e?.message ?? "Couldn't save entry.");
     } finally {
@@ -176,157 +136,120 @@ export function ReflectModule({
     }
   };
 
-  const sheetTranslate = translateY.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 600],
-  });
-
-  if (!mounted && !visible) return null;
-
   const canSave = text.trim().length > 0 && !saving;
 
   return (
-    <Modal visible={mounted} transparent animationType="none" onRequestClose={runClose}>
-      <View style={styles.root}>
-        <TouchableWithoutFeedback onPress={runClose}>
-          <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]} />
-        </TouchableWithoutFeedback>
-
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          pointerEvents="box-none"
-          style={styles.kbContainer}
-        >
-          <Animated.View
-            style={[styles.sheet, { transform: [{ translateY: sheetTranslate }] }]}
-            accessibilityViewIsModal
-            accessibilityLabel={`Reflect on ${videoTitle}`}
+    <BottomSheet
+      visible={visible}
+      onClose={requestClose}
+      handleMarginBottom={4}
+      contentStyle={styles.content}
+    >
+      <View
+        accessibilityViewIsModal
+        accessibilityLabel={`Reflect on ${videoTitle}`}
+      >
+        <View style={styles.headerRow}>
+          <SansText style={styles.headerTitle}>Reflect</SansText>
+          <TouchableOpacity
+            onPress={requestClose}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            accessibilityRole="button"
+            accessibilityLabel="Close"
           >
-            <View style={styles.handle} />
+            <CloseIcon color={colors.queued} />
+          </TouchableOpacity>
+        </View>
 
-            <View style={styles.headerRow}>
-              <SansText style={styles.headerTitle}>Reflect</SansText>
-              <TouchableOpacity
-                onPress={runClose}
-                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                accessibilityRole="button"
-                accessibilityLabel="Close"
+        <SansText style={styles.subheader}>
+          Capture a thought for your Journal.
+        </SansText>
+
+        <View style={styles.fullDivider} />
+
+        {error && (
+          <ErrorBanner message={error} onDismiss={() => setError(null)} />
+        )}
+
+        <View style={styles.body}>
+          <TextInput
+            ref={inputRef}
+            autoFocus
+            style={styles.textarea}
+            placeholder="What are you thinking about…"
+            placeholderTextColor={colors.queued}
+            value={text}
+            onChangeText={setText}
+            multiline
+            maxLength={ENTRY_MAX_CHARS}
+            textAlignVertical="top"
+          />
+
+          <View style={styles.footerRow}>
+            <TouchableOpacity
+              onPress={handleChipTap}
+              disabled={chipTapped}
+              activeOpacity={0.8}
+              style={[
+                styles.tsChip,
+                chipTapped ? styles.tsChipOn : styles.tsChipOff,
+              ]}
+              accessibilityRole="button"
+              accessibilityState={{ selected: chipTapped, disabled: chipTapped }}
+              accessibilityLabel={
+                chipTapped
+                  ? `Timestamp ${tsLabel} added`
+                  : `Add timestamp ${tsLabel}`
+              }
+            >
+              <ClockIcon color={chipTapped ? colors.green : colors.ink} />
+              <SansText
+                style={[
+                  styles.tsChipText,
+                  { color: chipTapped ? colors.green : colors.ink },
+                ]}
               >
-                <CloseIcon color={colors.queued} />
-              </TouchableOpacity>
-            </View>
+                {chipTapped ? `${tsLabel} added` : `${tsLabel} +`}
+              </SansText>
+            </TouchableOpacity>
 
-            <SansText style={styles.subheader}>
-              Capture a thought for your Journal.
-            </SansText>
+            <TouchableOpacity
+              onPress={handleSave}
+              disabled={!canSave}
+              activeOpacity={0.8}
+              style={[
+                styles.saveBtn,
+                { backgroundColor: colors.accent },
+                !canSave && { opacity: 0.4 },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel="Save entry"
+            >
+              <SansText style={[styles.saveBtnText, { color: colors.buttonText }]}>
+                {saving ? "Saving…" : "Save entry"}
+              </SansText>
+            </TouchableOpacity>
+          </View>
+        </View>
 
-            <View style={styles.fullDivider} />
-
-            {error && (
-              <ErrorBanner message={error} onDismiss={() => setError(null)} />
-            )}
-
-            <View style={styles.body}>
-              <TextInput
-                ref={inputRef}
-                style={styles.textarea}
-                placeholder="What are you thinking about…"
-                placeholderTextColor={colors.queued}
-                value={text}
-                onChangeText={setText}
-                multiline
-                maxLength={ENTRY_MAX_CHARS}
-                textAlignVertical="top"
-              />
-
-              <View style={styles.footerRow}>
-                <TouchableOpacity
-                  onPress={handleChipTap}
-                  disabled={chipTapped}
-                  activeOpacity={0.8}
-                  style={[
-                    styles.tsChip,
-                    chipTapped ? styles.tsChipOn : styles.tsChipOff,
-                  ]}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: chipTapped, disabled: chipTapped }}
-                  accessibilityLabel={
-                    chipTapped
-                      ? `Timestamp ${tsLabel} added`
-                      : `Add timestamp ${tsLabel}`
-                  }
-                >
-                  <ClockIcon color={chipTapped ? colors.green : colors.ink} />
-                  <SansText
-                    style={[
-                      styles.tsChipText,
-                      { color: chipTapped ? colors.green : colors.ink },
-                    ]}
-                  >
-                    {chipTapped ? `${tsLabel} added` : `${tsLabel} +`}
-                  </SansText>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={handleSave}
-                  disabled={!canSave}
-                  activeOpacity={0.8}
-                  style={[
-                    styles.saveBtn,
-                    { backgroundColor: colors.accent },
-                    !canSave && { opacity: 0.4 },
-                  ]}
-                  accessibilityRole="button"
-                  accessibilityLabel="Save entry"
-                >
-                  <SansText style={[styles.saveBtnText, { color: colors.buttonText }]}>
-                    {saving ? "Saving…" : "Save entry"}
-                  </SansText>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            <SansText style={styles.disclaimer}>
-              This is saved privately to your Journal.
-            </SansText>
-          </Animated.View>
-        </KeyboardAvoidingView>
+        <SansText style={styles.disclaimer}>
+          This is saved privately to your Journal.
+        </SansText>
       </View>
-    </Modal>
+    </BottomSheet>
   );
 }
 
 
 function makeStyles(c: ColorPalette) {
   return StyleSheet.create({
-    root: { flex: 1 },
-    backdrop: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: "rgba(26,23,20,0.5)",
-    },
-    kbContainer: {
-      flex: 1,
-      justifyContent: "flex-end",
-    },
-    sheet: {
-      backgroundColor: c.cardBg,
-      borderTopLeftRadius: Radius.lg,
-      borderTopRightRadius: Radius.lg,
+    // Override BottomSheet's default content padding — the headerRow,
+    // subheader, body, and disclaimer each carry their own paddingHorizontal,
+    // and the fullDivider needs to span edge-to-edge.
+    content: {
+      paddingHorizontal: 0,
       paddingTop: 6,
-      // Width cap so the sheet doesn't span an iPad's full landscape width.
-      // Phones (< 520pt wide) get full width naturally; iPad caps at 520pt
-      // and centers via alignSelf.
-      width: "100%",
-      maxWidth: 520,
-      alignSelf: "center",
-    },
-    handle: {
-      alignSelf: "center",
-      width: 36,
-      height: 4,
-      borderRadius: 999,
-      backgroundColor: c.divider,
-      marginBottom: 4,
+      paddingBottom: 0,
     },
     headerRow: {
       flexDirection: "row",
@@ -380,7 +303,7 @@ function makeStyles(c: ColorPalette) {
       alignItems: "center",
       gap: 4,
       borderWidth: 1.5,
-      borderRadius: 999,
+      borderRadius: Radius.pill,
       paddingVertical: 4,
       paddingHorizontal: 10,
     },
