@@ -331,7 +331,7 @@ function makeStyles(c: ColorPalette) {
     },
     avatarInitial: {
       fontSize: FontSize.lg,
-      color: "white",
+      color: c.buttonText,
       fontFamily: FontFamily.sansMedium,
     },
     headerText: {
@@ -433,7 +433,7 @@ function makeStyles(c: ColorPalette) {
       fontFamily: FontFamily.sansMedium,
     },
     unsubscribedButtonText: {
-      color: "white",
+      color: c.buttonText,
     },
     subscribedButtonText: {
       color: c.green,

@@ -50,7 +50,7 @@ function makeStyles(c: ColorPalette) {
     bottomSection:  { gap: Spacing.sm },
     primaryBtn:     { backgroundColor: c.accent, borderRadius: Radius.pill, height: 52, alignItems: "center", justifyContent: "center" },
     primaryBtnDisabled: { opacity: 0.6 },
-    primaryBtnText: { fontFamily: FontFamily.sansMedium, fontSize: FontSize.sm, color: "white", letterSpacing: 0.3 },
+    primaryBtnText: { fontFamily: FontFamily.sansMedium, fontSize: FontSize.sm, color: c.buttonText, letterSpacing: 0.3 },
     skipBtn:        { paddingVertical: Spacing.sm, alignItems: "center" },
     skipBtnText:    { fontSize: FontSize.sm, color: c.warmMid, fontFamily: FontFamily.sans },
   });

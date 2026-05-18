@@ -78,7 +78,7 @@ function QueuesIllustration() {
           paddingHorizontal: 10, paddingVertical: 5,
           borderRadius: Radius.pill, backgroundColor: colors.accent,
         }}>
-          <SansText style={{ fontSize: 11, color: "white", fontFamily: FontFamily.sansMedium }}>
+          <SansText style={{ fontSize: 11, color: colors.buttonText, fontFamily: FontFamily.sansMedium }}>
             Chill Vibes
           </SansText>
         </View>
@@ -127,7 +127,7 @@ function QueuesIllustration() {
             borderRadius: Radius.pill, backgroundColor: colors.accent,
           }}>
             <SansText style={{
-              fontSize: 8, color: "white",
+              fontSize: 8, color: colors.buttonText,
               fontFamily: FontFamily.sansMedium, letterSpacing: 0.5,
             }}>
               Now
@@ -525,7 +525,7 @@ export default function KewPlusWelcomeScreen({ onDone }: Props) {
               }}
             >
               <SansText style={{
-                color: "white",
+                color: colors.buttonText,
                 fontFamily: FontFamily.sansMedium,
                 fontSize: FontSize.sm,
                 letterSpacing: 0.3,

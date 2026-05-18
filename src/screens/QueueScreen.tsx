@@ -348,7 +348,7 @@ export default function QueueScreen() {
               )}
               <SansText style={[
                 { fontSize: 12, fontFamily: "DMSans_500Medium" },
-                activeQueueId === q.id ? { color: "#fff" } : { color: colors.warmMid },
+                activeQueueId === q.id ? { color: colors.buttonText } : { color: colors.warmMid },
               ]}>
                 {q.name} · {q.videoCount}
               </SansText>
@@ -948,7 +948,7 @@ export default function QueueScreen() {
                   )}
                   <SansText style={[
                     { fontSize: 12, fontFamily: "DMSans_500Medium" },
-                    activeQueueId === q.id ? { color: "#fff" } : { color: colors.warmMid },
+                    activeQueueId === q.id ? { color: colors.buttonText } : { color: colors.warmMid },
                   ]}>
                     {q.name} · {q.videoCount}
                   </SansText>
@@ -1081,7 +1081,7 @@ export default function QueueScreen() {
       {!!reorderToast && (
         <View style={{ position: "absolute", bottom: 90, left: 0, right: 0, alignItems: "center", pointerEvents: "none" } as any}>
           <View style={{ backgroundColor: "#1A1714", paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 }}>
-            <SansText style={{ fontSize: FontSize.xs, color: "white" }}>{reorderToast}</SansText>
+            <SansText style={{ fontSize: FontSize.xs, color: colors.buttonText }}>{reorderToast}</SansText>
           </View>
         </View>
       )}
@@ -1090,7 +1090,7 @@ export default function QueueScreen() {
       {!!moveToast && (
         <View style={{ position: "absolute", bottom: 90, left: 0, right: 0, alignItems: "center", pointerEvents: "none" } as any}>
           <View style={{ backgroundColor: "#1A1714", paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 }}>
-            <SansText style={{ fontSize: FontSize.xs, color: "white" }}>{moveToast}</SansText>
+            <SansText style={{ fontSize: FontSize.xs, color: colors.buttonText }}>{moveToast}</SansText>
           </View>
         </View>
       )}

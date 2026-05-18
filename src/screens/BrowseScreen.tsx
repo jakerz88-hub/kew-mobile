@@ -291,7 +291,7 @@ export default function BrowseScreen() {
                       ? <Image source={{ uri: item.thumbnailUrl }} style={tStyles.channelAvatar} />
                       : (
                         <View style={[tStyles.channelAvatar, { backgroundColor: colors.green, alignItems: "center", justifyContent: "center" }]}>
-                          <SansText style={{ color: "white", fontSize: FontSize.xs, fontFamily: FontFamily.sansMedium }}>
+                          <SansText style={{ color: colors.buttonText, fontSize: FontSize.xs, fontFamily: FontFamily.sansMedium }}>
                             {item.title.charAt(0).toUpperCase()}
                           </SansText>
                         </View>
@@ -715,7 +715,7 @@ function makePhoneStyles(c: ColorPalette) {
     row:                  { flexDirection: "row", alignItems: "center", paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, gap: Spacing.md },
     avatar:               { width: 44, height: 44, borderRadius: 22, backgroundColor: c.divider },
     avatarFallback:       { width: 44, height: 44, borderRadius: 22, backgroundColor: c.green, alignItems: "center", justifyContent: "center" },
-    avatarChar:           { color: "white", fontSize: FontSize.md, fontFamily: FontFamily.sansMedium },
+    avatarChar:           { color: c.buttonText, fontSize: FontSize.md, fontFamily: FontFamily.sansMedium },
     channelName:          { flex: 1, fontSize: FontSize.sm, color: c.ink, fontFamily: FontFamily.sansMedium },
   });
 }

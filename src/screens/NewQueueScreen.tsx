@@ -187,7 +187,7 @@ function makeStyles(c: ColorPalette) {
     vibePillText: {
       fontSize: FontSize.xs, color: c.warmMid, fontFamily: FontFamily.sansMedium,
     },
-    vibePillTextActive: { color: "#fff" },
+    vibePillTextActive: { color: c.buttonText },
 
     emojiGrid: {
       flexDirection: "row", flexWrap: "wrap",

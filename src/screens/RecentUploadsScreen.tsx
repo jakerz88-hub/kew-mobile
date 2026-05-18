@@ -204,8 +204,8 @@ function makeStyles(c: ColorPalette) {
     cardMeta:        { fontSize: FontSize.xxs, color: c.queued },
     addBtn:          { width: 34, height: 34, borderRadius: 17, backgroundColor: c.accent, alignItems: "center", justifyContent: "center", flexShrink: 0 },
     addBtnAdded:     { backgroundColor: c.green },
-    addBtnText:      { fontSize: FontSize.lg, color: "white", lineHeight: 24, marginTop: -2 },
-    addBtnTextAdded: { color: "white", fontSize: FontSize.sm, marginTop: 0 },
+    addBtnText:      { fontSize: FontSize.lg, color: c.buttonText, lineHeight: 24, marginTop: -2 },
+    addBtnTextAdded: { color: c.buttonText, fontSize: FontSize.sm, marginTop: 0 },
     // Tablet grid layout
     gridRow:         { gap: 12, paddingHorizontal: Spacing.md },
     gridItem:        { flex: 1 },

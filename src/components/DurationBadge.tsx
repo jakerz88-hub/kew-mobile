@@ -2,7 +2,7 @@ import React from "react";
 import { View, StyleSheet } from "react-native";
 import { SansText } from "./UI";
 import { formatDuration } from "../types";
-import { FontSize } from "../types/theme";
+import { Colors, FontSize } from "../types/theme";
 
 interface Props {
   seconds: number | null | undefined;
@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   text: {
-    color: "white",
+    color: Colors.cream,
     fontSize: FontSize.xxs,
   },
 });

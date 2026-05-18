@@ -132,7 +132,7 @@ export function ChannelDot({ title, size = 26, color }: { title: string; size?: 
   const bg = color ?? colors.green;
   return (
     <View style={[staticStyles.channelDot, { width: size, height: size, backgroundColor: bg }]}>
-      <Text style={[staticStyles.channelDotText, { fontSize: size * 0.38 }]}>
+      <Text style={[staticStyles.channelDotText, { fontSize: size * 0.38, color: colors.buttonText }]}>
         {title.charAt(0).toUpperCase()}
       </Text>
     </View>
@@ -193,7 +193,7 @@ export function EmptyState({ icon, title, subtitle, action }: {
           activeOpacity={0.8}
           style={[staticStyles.emptyAction, { backgroundColor: colors.accent }]}
         >
-          <SansText style={staticStyles.emptyActionText}>
+          <SansText style={[staticStyles.emptyActionText, { color: colors.buttonText }]}>
             {action.loading ? "Loading…" : action.label}
           </SansText>
         </TouchableOpacity>
@@ -305,7 +305,7 @@ const staticStyles = StyleSheet.create({
   buttonLabel: { fontFamily: FontFamily.sansMedium, fontSize: FontSize.sm, letterSpacing: 0.3 },
   divider: { height: 1, marginHorizontal: Spacing.md },
   channelDot: { borderRadius: Radius.pill, alignItems: "center", justifyContent: "center" },
-  channelDotText: { fontFamily: FontFamily.sansMedium, color: "white", fontWeight: "700" },
+  channelDotText: { fontFamily: FontFamily.sansMedium, fontWeight: "700" },
   skipCounter: { flexDirection: "row", gap: 4, alignItems: "center" },
   skipDot:     { width: 10, height: 10, borderRadius: 5 },
   emptyState:    { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: Spacing.xl, paddingVertical: Spacing.xxl },
@@ -314,7 +314,7 @@ const staticStyles = StyleSheet.create({
   emptyTitle:    { fontSize: FontSize.lg, textAlign: "center", marginBottom: Spacing.sm },
   emptySubtitle: { fontSize: FontSize.sm, textAlign: "center", lineHeight: 20 },
   emptyAction:   { marginTop: Spacing.lg, paddingVertical: Spacing.sm + 2, paddingHorizontal: Spacing.xl, borderRadius: Radius.pill },
-  emptyActionText: { fontSize: FontSize.sm, color: "white", fontFamily: FontFamily.sansMedium },
+  emptyActionText: { fontSize: FontSize.sm, fontFamily: FontFamily.sansMedium },
   errorBanner:   { padding: Spacing.sm, margin: Spacing.md, borderRadius: Radius.sm, flexDirection: "row", alignItems: "center", gap: Spacing.sm },
   errorText:     { fontSize: FontSize.xs, textAlign: "center" },
   errorActionBtn:  { borderWidth: 1.5, borderRadius: Radius.pill, paddingVertical: 4, paddingHorizontal: 12, flexShrink: 0 },

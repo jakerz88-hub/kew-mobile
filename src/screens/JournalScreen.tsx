@@ -858,7 +858,7 @@ function ReaddCircle({
       <SansText
         style={[
           styles.readdBtnText,
-          readded && { color: "white", fontSize: FontSize.sm, marginTop: 0 },
+          readded && { color: colors.buttonText, fontSize: FontSize.sm, marginTop: 0 },
         ]}
       >
         {adding ? "..." : readded ? "✓" : "+"}

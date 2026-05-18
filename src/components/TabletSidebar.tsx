@@ -119,7 +119,7 @@ export function TabletSidebar({
           style={[styles.profileRow, collapsed && styles.profileRowCollapsed]}
         >
           <View style={[styles.avatar, { backgroundColor: colors.green }]}>
-            <SansText style={styles.avatarInitial}>{initial}</SansText>
+            <SansText style={[styles.avatarInitial, { color: colors.buttonText }]}>{initial}</SansText>
           </View>
           {!collapsed && (
             <View style={{ flex: 1, minWidth: 0, flexDirection: "row", alignItems: "center", gap: 6 }}>
@@ -128,7 +128,7 @@ export function TabletSidebar({
               </SansText>
               {isPro && (
                 <View style={[styles.proBadge, { backgroundColor: colors.accent }]}>
-                  <SansText style={styles.proBadgeText}>Kew+</SansText>
+                  <SansText style={[styles.proBadgeText, { color: colors.buttonText }]}>Kew+</SansText>
                 </View>
               )}
             </View>
@@ -212,7 +212,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   avatarInitial: {
-    color: "#fff",
     fontSize: 11,
     fontFamily: "DMSans_500Medium",
   },
@@ -226,7 +225,6 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
   },
   proBadgeText: {
-    color: "#fff",
     fontSize: 9,
     fontFamily: "DMSans_500Medium",
   },
