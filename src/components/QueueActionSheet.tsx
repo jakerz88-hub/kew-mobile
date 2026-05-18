@@ -201,7 +201,7 @@ function makeStyles(c: ColorPalette) {
     pickSubtitle:          { fontSize: FontSize.xs, color: c.warmMid, textAlign: "center", lineHeight: 18 },
     queueList:             { maxHeight: 220 },
     queueRow:              { flexDirection: "row", alignItems: "center", gap: Spacing.sm, paddingVertical: Spacing.sm, paddingHorizontal: Spacing.sm, borderRadius: Radius.md, borderWidth: 1, borderColor: c.divider, backgroundColor: c.cardElevated, marginBottom: Spacing.xs },
-    queueEmoji:            { fontSize: FontSize.md, width: 24, textAlign: "center" },
+    queueEmoji:            { fontSize: FontSize.md, color: c.ink, width: 24, textAlign: "center" },
     queueName:             { flex: 1, fontSize: FontSize.sm, color: c.ink, fontFamily: FontFamily.sansMedium },
     queueCount:            { fontSize: FontSize.xs, color: c.warmMid },
     btnRow:                { flexDirection: "row", gap: Spacing.sm, marginTop: Spacing.xs },
