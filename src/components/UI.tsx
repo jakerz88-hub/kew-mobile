@@ -181,7 +181,7 @@ export function EmptyState({ icon, title, subtitle, action }: {
   return (
     <View style={staticStyles.emptyState}>
       {typeof icon === "string"
-        ? <Text style={staticStyles.emptyIcon}>{icon}</Text>
+        ? <Text style={[staticStyles.emptyIcon, { color: colors.ink }]}>{icon}</Text>
         : <View style={staticStyles.emptyIconNode}>{icon}</View>
       }
       <SerifText style={staticStyles.emptyTitle}>{title}</SerifText>
