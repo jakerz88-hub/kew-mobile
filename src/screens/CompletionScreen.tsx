@@ -158,7 +158,7 @@ function makeStyles(c: ColorPalette) {
     emptyNext:    { alignItems: "center", gap: Spacing.xs },
     emptyNextText:{ fontSize: FontSize.lg, color: c.ink },
     emptyNextSub: { fontSize: FontSize.sm, color: c.warmMid },
-    backToQueue:     { borderWidth: 1, borderColor: c.divider, borderRadius: Radius.pill, paddingVertical: 12, alignItems: "center" },
+    backToQueue:     { borderWidth: 1, borderColor: c.divider, borderRadius: Radius.pill, paddingVertical: 12, paddingHorizontal: 32, alignSelf: "center" },
     backToQueueText: { fontSize: FontSize.sm, color: c.ink, fontFamily: FontFamily.sansMedium },
   });
 }
