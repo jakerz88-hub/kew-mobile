@@ -16,7 +16,7 @@ import { supabase } from "./src/services/supabase";
 import { api } from "./src/services/api";
 import { configurePurchases, logoutPurchases } from "./src/services/revenuecat";
 import { useStore } from "./src/store";
-import { Colors } from "./src/types/theme";
+import { Colors, FontFamily } from "./src/types/theme";
 import { ThemeProvider, useTheme } from "./src/contexts/ThemeContext";
 import { QueueTabIcon, BrowseTabIcon, ExploreTabIcon, HistoryTabIcon, JournalTabIcon, LogoMark } from "./src/components/TabIcons";
 import { KewLogo } from "./src/components/UI";
@@ -88,7 +88,7 @@ function TabNavigator() {
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.warmMid,
         tabBarLabelStyle: {
-          fontFamily: "DMSans_500Medium",
+          fontFamily: FontFamily.sansMedium,
           fontSize: 10,
           textTransform: "uppercase",
           letterSpacing: 0.5,
