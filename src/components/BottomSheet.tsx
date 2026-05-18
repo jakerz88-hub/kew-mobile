@@ -87,6 +87,11 @@ export function BottomSheet({
         borderTopLeftRadius: Radius.lg,
         borderTopRightRadius: Radius.lg,
         maxHeight: screenHeight * maxHeightPct,
+        // iPad cap: matches InteractModule/ReflectModule. Phones (< 520pt
+        // wide) are unaffected; iPads center the sheet at 520pt.
+        width: "100%",
+        maxWidth: 520,
+        alignSelf: "center",
         transform: [{ translateY: sheetTranslate }],
       }}
     >
