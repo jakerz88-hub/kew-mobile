@@ -11,6 +11,11 @@ export const Colors = {
   background:  "#EDEAE3",
 } as const;
 
+// Kew+ brand color — strictly reserved for Kew+ surfaces (see DESIGN_SYSTEM §1.1).
+export const KEW_PLUS_GOLD        = "#C49A28";
+export const KEW_PLUS_GOLD_TINT   = "rgba(196,154,40,0.12)";
+export const KEW_PLUS_GOLD_BORDER = "rgba(196,154,40,0.35)";
+
 export const DarkColors = {
   cream:        "#171410",   // screen backgrounds in dark
   ink:          "#F0EAE0",   // primary text in dark

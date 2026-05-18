@@ -2,10 +2,8 @@ import React, { useMemo } from "react";
 import { View, Modal, TouchableOpacity, TouchableWithoutFeedback, StyleSheet } from "react-native";
 import { SansText, SerifText } from "./UI";
 import { ProIcon } from "./ProIcon";
-import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
+import { ColorPalette, FontFamily, FontSize, Spacing, Radius, KEW_PLUS_GOLD } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
-
-const GOLD = "#C49A28";
 
 const FEATURE_BULLETS = [
   "Multiple queues",
@@ -83,9 +81,9 @@ function makeStyles(c: ColorPalette) {
     body:         { fontSize: FontSize.sm, color: c.warmMid, textAlign: "center", lineHeight: 19, marginTop: Spacing.xs, paddingHorizontal: Spacing.sm },
     bullets:      { width: "100%", marginTop: Spacing.md, gap: Spacing.xs + 2 },
     bulletRow:    { flexDirection: "row", alignItems: "center", gap: Spacing.sm, alignSelf: "center" },
-    bulletDot:    { width: 6, height: 6, borderRadius: 3, backgroundColor: GOLD },
+    bulletDot:    { width: 6, height: 6, borderRadius: 3, backgroundColor: KEW_PLUS_GOLD },
     bulletText:   { fontSize: FontSize.sm, color: c.ink },
-    exploreBtn:   { width: "100%", backgroundColor: GOLD, borderRadius: Radius.pill, paddingVertical: Spacing.md - 2, alignItems: "center", justifyContent: "center", marginTop: Spacing.lg },
+    exploreBtn:   { width: "100%", backgroundColor: KEW_PLUS_GOLD, borderRadius: Radius.pill, paddingVertical: Spacing.md - 2, alignItems: "center", justifyContent: "center", marginTop: Spacing.lg },
     exploreBtnText:{ fontSize: FontSize.sm, color: c.buttonText, fontFamily: FontFamily.sansMedium, letterSpacing: 0.3 },
     notNowBtn:    { marginTop: Spacing.sm, paddingVertical: Spacing.sm, alignItems: "center" },
     notNowText:   { fontSize: FontSize.xs, color: c.warmMid, fontFamily: FontFamily.sansMedium },

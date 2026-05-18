@@ -7,14 +7,10 @@ import { Feather } from "@expo/vector-icons";
 import Svg, { Rect, Path, Polyline, Circle, Line } from "react-native-svg";
 import { SansText, SerifText } from "../components/UI";
 import { ProIcon } from "../components/ProIcon";
-import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
+import { ColorPalette, FontFamily, FontSize, Spacing, Radius, KEW_PLUS_GOLD, KEW_PLUS_GOLD_TINT } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
 import { useSubscription } from "../hooks/useSubscription";
 import { useStore } from "../store";
-
-const GOLD = "#C49A28";
-const GOLD_TINT = "rgba(196,154,40,0.12)";
-const GOLD_BORDER = "rgba(196,154,40,0.35)";
 
 type FeatureRow = {
   key: string;
@@ -201,7 +197,7 @@ export default function BenefitsScreen() {
             <View key={f.key}>
               <View style={styles.featureRow}>
                 <View style={styles.featureIconBox}>
-                  {f.icon(GOLD, ICON_SIZE)}
+                  {f.icon(KEW_PLUS_GOLD, ICON_SIZE)}
                 </View>
                 <View style={styles.featureText}>
                   <SansText style={styles.featureTitle}>{f.title}</SansText>
@@ -299,14 +295,14 @@ function makeStyles(c: ColorPalette) {
     headerSide:       { width: 36, height: 36, alignItems: "flex-start", justifyContent: "center" },
     headerCenter:     { flex: 1, alignItems: "center" },
     headerTitle:      { fontSize: FontSize.md, color: c.ink, fontFamily: FontFamily.serif },
-    headerPlus:       { color: GOLD, fontFamily: FontFamily.serif },
+    headerPlus:       { color: KEW_PLUS_GOLD, fontFamily: FontFamily.serif },
     content:          { paddingHorizontal: Spacing.md, paddingBottom: Spacing.xxl },
     hero:             { alignItems: "center", paddingTop: Spacing.md, paddingBottom: Spacing.lg, gap: Spacing.sm },
     heroHeadline:     { fontSize: FontSize.xl, color: c.ink, textAlign: "center", marginTop: Spacing.xs },
     heroSubhead:      { fontSize: FontSize.sm, color: c.warmMid, textAlign: "center", lineHeight: 19, paddingHorizontal: Spacing.md },
     featuresCard:     { backgroundColor: c.cardBg, borderWidth: 1, borderColor: c.divider, borderRadius: Radius.md, paddingVertical: Spacing.xs },
     featureRow:       { flexDirection: "row", alignItems: "center", gap: Spacing.sm, paddingVertical: Spacing.sm + 2, paddingHorizontal: Spacing.md },
-    featureIconBox:   { width: 28, height: 28, borderRadius: Radius.sm, backgroundColor: GOLD_TINT, alignItems: "center", justifyContent: "center" },
+    featureIconBox:   { width: 28, height: 28, borderRadius: Radius.sm, backgroundColor: KEW_PLUS_GOLD_TINT, alignItems: "center", justifyContent: "center" },
     featureText:      { flex: 1, minWidth: 0 },
     featureTitle:     { fontSize: FontSize.sm, color: c.ink, fontFamily: FontFamily.sansMedium, marginBottom: 2 },
     featureSubtitle:  { fontSize: FontSize.xs, color: c.warmMid, lineHeight: 17 },
@@ -314,13 +310,13 @@ function makeStyles(c: ColorPalette) {
     toggleWrap:       { marginTop: Spacing.lg, alignItems: "center" },
     togglePill:       { flexDirection: "row", backgroundColor: c.divider, borderRadius: Radius.pill, padding: 3, alignSelf: "center" },
     toggleOption:     { paddingVertical: 8, paddingHorizontal: Spacing.lg, borderRadius: Radius.pill, alignItems: "center", justifyContent: "center" },
-    toggleOptionActive:{ backgroundColor: GOLD },
+    toggleOptionActive:{ backgroundColor: KEW_PLUS_GOLD },
     toggleOptionText: { fontSize: FontSize.xs, color: c.warmMid, fontFamily: FontFamily.sansMedium },
     toggleOptionTextActive: { color: "#FFFFFF" },
     priceBlock:       { alignItems: "center", marginTop: Spacing.md, gap: 4 },
     priceMain:        { fontSize: FontSize.xl, color: c.ink },
     priceSub:         { fontSize: FontSize.xs, color: c.warmMid },
-    ctaBtn:           { marginTop: Spacing.lg, backgroundColor: GOLD, borderRadius: Radius.pill, paddingVertical: Spacing.md - 2, alignItems: "center", justifyContent: "center" },
+    ctaBtn:           { marginTop: Spacing.lg, backgroundColor: KEW_PLUS_GOLD, borderRadius: Radius.pill, paddingVertical: Spacing.md - 2, alignItems: "center", justifyContent: "center" },
     ctaBtnDisabled:   { opacity: 0.6 },
     ctaBtnText:       { fontSize: FontSize.sm, color: "#FFFFFF", fontFamily: FontFamily.sansMedium, letterSpacing: 0.3 },
     restoreBtn:       { marginTop: Spacing.md, alignItems: "center", paddingVertical: Spacing.sm },

@@ -3,11 +3,9 @@ import {
   View, Text, TouchableOpacity, ActivityIndicator, Image, Animated,
   StyleSheet, ViewStyle, TextStyle,
 } from "react-native";
-import { Colors, ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
+import { Colors, ColorPalette, FontFamily, FontSize, Spacing, Radius, KEW_PLUS_GOLD } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
 import { useStore } from "../store";
-
-const KEW_PLUS_GOLD = "#C49A28";
 
 export function SerifText({ style, children, ...props }: { style?: TextStyle; children: React.ReactNode; [k: string]: any }) {
   const { colors } = useTheme();
@@ -41,10 +39,19 @@ export function KewLogo({ size = 28, plus }: { size?: number; plus?: boolean }) 
   );
 }
 
+type ButtonVariant =
+  | "primary"      // T1 — accent filled
+  | "secondary"    // T2 — accent outline
+  | "additive"     // T3 — green filled
+  | "completion"   // T4 — green outline
+  | "ghost"        // T5 — divider outline, warmMid text
+  | "text"         // T6 — text only, accent
+  | "destructive"; // ink filled
+
 interface ButtonProps {
   label: string;
   onPress: () => void;
-  variant?: "primary" | "ghost" | "destructive";
+  variant?: ButtonVariant;
   loading?: boolean;
   disabled?: boolean;
   style?: ViewStyle;
@@ -53,20 +60,46 @@ interface ButtonProps {
 export function Button({ label, onPress, variant = "primary", loading, disabled, style }: ButtonProps) {
   const { colors } = useTheme();
 
-  const bgColor =
-    variant === "primary"     ? colors.accent :
-    variant === "destructive" ? colors.ink    :
-    "transparent";
+  // greenText is a dark-aware token; in light mode it equals green.
+  const greenText = colors.greenText ?? colors.green;
 
-  const textColor =
-    variant === "primary"     ? colors.buttonText :
-    variant === "destructive" ? colors.cream      :
-    colors.accent;
+  let bgColor: string;
+  let textColor: string;
+  let borderStyle: ViewStyle | undefined;
 
-  const borderStyle =
-    variant === "ghost"
-      ? { borderWidth: 1.5, borderColor: colors.accent }
-      : undefined;
+  switch (variant) {
+    case "primary":
+      bgColor = colors.accent;
+      textColor = colors.buttonText;
+      break;
+    case "secondary":
+      bgColor = "transparent";
+      textColor = colors.accent;
+      borderStyle = { borderWidth: 1.5, borderColor: colors.accent };
+      break;
+    case "additive":
+      bgColor = colors.green;
+      textColor = colors.buttonText;
+      break;
+    case "completion":
+      bgColor = "transparent";
+      textColor = greenText;
+      borderStyle = { borderWidth: 1.5, borderColor: colors.green };
+      break;
+    case "ghost":
+      bgColor = "transparent";
+      textColor = colors.warmMid;
+      borderStyle = { borderWidth: 1.5, borderColor: colors.divider };
+      break;
+    case "text":
+      bgColor = "transparent";
+      textColor = colors.accent;
+      break;
+    case "destructive":
+      bgColor = colors.ink;
+      textColor = colors.cream;
+      break;
+  }
 
   return (
     <TouchableOpacity
@@ -259,7 +292,7 @@ const staticStyles = StyleSheet.create({
     alignItems: "center", justifyContent: "center",
     paddingHorizontal: Spacing.lg,
   },
-  buttonDisabled: { opacity: 0.5 },
+  buttonDisabled: { opacity: 0.4 },
   buttonLabel: { fontFamily: FontFamily.sansMedium, fontSize: FontSize.sm, letterSpacing: 0.3 },
   divider: { height: 1, marginHorizontal: Spacing.md },
   channelDot: { borderRadius: Radius.pill, alignItems: "center", justifyContent: "center" },

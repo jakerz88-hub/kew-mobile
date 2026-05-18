@@ -7,9 +7,7 @@ import { SansText, SerifText } from "../components/UI";
 import { ProIcon } from "../components/ProIcon";
 import { useTheme } from "../contexts/ThemeContext";
 import { useIsTablet } from "../hooks/useIsTablet";
-import { FontFamily, FontSize, Spacing, Radius } from "../types/theme";
-
-const GOLD = "#C49A28";
+import { FontFamily, FontSize, Spacing, Radius, KEW_PLUS_GOLD } from "../types/theme";
 
 interface Props {
   onDone: () => void;
@@ -55,17 +53,17 @@ function WelcomeIllustration() {
     <View style={{ width: 180, height: 180, alignItems: "center", justifyContent: "center" }}>
       <View style={{
         position: "absolute", width: 172, height: 172, borderRadius: 86,
-        backgroundColor: GOLD, opacity: 0.08,
+        backgroundColor: KEW_PLUS_GOLD, opacity: 0.08,
       }} />
       <View style={{
         position: "absolute", width: 122, height: 122, borderRadius: 61,
-        backgroundColor: GOLD, opacity: 0.12,
+        backgroundColor: KEW_PLUS_GOLD, opacity: 0.12,
       }} />
       <ProIcon size={100} />
-      <View style={{ position: "absolute", top: 16, left: 20, width: 8, height: 8, borderRadius: 4, backgroundColor: GOLD, opacity: 0.35 }} />
-      <View style={{ position: "absolute", top: 22, right: 18, width: 6, height: 6, borderRadius: 3, backgroundColor: GOLD, opacity: 0.25 }} />
-      <View style={{ position: "absolute", bottom: 18, left: 18, width: 6, height: 6, borderRadius: 3, backgroundColor: GOLD, opacity: 0.25 }} />
-      <View style={{ position: "absolute", bottom: 16, right: 20, width: 8, height: 8, borderRadius: 4, backgroundColor: GOLD, opacity: 0.35 }} />
+      <View style={{ position: "absolute", top: 16, left: 20, width: 8, height: 8, borderRadius: 4, backgroundColor: KEW_PLUS_GOLD, opacity: 0.35 }} />
+      <View style={{ position: "absolute", top: 22, right: 18, width: 6, height: 6, borderRadius: 3, backgroundColor: KEW_PLUS_GOLD, opacity: 0.25 }} />
+      <View style={{ position: "absolute", bottom: 18, left: 18, width: 6, height: 6, borderRadius: 3, backgroundColor: KEW_PLUS_GOLD, opacity: 0.25 }} />
+      <View style={{ position: "absolute", bottom: 16, right: 20, width: 8, height: 8, borderRadius: 4, backgroundColor: KEW_PLUS_GOLD, opacity: 0.35 }} />
     </View>
   );
 }
@@ -197,13 +195,13 @@ function SkipsIllustration() {
         {/* Dot 1: used skip — hollow gold outline */}
         <View style={{
           width: 14, height: 14, borderRadius: 7,
-          borderWidth: 2, borderColor: GOLD,
+          borderWidth: 2, borderColor: KEW_PLUS_GOLD,
         }} />
         {/* Dots 2–5: solid gold */}
-        <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: GOLD }} />
-        <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: GOLD }} />
-        <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: GOLD }} />
-        <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: GOLD }} />
+        <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: KEW_PLUS_GOLD }} />
+        <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: KEW_PLUS_GOLD }} />
+        <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: KEW_PLUS_GOLD }} />
+        <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: KEW_PLUS_GOLD }} />
       </View>
     </View>
   );
@@ -268,7 +266,7 @@ function JournalIllustration() {
         <View style={{
           position: "absolute", bottom: 10, right: 12,
           width: 4, height: 22, borderRadius: 2,
-          backgroundColor: GOLD, opacity: 0.35,
+          backgroundColor: KEW_PLUS_GOLD, opacity: 0.35,
         }} />
       </View>
     </View>
@@ -415,7 +413,7 @@ export default function KewPlusWelcomeScreen({ onDone }: Props) {
             <View style={{ gap: Spacing.sm, alignItems: "center" }}>
               <SansText style={{
                 fontSize: FontSize.md,
-                color: GOLD,
+                color: KEW_PLUS_GOLD,
                 fontFamily: FontFamily.sansMedium,
                 textTransform: "uppercase",
                 letterSpacing: 1.5,
@@ -483,7 +481,7 @@ export default function KewPlusWelcomeScreen({ onDone }: Props) {
               });
               const bgColor = dotAnim.interpolate({
                 inputRange: [i - 1, i, i + 1],
-                outputRange: [colors.divider, GOLD, colors.divider],
+                outputRange: [colors.divider, KEW_PLUS_GOLD, colors.divider],
                 extrapolate: "clamp",
               });
               return (
@@ -520,7 +518,7 @@ export default function KewPlusWelcomeScreen({ onDone }: Props) {
               onPress={isLastSlide ? onDone : () => goToSlide(currentIndex + 1)}
               activeOpacity={0.8}
               style={{
-                backgroundColor: isLastSlide ? colors.green : GOLD,
+                backgroundColor: isLastSlide ? colors.green : KEW_PLUS_GOLD,
                 borderRadius: 999,
                 paddingVertical: 14,
                 paddingHorizontal: Spacing.xl,

@@ -13,7 +13,7 @@ import { connectYouTube } from "../utils/youtubeConnect";
 import { useSubscription } from "../hooks/useSubscription";
 
 import { SansText, SerifText, Divider, SkipCounter, Toast, ErrorBanner } from "../components/UI";
-import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
+import { ColorPalette, FontFamily, FontSize, Spacing, Radius, KEW_PLUS_GOLD, KEW_PLUS_GOLD_BORDER } from "../types/theme";
 import { useTheme, type ThemeId } from "../contexts/ThemeContext";
 import { MiniWeekChart, formatMinutesShort } from "./InsightsScreen";
 import { ICON_THEMES, normalizeCurrentSlot, type IconSlot } from "./AppIconScreen";
@@ -35,9 +35,6 @@ const _v = Constants.expoConfig?.version;
 const _b = Constants.expoConfig?.ios?.buildNumber;
 const APP_VERSION_STRING: string | null =
   _v && _b ? `${_v} (${_b})` : _v ?? (_b ? `(${_b})` : null);
-
-const KEW_PLUS_GOLD = "#C49A28";
-const KEW_PLUS_GOLD_BORDER = "rgba(196,154,40,0.35)";
 
 const KEW_PLUS_ROTATE_MSGS = [
   "Upgrade to Kew+ to unlock watch insights",

@@ -8,7 +8,7 @@ import { KewLogo, SansText, SerifText, Divider, ThumbPlaceholder, EmptyState, Er
 import { QueuePickerModal } from "../components/QueuePickerModal";
 import { useAddToQueue } from "../hooks/useAddToQueue";
 import { LogoMark } from "../components/TabIcons";
-import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
+import { ColorPalette, FontFamily, FontSize, Spacing, Radius, KEW_PLUS_GOLD, KEW_PLUS_GOLD_TINT, KEW_PLUS_GOLD_BORDER } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
 import { useIsTablet } from "../hooks/useIsTablet";
 import { useInTabletSidebar } from "../contexts/TabletSidebarContext";
@@ -210,10 +210,6 @@ function _formatTotalTime(secs: number): string {
   if (h === 0) return `${m}m`;
   return `${h}h ${m}m`;
 }
-
-const KEW_PLUS_GOLD = "#C49A28";
-const KEW_PLUS_GOLD_TINT = "rgba(196,154,40,0.12)";
-const KEW_PLUS_GOLD_BORDER = "rgba(196,154,40,0.35)";
 
 function makeStyles(c: ColorPalette) {
   return StyleSheet.create({
