@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   tagline: { fontSize: FontSize.md, color: Colors.warmMid, textAlign: "center", lineHeight: 24, fontFamily: FontFamily.sansLight },
   howItWorks: { gap: Spacing.lg, paddingHorizontal: Spacing.sm },
   howItem: { flexDirection: "row", alignItems: "flex-start", gap: Spacing.md },
-  howIcon: { fontSize: 18, width: 28, textAlign: "center", marginTop: 1 },
+  howIcon: { fontSize: FontSize.lg, width: 28, textAlign: "center", marginTop: 1 },
   howText: { flex: 1, fontSize: FontSize.sm, color: Colors.warmMid, lineHeight: 20 },
   ctaSection: { gap: Spacing.md },
   googleBtn: { backgroundColor: Colors.ink, borderRadius: Radius.pill, height: 52, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.sm },

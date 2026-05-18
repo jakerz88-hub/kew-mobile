@@ -658,7 +658,7 @@ function makeStyles(c: ColorPalette) {
     recentSurpriseItem:    { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 8, borderBottomWidth: 0.5, borderBottomColor: c.divider },
     recentSurpriseThumb:   { width: 52, height: 34, borderRadius: 4, overflow: "hidden", flexShrink: 0, backgroundColor: c.divider },
     recentSurpriseInfo:    { flex: 1, gap: 2 },
-    recentSurpriseLabel:   { fontSize: 10, color: c.warmMid, textTransform: "uppercase", letterSpacing: 0.8, fontFamily: FontFamily.sansMedium },
+    recentSurpriseLabel:   { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 0.8, fontFamily: FontFamily.sansMedium },
     recentSurpriseTitle:   { fontSize: FontSize.sm, color: c.ink, lineHeight: 16 },
 
     // Footer note
@@ -681,7 +681,7 @@ function makeStyles(c: ColorPalette) {
     backText:           { fontSize: FontSize.xs, color: c.accent, fontFamily: FontFamily.sans },
     surpriseLoading:    { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.sm, paddingVertical: 60 },
     surpriseLoadingText:{ fontSize: FontSize.sm, color: c.warmMid },
-    surpriseTopicLabel: { fontSize: 10, color: c.warmMid, textTransform: "uppercase", letterSpacing: 1.2, fontFamily: FontFamily.sansMedium, marginTop: Spacing.xs },
+    surpriseTopicLabel: { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 1.2, fontFamily: FontFamily.sansMedium, marginTop: Spacing.xs },
     surpriseCard:       { borderRadius: Radius.md, borderWidth: 1, borderColor: c.divider, backgroundColor: c.cardBg, overflow: "hidden" },
     surpriseThumb:      { width: "100%", aspectRatio: 16 / 9, backgroundColor: c.divider },
     surpriseInfo:       { padding: Spacing.sm, gap: 4 },

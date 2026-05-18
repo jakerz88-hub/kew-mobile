@@ -342,12 +342,12 @@ export default function QueueScreen() {
               ]}
             >
               {q.emoji ? (
-                <SansText style={{ fontSize: 12 }}>{q.emoji}</SansText>
+                <SansText style={{ fontSize: FontSize.xs }}>{q.emoji}</SansText>
               ) : (
                 <LogoMark color={activeQueueId === q.id ? "#fff" : colors.warmMid} size={12} />
               )}
               <SansText style={[
-                { fontSize: 12, fontFamily: "DMSans_500Medium" },
+                { fontSize: FontSize.xs, fontFamily: "DMSans_500Medium" },
                 activeQueueId === q.id ? { color: colors.buttonText } : { color: colors.warmMid },
               ]}>
                 {q.name} · {q.videoCount}
@@ -358,7 +358,7 @@ export default function QueueScreen() {
             onPress={() => navigation.navigate("AllQueues")}
             style={{ backgroundColor: colors.cardBg, borderColor: colors.divider, borderWidth: 1, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, flexDirection: "row", alignItems: "center", gap: 4 }}
           >
-            <SansText style={{ color: colors.warmMid, fontSize: 12, fontFamily: "DMSans_500Medium" }}>All queues</SansText>
+            <SansText style={{ color: colors.warmMid, fontSize: FontSize.xs, fontFamily: "DMSans_500Medium" }}>All queues</SansText>
           </TouchableOpacity>
           </ScrollView>
         </View>
@@ -942,12 +942,12 @@ export default function QueueScreen() {
                   ]}
                 >
                   {q.emoji ? (
-                    <SansText style={{ fontSize: 12 }}>{q.emoji}</SansText>
+                    <SansText style={{ fontSize: FontSize.xs }}>{q.emoji}</SansText>
                   ) : (
                     <LogoMark color={activeQueueId === q.id ? "#fff" : colors.warmMid} size={12} />
                   )}
                   <SansText style={[
-                    { fontSize: 12, fontFamily: "DMSans_500Medium" },
+                    { fontSize: FontSize.xs, fontFamily: "DMSans_500Medium" },
                     activeQueueId === q.id ? { color: colors.buttonText } : { color: colors.warmMid },
                   ]}>
                     {q.name} · {q.videoCount}
@@ -958,7 +958,7 @@ export default function QueueScreen() {
                 onPress={() => navigation.navigate("AllQueues")}
                 style={{ backgroundColor: colors.cardBg, borderColor: colors.divider, borderWidth: 1, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, flexDirection: "row", alignItems: "center", gap: 4 }}
               >
-                <SansText style={{ color: colors.warmMid, fontSize: 12, fontFamily: "DMSans_500Medium" }}>All queues</SansText>
+                <SansText style={{ color: colors.warmMid, fontSize: FontSize.xs, fontFamily: "DMSans_500Medium" }}>All queues</SansText>
               </TouchableOpacity>
             </ScrollView>
           );
@@ -1562,12 +1562,12 @@ function RecentlyRemovedTray({
     headerLeft:  { flexDirection: "row", alignItems: "center", gap: 6 },
     label:       { fontSize: FontSize.xxs, color: colors.warmMid, fontFamily: FontFamily.sansMedium, textTransform: "uppercase", letterSpacing: 0.6 },
     badge:       { backgroundColor: colors.divider, paddingHorizontal: 5, paddingVertical: 1.5, borderRadius: Radius.pill },
-    badgeText:   { fontSize: 9, color: colors.warmMid, fontFamily: FontFamily.sansMedium },
+    badgeText:   { fontSize: FontSize.xxs, color: colors.warmMid, fontFamily: FontFamily.sansMedium },
     row:         { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: Spacing.md, paddingVertical: 7, borderTopWidth: 0.5, borderTopColor: colors.divider },
     thumb:       { width: 52, height: 33, borderRadius: 4, backgroundColor: colors.divider, flexShrink: 0 },
     info:        { flex: 1, minWidth: 0, gap: 1 },
     title:       { fontSize: FontSize.xs, color: colors.ink, lineHeight: 16 },
-    meta:        { fontSize: 9, color: colors.queued },
+    meta:        { fontSize: FontSize.xxs, color: colors.queued },
     readdBtn:    { paddingHorizontal: 8, paddingVertical: 3, borderRadius: Radius.pill, borderWidth: 1, borderColor: colors.accent, flexShrink: 0 },
     readdText:   { fontSize: FontSize.xxs, color: colors.accent, fontFamily: FontFamily.sansMedium },
   });
@@ -1723,7 +1723,7 @@ function makePhoneStyles(c: ColorPalette) {
     nowTag:            { position: "absolute", top: 10, left: 10, backgroundColor: c.accent, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 },
     nowTagText:        { color: c.buttonText, fontSize: FontSize.xxs, fontFamily: FontFamily.sansMedium, letterSpacing: 0.5, textTransform: "uppercase" },
     playBtn:           { width: 48, height: 48, backgroundColor: c.accent, borderRadius: 24, alignItems: "center", justifyContent: "center", paddingLeft: 3 },
-    playBtnIcon:       { color: c.buttonText, fontSize: 18 },
+    playBtnIcon:       { color: c.buttonText, fontSize: FontSize.lg },
     progressBar:       { height: 3, backgroundColor: "rgba(255,255,255,0.15)" },
     progressFill:      { height: 3, backgroundColor: c.accent },
     nowPlayingInfo:    { padding: Spacing.sm + 2 },

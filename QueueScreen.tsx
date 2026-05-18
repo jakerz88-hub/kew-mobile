@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
   nowTag: { position: "absolute", top: 10, left: 10, backgroundColor: Colors.accent, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 },
   nowTagText: { color: Colors.cream, fontSize: FontSize.xxs, fontFamily: FontFamily.sansMedium, letterSpacing: 0.5, textTransform: "uppercase" },
   playBtn: { width: 48, height: 48, backgroundColor: Colors.accent, borderRadius: 24, alignItems: "center", justifyContent: "center", paddingLeft: 3 },
-  playBtnIcon: { color: Colors.cream, fontSize: 18 },
+  playBtnIcon: { color: Colors.cream, fontSize: FontSize.lg },
   progressBar: { height: 3, backgroundColor: "rgba(255,255,255,0.15)" },
   progressFill: { height: 3, backgroundColor: Colors.accent },
   nowPlayingInfo: { padding: Spacing.sm + 2 },

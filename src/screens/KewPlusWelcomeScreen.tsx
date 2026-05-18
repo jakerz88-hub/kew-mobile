@@ -78,7 +78,7 @@ function QueuesIllustration() {
           paddingHorizontal: 10, paddingVertical: 5,
           borderRadius: Radius.pill, backgroundColor: colors.accent,
         }}>
-          <SansText style={{ fontSize: 11, color: colors.buttonText, fontFamily: FontFamily.sansMedium }}>
+          <SansText style={{ fontSize: FontSize.xs, color: colors.buttonText, fontFamily: FontFamily.sansMedium }}>
             Chill Vibes
           </SansText>
         </View>
@@ -87,7 +87,7 @@ function QueuesIllustration() {
           borderRadius: Radius.pill, backgroundColor: colors.cardBg,
           borderWidth: 1, borderColor: colors.divider,
         }}>
-          <SansText style={{ fontSize: 11, color: colors.warmMid, fontFamily: FontFamily.sansMedium }}>
+          <SansText style={{ fontSize: FontSize.xs, color: colors.warmMid, fontFamily: FontFamily.sansMedium }}>
             Workout
           </SansText>
         </View>
@@ -96,7 +96,7 @@ function QueuesIllustration() {
           borderRadius: Radius.pill, backgroundColor: colors.cardBg,
           borderWidth: 1, borderColor: colors.divider,
         }}>
-          <SansText style={{ fontSize: 10, color: colors.warmMid, fontFamily: FontFamily.sansMedium }}>
+          <SansText style={{ fontSize: FontSize.xxs, color: colors.warmMid, fontFamily: FontFamily.sansMedium }}>
             Science & Tech
           </SansText>
         </View>
@@ -127,7 +127,7 @@ function QueuesIllustration() {
             borderRadius: Radius.pill, backgroundColor: colors.accent,
           }}>
             <SansText style={{
-              fontSize: 8, color: colors.buttonText,
+              fontSize: FontSize.xxs, color: colors.buttonText,
               fontFamily: FontFamily.sansMedium, letterSpacing: 0.5,
             }}>
               Now
@@ -144,7 +144,7 @@ function QueuesIllustration() {
             backgroundColor: colors.cardBg, borderWidth: 1.5, borderColor: colors.divider,
             alignItems: "center", justifyContent: "center",
           }}>
-            <SansText style={{ fontSize: 10, color: colors.warmMid, fontFamily: FontFamily.sansMedium }}>
+            <SansText style={{ fontSize: FontSize.xxs, color: colors.warmMid, fontFamily: FontFamily.sansMedium }}>
               2
             </SansText>
           </View>
@@ -163,7 +163,7 @@ function QueuesIllustration() {
             backgroundColor: colors.cardBg, borderWidth: 1.5, borderColor: colors.divider,
             alignItems: "center", justifyContent: "center",
           }}>
-            <SansText style={{ fontSize: 10, color: colors.warmMid, fontFamily: FontFamily.sansMedium }}>
+            <SansText style={{ fontSize: FontSize.xxs, color: colors.warmMid, fontFamily: FontFamily.sansMedium }}>
               3
             </SansText>
           </View>
@@ -335,7 +335,7 @@ function InsightsIllustration() {
             key={i}
             style={{
               flex: 1, textAlign: "center",
-              fontSize: 9, color: colors.queued,
+              fontSize: FontSize.xxs, color: colors.queued,
               fontFamily: FontFamily.sansMedium,
             }}
           >

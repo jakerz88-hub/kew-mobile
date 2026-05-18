@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import { Animated, View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { FontFamily } from "../types/theme";
+import { FontFamily, FontSize } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
 
 interface HintBannerProps {
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
   },
   body: {
     flex: 1,
-    fontSize: 10.5,
+    fontSize: FontSize.xxs,
     lineHeight: 15,
     fontFamily: FontFamily.sans,
   },
@@ -134,11 +134,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   counter: {
-    fontSize: 9,
+    fontSize: FontSize.xxs,
     fontFamily: FontFamily.sans,
   },
   dismiss: {
-    fontSize: 9,
+    fontSize: FontSize.xxs,
     fontFamily: FontFamily.sans,
   },
 });

@@ -223,7 +223,7 @@ function makeStyles(c: ColorPalette) {
     thumb:           { width: 88, height: 56, borderRadius: Radius.sm, overflow: "hidden", backgroundColor: c.divider, flexShrink: 0, position: "relative" },
     thumbImg:        { borderRadius: Radius.sm },
     completedBadge:  { position: "absolute", bottom: 4, right: 4, width: 18, height: 18, borderRadius: 9, backgroundColor: c.green, alignItems: "center", justifyContent: "center" },
-    completedTick:   { color: c.buttonText, fontSize: 9, fontFamily: FontFamily.sansMedium },
+    completedTick:   { color: c.buttonText, fontSize: FontSize.xxs, fontFamily: FontFamily.sansMedium },
     info:            { flex: 1, minWidth: 0 },
     channel:         { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 0.5, fontFamily: FontFamily.sansMedium, marginBottom: 2 },
     title:           { fontSize: FontSize.sm, color: c.ink, lineHeight: 18 },

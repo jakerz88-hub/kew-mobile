@@ -676,7 +676,7 @@ function makeStyles(c: ColorPalette) {
     channelRow:          { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: Spacing.xs },
     channelName:         { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 0.7, flex: 1 },
     channelMenuButton:   { padding: Spacing.xs, marginLeft: Spacing.sm },
-    channelMenuIcon:     { fontSize: 18, color: c.warmMid },
+    channelMenuIcon:     { fontSize: FontSize.lg, color: c.warmMid },
     videoTitle:          { fontSize: FontSize.lg, lineHeight: 26 },
     metaRow:             { flexDirection: "row", gap: Spacing.md, marginTop: Spacing.xs },
     metaText:            { fontSize: FontSize.xxs, color: c.warmMid },

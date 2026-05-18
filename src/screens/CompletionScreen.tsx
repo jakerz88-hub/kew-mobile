@@ -134,7 +134,7 @@ function makeStyles(c: ColorPalette) {
     inner:        { flex: 1, padding: Spacing.md, gap: Spacing.lg, justifyContent: "center" },
     heroSection:  { alignItems: "center", gap: Spacing.sm },
     checkCircle:  { width: 68, height: 68, borderRadius: 34, backgroundColor: c.green, alignItems: "center", justifyContent: "center" },
-    checkIcon:    { fontSize: 28, color: c.buttonText },
+    checkIcon:    { fontSize: FontSize.xxl, color: c.buttonText },
     heroTitle:    { fontSize: FontSize.xxl },
     heroSub:      { fontSize: FontSize.sm, color: c.warmMid, textAlign: "center", lineHeight: 20, maxWidth: 260 },
     statsRow:     { flexDirection: "row", gap: Spacing.sm },

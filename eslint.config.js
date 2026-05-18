@@ -60,7 +60,7 @@ module.exports = [
       // ── Tier 2: warn → escalate to error after cleanup pass ────────────────
       // Flip each rule to "error" once `npm run lint` reports 0 warnings for it.
       "kew/no-raw-colors":        "warn",  // raw #hex / rgba() → theme token
-      "kew/no-raw-font-size":     "warn",  // numeric fontSize → FontSize.*
+      "kew/no-raw-font-size":     "error", // numeric fontSize → FontSize.* (ratcheted 2026-05-18)
       "kew/no-raw-white":         "error", // color:"white" → colors.cream/buttonText (ratcheted 2026-05-18)
       "kew/no-border-radius-999": "error", // borderRadius:999 → Radius.pill (ratcheted 2026-05-18)
     },

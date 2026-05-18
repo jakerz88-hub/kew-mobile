@@ -131,7 +131,7 @@ export default function AllQueuesScreen() {
         {/* Icon */}
         <View style={styles.iconWrap}>
           {item.emoji ? (
-            <SansText style={{ fontSize: 20 }}>{item.emoji}</SansText>
+            <SansText style={{ fontSize: FontSize.lg }}>{item.emoji}</SansText>
           ) : (
             <LogoMark color={isActive ? colors.accent : colors.warmMid} size={18} />
           )}

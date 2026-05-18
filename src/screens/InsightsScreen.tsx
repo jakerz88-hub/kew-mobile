@@ -557,7 +557,7 @@ function makeStyles(c: ColorPalette) {
     chartBars:    { flexDirection: "row", alignItems: "flex-end", height: 110, gap: 4 },
     chartBarCol:  { flex: 1, alignItems: "center", justifyContent: "flex-end", gap: 4 },
     chartBar:     { width: "70%", borderRadius: 3, minHeight: 2 },
-    chartLabel:   { fontSize: 10, color: c.warmMid },
+    chartLabel:   { fontSize: FontSize.xxs, color: c.warmMid },
     chartHint:    { fontSize: FontSize.xxs, color: c.warmMid, textAlign: "right", fontStyle: "italic" },
 
     // Insight strip

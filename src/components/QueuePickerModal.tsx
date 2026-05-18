@@ -56,7 +56,7 @@ export function QueuePickerModal({
             onPress={() => onSelect(item.id)}
             activeOpacity={0.7}
           >
-            <SansText style={{ fontSize: 18, width: 24 }}>{item.emoji ?? ""}</SansText>
+            <SansText style={{ fontSize: FontSize.lg, width: 24 }}>{item.emoji ?? ""}</SansText>
             <View style={{ flex: 1 }}>
               <SansText style={{ fontSize: FontSize.sm, color: colors.ink, fontFamily: FontFamily.sansMedium }}>{item.name}</SansText>
               <SansText style={{ fontSize: FontSize.xxs, color: colors.warmMid }}>{item.videoCount} video{item.videoCount !== 1 ? "s" : ""}</SansText>

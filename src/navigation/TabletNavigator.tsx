@@ -8,7 +8,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import { useStore } from "../store";
 import { SansText, KewLogo, AvatarBubble } from "../components/UI";
 import { LogoMark, QueueTabIcon, BrowseTabIcon, ExploreTabIcon, HistoryTabIcon, JournalTabIcon } from "../components/TabIcons";
-import { Spacing } from "../types/theme";
+import { FontSize, Spacing } from "../types/theme";
 import QueueScreen from "../screens/QueueScreen";
 import BrowseScreen from "../screens/BrowseScreen";
 import ExploreScreen from "../screens/ExploreScreen";
@@ -180,7 +180,7 @@ function TabletBottomTabBar({
               <SansText
                 style={{
                   color: tintColor,
-                  fontSize: 10,
+                  fontSize: FontSize.xxs,
                   textTransform: "uppercase",
                   letterSpacing: 0.5,
                   fontFamily: "DMSans_500Medium",

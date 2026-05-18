@@ -374,7 +374,7 @@ function makeStyles(c: ColorPalette) {
     tagline:      { fontSize: FontSize.lg, color: c.warmMid, textAlign: "center", lineHeight: 28, fontFamily: FontFamily.sansLight },
     howItWorks:   { gap: Spacing.lg, paddingHorizontal: Spacing.sm },
     howItem:      { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.md },
-    howIcon:      { fontSize: 22, color: c.ink, textAlign: "center", marginTop: 1 },
+    howIcon:      { fontSize: FontSize.xl, color: c.ink, textAlign: "center", marginTop: 1 },
     howText:      { fontSize: FontSize.md, color: c.warmMid, lineHeight: 22, textAlign: "center" },
     ctaSection:   { gap: Spacing.md, alignSelf: "center", width: "100%", maxWidth: 340 },
 

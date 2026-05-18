@@ -700,7 +700,7 @@ export default function ProfileScreen() {
                 activeOpacity={0.7}
                 style={{ alignItems: "center", paddingVertical: 6 }}
               >
-                <SansText style={{ fontSize: 12, color: colors.warmMid }}>
+                <SansText style={{ fontSize: FontSize.xs, color: colors.warmMid }}>
                   {ytDisconnecting ? "Disconnecting…" : "Disconnect YouTube"}
                 </SansText>
               </TouchableOpacity>
@@ -764,7 +764,7 @@ function makeStyles(c: ColorPalette) {
     avatarWrapper:   { position: "relative" },
     avatar:          { width: 80, height: 80, borderRadius: 40 },
     avatarFallback:  { backgroundColor: c.green, alignItems: "center", justifyContent: "center" },
-    avatarInitial:   { color: c.buttonText, fontSize: 30, fontFamily: FontFamily.sansMedium },
+    avatarInitial:   { color: c.buttonText, fontSize: FontSize.xxl, fontFamily: FontFamily.sansMedium },
     avatarOverlay:   { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: 40, backgroundColor: "rgba(0,0,0,0.45)", alignItems: "center", justifyContent: "center" },
     avatarEditBadge: { position: "absolute", bottom: 0, right: 0, width: 24, height: 24, borderRadius: 12, backgroundColor: c.accent, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: c.cream },
     usernameRow:     { flexDirection: "row", alignItems: "center", gap: 8 },
@@ -816,6 +816,7 @@ function makeStyles(c: ColorPalette) {
     themePillBtnAvailable:    { borderColor: c.divider, backgroundColor: c.cardBg },
     themePillBtnMuted:        { borderColor: c.divider, backgroundColor: c.cardBg },
     themePillBtnSelected:     { borderColor: c.accent, backgroundColor: c.accent },
+    // eslint-disable-next-line kew/no-raw-font-size -- intentional 11px (between xxs:10 and xs:12); cleanup tracked in separate audit row for arithmetic patterns
     themePillBtnText:         { fontSize: FontSize.xxs + 1, fontFamily: FontFamily.sansMedium, color: c.ink },
     themePillBtnTextSelected: { color: c.buttonText },
     themePillBtnTextMuted:    { color: c.queued },

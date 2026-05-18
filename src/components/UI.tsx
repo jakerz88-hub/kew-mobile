@@ -132,6 +132,7 @@ export function ChannelDot({ title, size = 26, color }: { title: string; size?: 
   const bg = color ?? colors.green;
   return (
     <View style={[staticStyles.channelDot, { width: size, height: size, backgroundColor: bg }]}>
+      {/* eslint-disable-next-line kew/no-raw-font-size -- proportional to ChannelDot's size prop; no fixed token applies */}
       <Text style={[staticStyles.channelDotText, { fontSize: size * 0.38, color: colors.buttonText }]}>
         {title.charAt(0).toUpperCase()}
       </Text>
@@ -221,6 +222,7 @@ export function AvatarBubble({
     />
   ) : (
     <View style={[staticStyles.avatarBubbleBg, { width: size, height: size, borderRadius: size / 2, backgroundColor: colors.green }]}>
+      {/* eslint-disable-next-line kew/no-raw-font-size -- proportional to AvatarBubble's size prop; no fixed token applies */}
       <Text style={[staticStyles.avatarBubbleInitial, { fontSize: size * 0.4, color: colors.buttonText }]}>{initial}</Text>
     </View>
   );
@@ -309,6 +311,7 @@ const staticStyles = StyleSheet.create({
   skipCounter: { flexDirection: "row", gap: 4, alignItems: "center" },
   skipDot:     { width: 10, height: 10, borderRadius: 5 },
   emptyState:    { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: Spacing.xl, paddingVertical: Spacing.xxl },
+  // eslint-disable-next-line kew/no-raw-font-size -- 40px is the documented empty-state icon size per DESIGN_SYSTEM §9, not a font-scale value
   emptyIcon:     { fontSize: 40, marginBottom: Spacing.md },
   emptyIconNode: { marginBottom: Spacing.md, alignItems: "center", justifyContent: "center" },
   emptyTitle:    { fontSize: FontSize.lg, textAlign: "center", marginBottom: Spacing.sm },
