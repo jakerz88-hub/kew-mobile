@@ -1,3 +1,9 @@
+// Muted-dark thumbnail placeholder gradients per palette. Each palette picks
+// 5 dark hues that read as "missing thumbnail" within its own color story.
+const STANDARD_THUMB_GRADIENTS = [
+  "#2C3E2D", "#4A3728", "#2B3A4A", "#3A2B4A", "#2B4A3A",
+] as const;
+
 export const Colors = {
   cream:       "#F5F0E8",
   ink:         "#1A1714",
@@ -9,6 +15,7 @@ export const Colors = {
   divider:     "#E8E2D8",
   green:       "#4A7C59",
   background:  "#EDEAE3",
+  thumbGradients: STANDARD_THUMB_GRADIENTS,
 } as const;
 
 // Kew+ brand color — strictly reserved for Kew+ surfaces (see DESIGN_SYSTEM §1.1).
@@ -31,6 +38,7 @@ export const DarkColors = {
   cardElevated: "#252019",   // elevated / selected cards
   greenText:    "#5E9B72",   // green text / outline on dark bg
   buttonText:   "#F0EAE0",   // text on accent/ink filled buttons
+  thumbGradients: STANDARD_THUMB_GRADIENTS,
 } as const;
 
 /** Full resolved palette — includes the 3 extra dark-aware tokens */
@@ -48,9 +56,15 @@ export type ColorPalette = {
   cardElevated: string;
   greenText:    string;
   buttonText:   string;
+  thumbGradients: readonly string[];
 };
 
 // ── Leather & Wine ────────────────────────────────────────────
+
+// Dark burgundies, mahoganies, and ox-blood browns for Leather & Wine.
+const LEATHER_WINE_THUMB_GRADIENTS = [
+  "#3E1A24", "#2E1810", "#3A1F18", "#341E12", "#28161E",
+] as const;
 
 export const LeatherWineColors: ColorPalette = {
   cream:        "#F0E8DC",
@@ -66,6 +80,7 @@ export const LeatherWineColors: ColorPalette = {
   cardElevated: "#FFFDF8",
   greenText:    "#A06818",
   buttonText:   "#FAF5EE",
+  thumbGradients: LEATHER_WINE_THUMB_GRADIENTS,
 };
 
 export const LeatherWineDarkColors: ColorPalette = {
@@ -82,9 +97,15 @@ export const LeatherWineDarkColors: ColorPalette = {
   cardElevated: "#3C200C",
   greenText:    "#D09830",
   buttonText:   "#F2DCC0",
+  thumbGradients: LEATHER_WINE_THUMB_GRADIENTS,
 };
 
 // ── Starlight Nectar ───────────────────────────────────────────
+
+// Deep violets, plums, and dusky roses for Starlight Nectar.
+const NECTAR_THUMB_GRADIENTS = [
+  "#2A1E3D", "#3D1E2E", "#2E1A40", "#341E50", "#3A2840",
+] as const;
 
 export const NectarColors: ColorPalette = {
   cream:        "#EEE8F8",
@@ -100,6 +121,7 @@ export const NectarColors: ColorPalette = {
   cardElevated: "#FDFAFE",
   greenText:    "#882E58",
   buttonText:   "#EEE8F8",
+  thumbGradients: NECTAR_THUMB_GRADIENTS,
 };
 
 export const NectarDarkColors: ColorPalette = {
@@ -116,9 +138,15 @@ export const NectarDarkColors: ColorPalette = {
   cardElevated: "#261440",
   greenText:    "#C05888",
   buttonText:   "#E0D0F5",
+  thumbGradients: NECTAR_THUMB_GRADIENTS,
 };
 
 // ── Bright Tide ────────────────────────────────────────────────
+
+// Deep teals, sea greens, and dark cyans for Bright Tide.
+const BRIGHT_TIDE_THUMB_GRADIENTS = [
+  "#0D2825", "#143830", "#1A3A38", "#0F302C", "#1F2E2C",
+] as const;
 
 export const BrightTideColors: ColorPalette = {
   cream:        "#EDF7F6",
@@ -134,6 +162,7 @@ export const BrightTideColors: ColorPalette = {
   cardElevated: "#FBFFFE",
   greenText:    "#B04820",
   buttonText:   "#EDF7F6",
+  thumbGradients: BRIGHT_TIDE_THUMB_GRADIENTS,
 };
 
 export const BrightTideDarkColors: ColorPalette = {
@@ -150,9 +179,15 @@ export const BrightTideDarkColors: ColorPalette = {
   cardElevated: "#132C28",
   greenText:    "#E07848",
   buttonText:   "#C8E5E2",
+  thumbGradients: BRIGHT_TIDE_THUMB_GRADIENTS,
 };
 
 // ── Forest Trail ───────────────────────────────────────────────
+
+// Dark mossy greens, evergreens, and bark browns for Forest Trail.
+const FOREST_TRAIL_THUMB_GRADIENTS = [
+  "#1E2D1E", "#2D2818", "#1A2820", "#2A2218", "#243018",
+] as const;
 
 export const ForestTrailColors: ColorPalette = {
   cream:        "#ECF3EC",
@@ -168,6 +203,7 @@ export const ForestTrailColors: ColorPalette = {
   cardElevated: "#FBFDFB",
   greenText:    "#3A7A9C",
   buttonText:   "#ECF3EC",
+  thumbGradients: FOREST_TRAIL_THUMB_GRADIENTS,
 };
 
 export const ForestTrailDarkColors: ColorPalette = {
@@ -184,9 +220,15 @@ export const ForestTrailDarkColors: ColorPalette = {
   cardElevated: "#162418",
   greenText:    "#5AA0C8",
   buttonText:   "#C5E5C8",
+  thumbGradients: FOREST_TRAIL_THUMB_GRADIENTS,
 };
 
 // ── Open Water ─────────────────────────────────────────────────
+
+// Deep navies, midnight blues, and steel slate-blues for Open Water.
+const OPEN_WATER_THUMB_GRADIENTS = [
+  "#0E1F2D", "#152838", "#1A2F40", "#0E2438", "#1F2E3D",
+] as const;
 
 export const OpenWaterColors: ColorPalette = {
   cream:        "#B4CDE0",
@@ -202,6 +244,7 @@ export const OpenWaterColors: ColorPalette = {
   cardElevated: "#E5F2FA",
   greenText:    "#B85030",
   buttonText:   "#E5F2FA",
+  thumbGradients: OPEN_WATER_THUMB_GRADIENTS,
 };
 
 export const OpenWaterDarkColors: ColorPalette = {
@@ -218,9 +261,15 @@ export const OpenWaterDarkColors: ColorPalette = {
   cardElevated: "#152640",
   greenText:    "#DC7254",
   buttonText:   "#BACFE6",
+  thumbGradients: OPEN_WATER_THUMB_GRADIENTS,
 };
 
 // ── Golden Hour ───────────────────────────────────────────────
+
+// Dark coffee browns, ochres, and walnut tones for Golden Hour.
+const GOLDEN_HOUR_THUMB_GRADIENTS = [
+  "#4A3D1F", "#3A2D14", "#3D3018", "#2E2A1A", "#403525",
+] as const;
 
 export const GoldenHourColors: ColorPalette = {
   cream:        "#F4EAC0",
@@ -236,6 +285,7 @@ export const GoldenHourColors: ColorPalette = {
   cardElevated: "#FFFEF2",
   greenText:    "#B05530",
   buttonText:   "#FAF4DA",
+  thumbGradients: GOLDEN_HOUR_THUMB_GRADIENTS,
 };
 
 export const GoldenHourDarkColors: ColorPalette = {
@@ -252,6 +302,7 @@ export const GoldenHourDarkColors: ColorPalette = {
   cardElevated: "#231A08",
   greenText:    "#CC7850",
   buttonText:   "#EDD890",
+  thumbGradients: GOLDEN_HOUR_THUMB_GRADIENTS,
 };
 
 export const FontFamily = {

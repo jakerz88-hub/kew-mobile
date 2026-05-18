@@ -139,13 +139,19 @@ export function ChannelDot({ title, size = 26, color }: { title: string; size?: 
   );
 }
 
-const THUMB_GRADIENTS = [
-  "#2C3E2D", "#4A3728", "#2B3A4A", "#3A2B4A", "#2B4A3A",
-];
+function hashSeed(seed: string): number {
+  if (!seed) return 0;
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) {
+    h = (h * 31 + seed.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h);
+}
 
 export function ThumbPlaceholder({ seed, style }: { seed: string; style?: ViewStyle }) {
-  const idx = seed.charCodeAt(0) % THUMB_GRADIENTS.length;
-  return <View style={[{ backgroundColor: THUMB_GRADIENTS[idx] }, style]} />;
+  const { colors } = useTheme();
+  const idx = hashSeed(seed) % colors.thumbGradients.length;
+  return <View style={[{ backgroundColor: colors.thumbGradients[idx] }, style]} />;
 }
 
 export function SkipCounter({ remaining, max }: { remaining: number; max: number }) {
