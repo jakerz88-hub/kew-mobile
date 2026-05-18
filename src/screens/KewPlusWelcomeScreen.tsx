@@ -487,7 +487,7 @@ export default function KewPlusWelcomeScreen({ onDone }: Props) {
               return (
                 <Animated.View
                   key={i}
-                  style={{ width: dotWidth, height: 6, borderRadius: 999, backgroundColor: bgColor }}
+                  style={{ width: dotWidth, height: 6, borderRadius: Radius.pill, backgroundColor: bgColor }}
                 />
               );
             })}
@@ -519,7 +519,7 @@ export default function KewPlusWelcomeScreen({ onDone }: Props) {
               activeOpacity={0.8}
               style={{
                 backgroundColor: isLastSlide ? colors.green : KEW_PLUS_GOLD,
-                borderRadius: 999,
+                borderRadius: Radius.pill,
                 paddingVertical: 14,
                 paddingHorizontal: Spacing.xl,
               }}

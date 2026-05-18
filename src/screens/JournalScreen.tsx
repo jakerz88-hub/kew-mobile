@@ -1104,7 +1104,7 @@ function composerStyles(c: ColorPalette) {
     backdrop:        { ...StyleSheet.absoluteFillObject, backgroundColor: "#000" },
     kbContainer:     { flex: 1, justifyContent: "flex-end" },
     sheet:           { backgroundColor: c.cardBg, borderTopLeftRadius: Radius.lg, borderTopRightRadius: Radius.lg, paddingTop: 6 },
-    handle:          { alignSelf: "center", width: 32, height: 3, borderRadius: 999, backgroundColor: c.divider, marginBottom: 4 },
+    handle:          { alignSelf: "center", width: 32, height: 3, borderRadius: Radius.pill, backgroundColor: c.divider, marginBottom: 4 },
     headerRow:       { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 14, paddingTop: 10, paddingBottom: 8 },
     headerTitle:     { fontSize: FontSize.md, fontFamily: FontFamily.sansMedium, color: c.ink },
     fullDivider:     { height: 1, backgroundColor: c.divider },

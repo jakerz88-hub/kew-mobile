@@ -8,7 +8,7 @@ import * as AuthSession from "expo-auth-session";
 import * as AppleAuthentication from "expo-apple-authentication";
 import Constants from "expo-constants";
 import { supabase } from "../services/supabase";
-import { ColorPalette, FontFamily, FontSize, Spacing } from "../types/theme";
+import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
 import { KewLogo, SansText } from "../components/UI";
 import { LogoMark } from "../components/TabIcons";
@@ -379,7 +379,7 @@ function makeStyles(c: ColorPalette) {
     ctaSection:   { gap: Spacing.md, alignSelf: "center", width: "100%", maxWidth: 340 },
 
     // Google
-    googleBtn:      { backgroundColor: c.accent, borderRadius: 999, height: 52, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.sm },
+    googleBtn:      { backgroundColor: c.accent, borderRadius: Radius.pill, height: 52, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.sm },
     googleIcon:     { fontFamily: FontFamily.serif, fontSize: FontSize.md, color: c.cream },
     googleBtnLabel: { fontFamily: FontFamily.sansMedium, fontSize: FontSize.sm, color: c.cream, letterSpacing: 0.3 },
 
@@ -394,12 +394,12 @@ function makeStyles(c: ColorPalette) {
     emailForm:     { gap: Spacing.sm },
     emailSentHint: { fontSize: FontSize.xs, color: c.warmMid, textAlign: "center" },
     emailInput:    {
-      height: 46, borderWidth: 1.5, borderColor: c.warmMid, borderRadius: 999,
+      height: 46, borderWidth: 1.5, borderColor: c.warmMid, borderRadius: Radius.pill,
       paddingHorizontal: Spacing.md, fontSize: FontSize.sm, fontFamily: FontFamily.sans,
       color: c.ink, backgroundColor: c.cream, textAlign: "left",
     },
     codeInput:     { textAlign: "center", letterSpacing: 6, fontSize: FontSize.md },
-    emailSubmitBtn:         { backgroundColor: c.ink, borderRadius: 999, height: 46, alignItems: "center", justifyContent: "center" },
+    emailSubmitBtn:         { backgroundColor: c.ink, borderRadius: Radius.pill, height: 46, alignItems: "center", justifyContent: "center" },
     emailSubmitBtnDisabled: { opacity: 0.45 },
     emailSubmitBtnText:     { fontFamily: FontFamily.sansMedium, fontSize: FontSize.sm, color: c.cream, letterSpacing: 0.3 },
     emailFooterRow:  { flexDirection: "row", justifyContent: "space-between" },

@@ -4,7 +4,7 @@ import * as WebBrowser from "expo-web-browser";
 import * as AuthSession from "expo-auth-session";
 import Constants from "expo-constants";
 import { supabase } from "../services/supabase";
-import { Colors, FontFamily, FontSize, Spacing } from "../types/theme";
+import { Colors, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { KewLogo, SansText } from "../components/UI";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
   howIcon: { fontSize: 18, width: 28, textAlign: "center", marginTop: 1 },
   howText: { flex: 1, fontSize: FontSize.sm, color: Colors.warmMid, lineHeight: 20 },
   ctaSection: { gap: Spacing.md },
-  googleBtn: { backgroundColor: Colors.ink, borderRadius: 999, height: 52, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.sm },
+  googleBtn: { backgroundColor: Colors.ink, borderRadius: Radius.pill, height: 52, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: Spacing.sm },
   googleIcon: { fontFamily: FontFamily.serif, fontSize: FontSize.md, color: Colors.cream },
   googleBtnLabel: { fontFamily: FontFamily.sansMedium, fontSize: FontSize.sm, color: Colors.cream, letterSpacing: 0.3 },
   errorText: { color: Colors.accent, fontSize: FontSize.xs, textAlign: "center" },

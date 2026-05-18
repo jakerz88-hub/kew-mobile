@@ -5,6 +5,7 @@ import { useStore } from "../store";
 import { useTheme } from "../contexts/ThemeContext";
 import { SansText, KewLogo } from "./UI";
 import { LogoMark, QueueTabIcon, BrowseTabIcon, ExploreTabIcon, HistoryTabIcon, JournalTabIcon } from "./TabIcons";
+import { Radius } from "../types/theme";
 import type { TabletTab } from "../contexts/TabletSidebarContext";
 
 export type { TabletTab };
@@ -222,7 +223,7 @@ const styles = StyleSheet.create({
   proBadge: {
     paddingHorizontal: 6,
     paddingVertical: 1,
-    borderRadius: 999,
+    borderRadius: Radius.pill,
   },
   proBadgeText: {
     color: "#fff",

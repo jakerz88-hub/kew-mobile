@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { View, StyleSheet, SafeAreaView, TouchableOpacity } from "react-native";
 import { SansText, SerifText } from "../components/UI";
 import { LogoMark } from "../components/TabIcons";
-import { ColorPalette, FontFamily, FontSize, Spacing } from "../types/theme";
+import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
 
 interface Props {
@@ -48,7 +48,7 @@ function makeStyles(c: ColorPalette) {
     subtitle:       { fontSize: FontSize.sm, color: c.warmMid, textAlign: "center", lineHeight: 22, fontFamily: FontFamily.sansLight },
     errorText:      { fontSize: FontSize.xs, color: c.accent, textAlign: "center" },
     bottomSection:  { gap: Spacing.sm },
-    primaryBtn:     { backgroundColor: c.accent, borderRadius: 999, height: 52, alignItems: "center", justifyContent: "center" },
+    primaryBtn:     { backgroundColor: c.accent, borderRadius: Radius.pill, height: 52, alignItems: "center", justifyContent: "center" },
     primaryBtnDisabled: { opacity: 0.6 },
     primaryBtnText: { fontFamily: FontFamily.sansMedium, fontSize: FontSize.sm, color: "white", letterSpacing: 0.3 },
     skipBtn:        { paddingVertical: Spacing.sm, alignItems: "center" },

@@ -62,7 +62,7 @@ module.exports = [
       "kew/no-raw-colors":        "warn",  // raw #hex / rgba() → theme token
       "kew/no-raw-font-size":     "warn",  // numeric fontSize → FontSize.*
       "kew/no-raw-white":         "warn",  // color:"white" → colors.cream/buttonText
-      "kew/no-border-radius-999": "warn",  // borderRadius:999 → Radius.pill
+      "kew/no-border-radius-999": "error", // borderRadius:999 → Radius.pill (ratcheted 2026-05-18)
     },
   },
 ];
