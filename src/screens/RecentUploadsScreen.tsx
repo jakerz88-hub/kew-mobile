@@ -130,8 +130,9 @@ export default function RecentUploadsScreen() {
         onClose={() => setRemoveTarget(null)}
       />
 
-      {Platform.OS !== "ios" && pickerVideoId && (
+      {Platform.OS !== "ios" && (
         <QueuePickerModal
+          visible={!!pickerVideoId}
           onSelect={(queueId) => { const vid = pickerVideoId; setPickerVideoId(null); doAddVideo(vid, queueId); }}
           onDismiss={() => setPickerVideoId(null)}
         />

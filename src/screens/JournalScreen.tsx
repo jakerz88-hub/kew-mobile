@@ -405,8 +405,9 @@ function JournalScreenPaid() {
         />
       )}
 
-      {Platform.OS !== "ios" && pickerVideoId && (
+      {Platform.OS !== "ios" && (
         <QueuePickerModal
+          visible={!!pickerVideoId}
           onSelect={(queueId) => {
             const vid = pickerVideoId;
             setPickerVideoId(null);

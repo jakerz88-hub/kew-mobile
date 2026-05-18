@@ -1,7 +1,8 @@
 import React, { useMemo } from "react";
-import { View, Modal, TouchableOpacity, TouchableWithoutFeedback, StyleSheet } from "react-native";
+import { View, TouchableOpacity, StyleSheet } from "react-native";
 import { SansText, SerifText } from "./UI";
 import { ProIcon } from "./ProIcon";
+import { BottomSheet } from "./BottomSheet";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius, KEW_PLUS_GOLD } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
 
@@ -33,49 +34,42 @@ export function KewPlusSheet({ visible, onClose, headline, body, onExplore }: Pr
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={styles.overlay}>
-          <TouchableWithoutFeedback>
-            <View style={styles.sheet}>
-              <View style={styles.handle} />
+    <BottomSheet
+      visible={visible}
+      onClose={onClose}
+      keyboardAvoiding={false}
+      contentStyle={styles.content}
+    >
+      <View style={styles.iconWrap}>
+        <ProIcon size={48} />
+      </View>
 
-              <View style={styles.iconWrap}>
-                <ProIcon size={48} />
-              </View>
+      <SerifText style={styles.headline}>{headline}</SerifText>
+      <SansText style={styles.body} numberOfLines={2}>{body}</SansText>
 
-              <SerifText style={styles.headline}>{headline}</SerifText>
-              <SansText style={styles.body} numberOfLines={2}>{body}</SansText>
+      <View style={styles.bullets}>
+        {FEATURE_BULLETS.map((b) => (
+          <View key={b} style={styles.bulletRow}>
+            <View style={styles.bulletDot} />
+            <SansText style={styles.bulletText}>{b}</SansText>
+          </View>
+        ))}
+      </View>
 
-              <View style={styles.bullets}>
-                {FEATURE_BULLETS.map((b) => (
-                  <View key={b} style={styles.bulletRow}>
-                    <View style={styles.bulletDot} />
-                    <SansText style={styles.bulletText}>{b}</SansText>
-                  </View>
-                ))}
-              </View>
+      <TouchableOpacity style={styles.exploreBtn} onPress={handleExplore} activeOpacity={0.85}>
+        <SansText style={styles.exploreBtnText}>Explore Kew+</SansText>
+      </TouchableOpacity>
 
-              <TouchableOpacity style={styles.exploreBtn} onPress={handleExplore} activeOpacity={0.85}>
-                <SansText style={styles.exploreBtnText}>Explore Kew+</SansText>
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={onClose} activeOpacity={0.7} style={styles.notNowBtn}>
-                <SansText style={styles.notNowText}>Not now</SansText>
-              </TouchableOpacity>
-            </View>
-          </TouchableWithoutFeedback>
-        </View>
-      </TouchableWithoutFeedback>
-    </Modal>
+      <TouchableOpacity onPress={onClose} activeOpacity={0.7} style={styles.notNowBtn}>
+        <SansText style={styles.notNowText}>Not now</SansText>
+      </TouchableOpacity>
+    </BottomSheet>
   );
 }
 
 function makeStyles(c: ColorPalette) {
   return StyleSheet.create({
-    overlay:      { flex: 1, backgroundColor: "rgba(26,23,20,0.5)", justifyContent: "flex-end" },
-    sheet:        { backgroundColor: c.cardBg, borderTopLeftRadius: Radius.lg, borderTopRightRadius: Radius.lg, paddingHorizontal: Spacing.lg, paddingTop: Spacing.sm + 2, paddingBottom: Spacing.xl, alignItems: "center" },
-    handle:       { width: 36, height: 4, borderRadius: 2, backgroundColor: c.divider, marginBottom: Spacing.md },
+    content:      { alignItems: "center" },
     iconWrap:     { marginBottom: Spacing.sm },
     headline:     { fontSize: FontSize.lg, color: c.ink, textAlign: "center", marginTop: Spacing.xs },
     body:         { fontSize: FontSize.sm, color: c.warmMid, textAlign: "center", lineHeight: 19, marginTop: Spacing.xs, paddingHorizontal: Spacing.sm },
