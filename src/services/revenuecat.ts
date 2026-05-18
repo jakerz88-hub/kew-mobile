@@ -30,7 +30,7 @@ export function isRevenueCatAvailable(): boolean {
 export async function configurePurchases(userId: string): Promise<void> {
   if (!isRevenueCatAvailable()) {
     if (Platform.OS === "ios") {
-      console.warn("[revenuecat] no SDK key set — skipping configure");
+      console.warn("[revenuecat] no SDK key set - skipping configure");
     }
     return;
   }

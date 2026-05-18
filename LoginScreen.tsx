@@ -71,7 +71,7 @@ export default function LoginScreen() {
         <View style={styles.howItWorks}>
           {[
             ["☰", "Browse your subscriptions and add videos to your queue."],
-            ["▶", "Watch the video at the front — your queue, in order."],
+            ["▶", "Watch the video at the front - your queue, in order."],
             ["→", "Finish it to unlock the next one."],
           ].map(([icon, text]) => (
             <View key={icon} style={styles.howItem}>

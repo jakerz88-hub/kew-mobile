@@ -28,7 +28,7 @@ const LIMIT_RANGES = {
 };
 
 function formatDelta(cur: number, prev: number, suffix: string = ""): { text: string; tone: "up" | "down" | "neutral" } {
-  if (prev === 0 && cur === 0) return { text: "—", tone: "neutral" };
+  if (prev === 0 && cur === 0) return { text: "-", tone: "neutral" };
   const diff = cur - prev;
   if (diff === 0) return { text: "no change", tone: "neutral" };
   const sign = diff > 0 ? "+" : "";

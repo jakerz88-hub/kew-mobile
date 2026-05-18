@@ -13,7 +13,10 @@ module.exports = {
       JSXText(node) {
         if (node.value.includes("—")) report(node);
       },
-      "JSXExpressionContainer > Literal"(node) {
+      // Covers all string literals: JSX expression containers (including ternaries),
+      // plain object properties, function returns, variable assignments, etc.
+      // "JSXExpressionContainer > Literal" was too narrow — ">" is direct-child only.
+      Literal(node) {
         if (typeof node.value === "string" && node.value.includes("—")) report(node);
       },
     };
