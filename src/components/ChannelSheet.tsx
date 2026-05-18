@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { View, Modal, TouchableOpacity, TouchableWithoutFeedback, Alert, Image, StyleSheet, Dimensions } from "react-native";
-import { SansText, SerifText, Divider, ErrorBanner } from "./UI";
+import { SansText, Divider, ErrorBanner } from "./UI";
+import { BottomSheet } from "./BottomSheet";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
 import { useIsTablet } from "../hooks/useIsTablet";
@@ -117,15 +118,11 @@ export function ChannelSheet({
     ]);
   }
 
-  const content = (
-    <View style={[styles.sheet, isTablet && styles.sheetTablet]}>
-      {!isTablet && <View style={styles.handle} />}
-      {isTablet && (
-        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-          <Feather name="x" size={20} color={colors.queued} />
-        </TouchableOpacity>
-      )}
-
+  // The actual channel content — no outer sheet wrapper, no handle, no close
+  // button. Each render path (iPad centered card vs phone BottomSheet) is
+  // responsible for its own chrome.
+  const body = (
+    <>
       <View style={styles.headerRow}>
         <View style={styles.avatarCircle}>
           {channelThumbnailUrl ? (
@@ -235,16 +232,25 @@ export function ChannelSheet({
               : "Subscribe"}
         </SansText>
       </TouchableOpacity>
-    </View>
+    </>
   );
 
+  // iPad: centered modal card. Not a bottom sheet — left as inline Modal +
+  // centered View pattern, outside the BottomSheet primitive's scope.
   if (isTablet) {
     return (
       <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
         <TouchableWithoutFeedback onPress={onClose}>
           <View style={styles.tabletOverlay}>
             <TouchableWithoutFeedback>
-              <View style={styles.tabletCard}>{content}</View>
+              <View style={styles.tabletCard}>
+                <View style={[styles.sheet, styles.sheetTablet]}>
+                  <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+                    <Feather name="x" size={20} color={colors.queued} />
+                  </TouchableOpacity>
+                  {body}
+                </View>
+              </View>
             </TouchableWithoutFeedback>
           </View>
         </TouchableWithoutFeedback>
@@ -252,31 +258,30 @@ export function ChannelSheet({
     );
   }
 
+  // Phone: standard bottom sheet via shared primitive.
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={styles.overlay}>
-          <TouchableWithoutFeedback>{content}</TouchableWithoutFeedback>
-        </View>
-      </TouchableWithoutFeedback>
-    </Modal>
+    <BottomSheet
+      visible={visible}
+      onClose={onClose}
+      keyboardAvoiding={false}
+    >
+      {body}
+    </BottomSheet>
   );
 }
 
 function makeStyles(c: ColorPalette) {
   const { height } = Dimensions.get("window");
   return StyleSheet.create({
-    overlay: {
-      flex: 1,
-      backgroundColor: "rgba(26,23,20,0.5)",
-      justifyContent: "flex-end",
-    },
     tabletOverlay: {
       flex: 1,
       backgroundColor: "rgba(26,23,20,0.5)",
       justifyContent: "center",
       alignItems: "center",
     },
+    // Inner sheet wrapper. Phone path now delegates this to BottomSheet's
+    // defaults (paddingHorizontal/Top/Bottom and Radius.lg top corners all
+    // match). iPad path still references it via sheetTablet override.
     sheet: {
       backgroundColor: c.cardBg,
       borderTopLeftRadius: Radius.lg,
@@ -298,14 +303,6 @@ function makeStyles(c: ColorPalette) {
       borderRadius: Radius.lg,
       backgroundColor: c.cardBg,
       overflow: "hidden",
-    },
-    handle: {
-      width: 36,
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: c.divider,
-      alignSelf: "center",
-      marginBottom: Spacing.md,
     },
     closeButton: {
       position: "absolute",
