@@ -75,14 +75,14 @@ export default function CompletionScreen() {
 
         {nextEntry ? (
           <View style={styles.nextSection}>
-            <SansText style={styles.nextLabel}>Up next</SansText>
+            <SerifText style={styles.nextHeading}>What would you like to do now?</SerifText>
             <TouchableOpacity style={styles.nextCard} onPress={() => navigation.replace("Player")} activeOpacity={0.85}>
               <View style={styles.nextThumbArea}>
                 {nextEntry.video.thumbnailUrl
                   ? <Image source={{ uri: nextEntry.video.thumbnailUrl }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
                   : <ThumbPlaceholder seed={nextEntry.video.ytVideoId} style={StyleSheet.absoluteFillObject} />}
                 <View style={styles.readyTag}>
-                  <SansText style={styles.readyTagText}>What would you like to do now?</SansText>
+                  <SansText style={styles.readyTagText}>Queued up</SansText>
                 </View>
               </View>
               <View style={styles.nextInfo}>
@@ -98,7 +98,7 @@ export default function CompletionScreen() {
           </View>
         )}
 
-        <TouchableOpacity style={styles.backToQueue} onPress={() => navigation.navigate("Tabs")}>
+        <TouchableOpacity style={styles.backToQueue} onPress={() => navigation.navigate("Tabs")} activeOpacity={0.7}>
           <SansText style={styles.backToQueueText}>Back to queue</SansText>
         </TouchableOpacity>
       </View>
@@ -146,8 +146,8 @@ function makeStyles(c: ColorPalette) {
     interactBtn:    { borderWidth: 1.5, borderColor: c.accent, borderRadius: Radius.pill, paddingVertical: 8, paddingHorizontal: 18, backgroundColor: c.accent },
     interactBtnText:{ fontSize: FontSize.sm, color: c.buttonText, fontFamily: FontFamily.sansMedium },
     nextSection:  { gap: Spacing.sm },
-    nextLabel:    { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 1, fontFamily: FontFamily.sansMedium },
-    // "Up Next" card — intentionally always dark (immersive cinema surface)
+    nextHeading:  { fontSize: FontSize.lg, color: c.ink },
+    // next card — intentionally always dark (immersive cinema surface)
     nextCard:     { backgroundColor: "#1A1714", borderRadius: Radius.lg, overflow: "hidden" },
     nextThumbArea:{ height: 120, justifyContent: "center", alignItems: "center", position: "relative" },
     readyTag:     { position: "absolute", top: 8, left: 8, backgroundColor: c.green, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 },
@@ -158,7 +158,7 @@ function makeStyles(c: ColorPalette) {
     emptyNext:    { alignItems: "center", gap: Spacing.xs },
     emptyNextText:{ fontSize: FontSize.lg, color: c.ink },
     emptyNextSub: { fontSize: FontSize.sm, color: c.warmMid },
-    backToQueue:  { alignItems: "center", paddingVertical: Spacing.sm },
-    backToQueueText: { fontSize: FontSize.sm, color: c.warmMid, borderBottomWidth: 1, borderBottomColor: c.divider, paddingBottom: 2 },
+    backToQueue:     { borderWidth: 1, borderColor: c.divider, borderRadius: Radius.pill, paddingVertical: 12, alignItems: "center" },
+    backToQueueText: { fontSize: FontSize.sm, color: c.ink, fontFamily: FontFamily.sansMedium },
   });
 }
