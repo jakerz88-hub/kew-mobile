@@ -172,7 +172,7 @@ export function SkipCounter({ remaining, max }: { remaining: number; max: number
 }
 
 export function EmptyState({ icon, title, subtitle, action }: {
-  icon: string;
+  icon: string | React.ReactNode;
   title: string;
   subtitle?: string;
   action?: { label: string; onPress: () => void; loading?: boolean };
@@ -180,7 +180,10 @@ export function EmptyState({ icon, title, subtitle, action }: {
   const { colors } = useTheme();
   return (
     <View style={staticStyles.emptyState}>
-      <Text style={staticStyles.emptyIcon}>{icon}</Text>
+      {typeof icon === "string"
+        ? <Text style={staticStyles.emptyIcon}>{icon}</Text>
+        : <View style={staticStyles.emptyIconNode}>{icon}</View>
+      }
       <SerifText style={staticStyles.emptyTitle}>{title}</SerifText>
       {subtitle && <SansText style={[staticStyles.emptySubtitle, { color: colors.warmMid }]}>{subtitle}</SansText>}
       {action && (
@@ -307,6 +310,7 @@ const staticStyles = StyleSheet.create({
   skipDot:     { width: 10, height: 10, borderRadius: 5 },
   emptyState:    { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: Spacing.xl, paddingVertical: Spacing.xxl },
   emptyIcon:     { fontSize: 40, marginBottom: Spacing.md },
+  emptyIconNode: { marginBottom: Spacing.md, alignItems: "center", justifyContent: "center" },
   emptyTitle:    { fontSize: FontSize.lg, textAlign: "center", marginBottom: Spacing.sm },
   emptySubtitle: { fontSize: FontSize.sm, textAlign: "center", lineHeight: 20 },
   emptyAction:   { marginTop: Spacing.lg, paddingVertical: Spacing.sm + 2, paddingHorizontal: Spacing.xl, borderRadius: Radius.pill },

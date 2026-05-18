@@ -463,12 +463,11 @@ export default function QueueScreen() {
               }
               ListEmptyComponent={
                 !current ? (
-                  <View style={tStyles.emptyQueue}>
-                    <SansText style={tStyles.emptyQueueTitle}>Your queue is empty</SansText>
-                    <SansText style={tStyles.emptyQueueSub}>
-                      Browse your subscriptions or import a playlist
-                    </SansText>
-                  </View>
+                  <EmptyState
+                    icon="▶"
+                    title="Your queue is empty"
+                    subtitle="Browse your subscriptions or import a playlist"
+                  />
                 ) : null
               }
               renderItem={({ item }) => (
@@ -769,11 +768,11 @@ export default function QueueScreen() {
                 })()}
               </ScrollView>
             ) : (
-              <View style={tStyles.emptyPlayer}>
-                <LogoMark size={36} />
-                <SerifText style={tStyles.emptyPlayerTitle}>Nothing playing</SerifText>
-                <SansText style={tStyles.emptyPlayerSub}>Add videos to your queue to get started</SansText>
-              </View>
+              <EmptyState
+                icon={<LogoMark size={36} />}
+                title="Nothing playing"
+                subtitle="Add videos to your queue to get started"
+              />
             )}
           </View>
         </View>
@@ -969,19 +968,17 @@ export default function QueueScreen() {
           <NowPlayingCard entry={current} onPress={() => navigation.navigate("Player")} />
         )}
         {!current && pendingEntries.length === 0 && (
-          <View style={styles.emptyQueueState}>
-            <SansText style={styles.emptyQueueTitle}>Your queue is empty</SansText>
-            <SansText style={styles.emptyQueueSub}>Sync your YouTube account to begin building your video queue.</SansText>
-            <TouchableOpacity
-              style={styles.emptySyncBtn}
-              onPress={async () => {
+          <EmptyState
+            icon="▶"
+            title="Your queue is empty"
+            subtitle="Sync your YouTube account to begin building your video queue."
+            action={{
+              label: "Sync",
+              onPress: async () => {
                 try { await api.syncSubscriptions(); fetchQueue(); } catch { /* silent */ }
-              }}
-              activeOpacity={0.7}
-            >
-              <SansText style={styles.emptySyncBtnText}>Sync</SansText>
-            </TouchableOpacity>
-          </View>
+              },
+            }}
+          />
         )}
 
         <View style={styles.actionRow}>
@@ -1639,9 +1636,6 @@ function makeTabletStyles(c: ColorPalette) {
     btnShuffleOutlineText:  { fontSize: FontSize.xs, color: c.accent, fontFamily: FontFamily.sansMedium },
     btnImportFill:          { backgroundColor: c.green },
     btnImportFillText:      { fontSize: FontSize.xs, color: c.buttonText, fontFamily: FontFamily.sansMedium },
-    emptyQueue:      { padding: Spacing.lg, alignItems: "center" },
-    emptyQueueTitle: { fontSize: FontSize.sm, color: c.warmMid, textAlign: "center" },
-    emptyQueueSub:   { fontSize: FontSize.xs, color: c.queued, textAlign: "center", marginTop: 4 },
 
     // Tablet "now playing" compact row in the left panel
     nowPlayingRow: {
@@ -1708,9 +1702,6 @@ function makeTabletStyles(c: ColorPalette) {
     upNextChannel: { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 0.5 },
     upNextTitle:   { fontSize: FontSize.sm, color: c.ink, lineHeight: 17, marginTop: 2 },
     upNextMeta:    { fontSize: FontSize.xxs, color: c.queued, marginTop: 3 },
-    emptyPlayer:      { flex: 1, alignItems: "center", justifyContent: "center", gap: Spacing.sm },
-    emptyPlayerTitle: { fontSize: FontSize.lg, color: c.ink, marginTop: Spacing.xs },
-    emptyPlayerSub:   { fontSize: FontSize.sm, color: c.warmMid, textAlign: "center", paddingHorizontal: Spacing.xl },
   });
 }
 
@@ -1751,12 +1742,6 @@ function makePhoneStyles(c: ColorPalette) {
     queueTitleText:  { fontSize: FontSize.sm, color: c.ink, lineHeight: 18 },
     queueStatus:     { fontSize: FontSize.xxs, color: c.queued, marginTop: 3, fontStyle: "italic" },
     listContent:     { paddingBottom: 80 },
-
-    emptyQueueState: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: Spacing.xl, paddingVertical: Spacing.xxl, gap: Spacing.sm },
-    emptyQueueTitle: { fontSize: FontSize.lg, color: c.ink, fontFamily: FontFamily.sansMedium, textAlign: "center" },
-    emptyQueueSub:   { fontSize: FontSize.sm, color: c.warmMid, textAlign: "center", lineHeight: 20 },
-    emptySyncBtn:    { marginTop: Spacing.sm, paddingVertical: Spacing.sm, paddingHorizontal: Spacing.lg, borderRadius: Radius.pill, backgroundColor: c.accent },
-    emptySyncBtnText: { fontSize: FontSize.sm, color: c.buttonText, fontFamily: FontFamily.sansMedium },
 
     actionRow:      { flexDirection: "row", marginHorizontal: Spacing.md, marginBottom: Spacing.sm, gap: Spacing.sm },
     actionBtn:      { flex: 1, paddingVertical: Spacing.sm, borderRadius: Radius.pill, borderWidth: 1.5, alignItems: "center" },

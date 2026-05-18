@@ -7,7 +7,7 @@ import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { useStore } from "../store";
 import { useTheme } from "../contexts/ThemeContext";
-import { SansText, SerifText, Divider } from "../components/UI";
+import { SansText, SerifText, Divider, EmptyState } from "../components/UI";
 import { LogoMark } from "../components/TabIcons";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import type { KewQueue } from "../types";
@@ -211,9 +211,12 @@ export default function AllQueuesScreen() {
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         contentContainerStyle={{ paddingBottom: 120 }}
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <SansText style={styles.emptyText}>No queues found.</SansText>
-          </View>
+          <EmptyState
+            icon="↻"
+            title="Couldn't load your queues"
+            subtitle="Check your connection and try again."
+            action={{ label: "Retry", onPress: () => { fetchQueues(); } }}
+          />
         }
       />
 
@@ -323,10 +326,6 @@ function makeStyles(c: ColorPalette) {
       backgroundColor: c.divider, borderRadius: Radius.pill,
     },
     mainBadgeText:   { fontSize: FontSize.xxs, color: c.warmMid, fontFamily: FontFamily.sansMedium },
-    empty: {
-      padding: Spacing.xl, alignItems: "center",
-    },
-    emptyText:       { fontSize: FontSize.sm, color: c.warmMid },
     footer: {
       position: "absolute", bottom: 0, left: 0, right: 0,
       backgroundColor: c.cream, borderTopWidth: 1, borderTopColor: c.divider,

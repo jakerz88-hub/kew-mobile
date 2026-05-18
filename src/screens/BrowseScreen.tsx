@@ -310,11 +310,10 @@ export default function BrowseScreen() {
               ItemSeparatorComponent={() => <View style={{ height: 1, backgroundColor: colors.divider, marginLeft: 48 }} />}
               ListEmptyComponent={
                 !syncing ? (
-                  <View style={{ padding: Spacing.md }}>
-                    <SansText style={{ color: colors.warmMid, fontSize: FontSize.sm, textAlign: "center" }}>
-                      {searchQuery ? "No matching creators" : "Pull down to sync subscriptions"}
-                    </SansText>
-                  </View>
+                  <EmptyState
+                    icon={searchQuery ? "☰" : "↓"}
+                    title={searchQuery ? "No matching creators" : "Pull down to sync subscriptions"}
+                  />
                 ) : null
               }
               contentContainerStyle={{ paddingBottom: 40 }}
@@ -371,14 +370,11 @@ export default function BrowseScreen() {
                 }}
                 ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
                 ListEmptyComponent={
-                  <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: Spacing.xl }}>
-                    <SansText style={{ color: colors.warmMid, fontSize: FontSize.sm, textAlign: "center" }}>
-                      No videos found
-                    </SansText>
-                    <SansText style={{ color: colors.queued, fontSize: FontSize.xs, textAlign: "center", marginTop: 4 }}>
-                      Try syncing your subscriptions
-                    </SansText>
-                  </View>
+                  <EmptyState
+                    icon="▶"
+                    title="No videos found"
+                    subtitle="Try syncing your subscriptions"
+                  />
                 }
                 ListFooterComponent={
                   selectedChannelId && !panelLoading ? (

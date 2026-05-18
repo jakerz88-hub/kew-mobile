@@ -9,7 +9,7 @@ import { api } from "../services/api";
 import type { BrowseVideo } from "../types";
 import { formatDuration } from "../types";
 import {
-  KewLogo, SansText, SerifText, Divider, ThumbPlaceholder, AvatarBubble,
+  KewLogo, SansText, SerifText, Divider, ThumbPlaceholder, AvatarBubble, EmptyState,
 } from "../components/UI";
 import { LogoMark } from "../components/TabIcons";
 import { useStore } from "../store";
@@ -512,12 +512,11 @@ export default function ExploreScreen() {
                     {results.length} result{results.length !== 1 ? "s" : ""} for "{submittedQuery}"
                   </SansText>
                 ) : (
-                  <View style={styles.emptyResults}>
-                    <SerifText style={styles.emptyTitle}>No results found.</SerifText>
-                    <SansText style={styles.emptySub}>
-                      Try a different search or tap a topic chip.
-                    </SansText>
-                  </View>
+                  <EmptyState
+                    icon="☰"
+                    title="No results found."
+                    subtitle="Try a different search or tap a topic chip."
+                  />
                 )
               }
               ListFooterComponent={
@@ -671,9 +670,6 @@ function makeStyles(c: ColorPalette) {
     errorText:      { fontSize: FontSize.sm, color: c.accent },
     resultsList:    { paddingBottom: 40 },
     resultsLabel:   { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 0.8, fontFamily: FontFamily.sansMedium, paddingHorizontal: Spacing.md, paddingTop: Spacing.sm, paddingBottom: Spacing.xs },
-    emptyResults:   { alignItems: "center", paddingTop: 60, gap: Spacing.xs },
-    emptyTitle:     { fontSize: FontSize.lg, color: c.ink },
-    emptySub:       { fontSize: FontSize.sm, color: c.warmMid },
 
     // Surprise me! chip
     surpriseChip:       { flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 12, paddingVertical: 6, borderRadius: Radius.pill, borderWidth: 1, borderColor: c.accent },
