@@ -1,31 +1,22 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Animated,
-  Easing,
-  Modal,
+  Keyboard,
+  Linking,
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  TouchableWithoutFeedback,
   View,
-  Linking,
-  KeyboardAvoidingView,
-  Platform,
-  Keyboard,
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { ColorPalette, FontFamily, FontSize, Radius } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
 import { SansText, ErrorBanner, Toast } from "./UI";
+import { BottomSheet } from "./BottomSheet";
 import { api } from "../services/api";
 import { connectYouTube } from "../utils/youtubeConnect";
 import { useStore } from "../store";
 
 const COMMENT_MAX = 500;
-const SHEET_ANIM_IN_MS = 280;
-const SHEET_ANIM_OUT_MS = 220;
-const BACKDROP_OPACITY = 0.35;
-const SHEET_EASING = Easing.bezier(0.32, 0.72, 0, 1);
 
 interface InteractModuleProps {
   visible: boolean;
@@ -108,10 +99,6 @@ export function InteractModule({
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
-  const translateY = useRef(new Animated.Value(1)).current; // 1 = off-screen
-  const backdropOpacity = useRef(new Animated.Value(0)).current;
-  const [mounted, setMounted] = useState(visible);
-
   const [liked, setLiked] = useState(false);
   const [likeBusy, setLikeBusy] = useState(false);
 
@@ -166,48 +153,19 @@ export function InteractModule({
     };
   }, [ytVideoId]);
 
+  // Reset comment-related state every time the sheet opens — a stale draft
+  // from a previous video / session would be confusing.
   useEffect(() => {
     if (visible) {
-      setMounted(true);
       setChipTapped(false);
       setComment("");
       setPostedUrl(null);
-      translateY.setValue(1);
-      backdropOpacity.setValue(0);
-      Animated.parallel([
-        Animated.timing(translateY, {
-          toValue: 0,
-          duration: SHEET_ANIM_IN_MS,
-          easing: SHEET_EASING,
-          useNativeDriver: true,
-        }),
-        Animated.timing(backdropOpacity, {
-          toValue: BACKDROP_OPACITY,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]).start();
     }
   }, [visible]);
 
-  const runClose = () => {
+  const requestClose = () => {
     Keyboard.dismiss();
-    Animated.parallel([
-      Animated.timing(translateY, {
-        toValue: 1,
-        duration: SHEET_ANIM_OUT_MS,
-        easing: SHEET_EASING,
-        useNativeDriver: true,
-      }),
-      Animated.timing(backdropOpacity, {
-        toValue: 0,
-        duration: SHEET_ANIM_OUT_MS,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      setMounted(false);
-      onClose();
-    });
+    onClose();
   };
 
   useEffect(() => {
@@ -285,230 +243,191 @@ export function InteractModule({
     }
   };
 
-  const sheetTranslate = translateY.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 600],
-  });
-
-  if (!mounted && !visible) return null;
-
   const charsRemaining = COMMENT_MAX - comment.length;
   const overLimit = comment.length > COMMENT_MAX;
   const canPost = comment.trim().length > 0 && !overLimit && !posting;
 
   return (
-    <Modal visible={mounted} transparent animationType="none" onRequestClose={runClose}>
-      <View style={styles.root}>
-        <TouchableWithoutFeedback onPress={runClose}>
-          <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]} />
-        </TouchableWithoutFeedback>
-
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          pointerEvents="box-none"
-          style={styles.kbContainer}
-        >
-          <Animated.View
-            style={[styles.sheet, { transform: [{ translateY: sheetTranslate }] }]}
-            accessibilityViewIsModal
-            accessibilityLabel={`Interact with ${videoTitle}`}
+    <BottomSheet
+      visible={visible}
+      onClose={requestClose}
+      handleMarginBottom={4}
+      contentStyle={styles.content}
+      overlayChildren={<Toast message={toastMsg} visible={toastVisible} />}
+    >
+      <View
+        accessibilityViewIsModal
+        accessibilityLabel={`Interact with ${videoTitle}`}
+      >
+        <View style={styles.headerRow}>
+          <SansText style={styles.headerTitle}>Interact</SansText>
+          <TouchableOpacity
+            onPress={requestClose}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            accessibilityRole="button"
+            accessibilityLabel="Close"
           >
-            <View style={styles.handle} />
+            <CloseIcon color={colors.queued} />
+          </TouchableOpacity>
+        </View>
 
-            <View style={styles.headerRow}>
-              <SansText style={styles.headerTitle}>Interact</SansText>
-              <TouchableOpacity
-                onPress={runClose}
-                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-                accessibilityRole="button"
-                accessibilityLabel="Close"
-              >
-                <CloseIcon color={colors.queued} />
-              </TouchableOpacity>
-            </View>
+        <SansText style={styles.subheader}>
+          Let this creator know what you thought of this video.
+        </SansText>
 
-            <SansText style={styles.subheader}>
-              Let this creator know what you thought of this video.
+        <View style={styles.fullDivider} />
+
+        {error && (
+          <ErrorBanner
+            message={error}
+            onDismiss={() => setError(null)}
+            actionLabel={error === RECONNECT_HINT ? "Reconnect" : undefined}
+            onAction={error === RECONNECT_HINT ? handleReconnect : undefined}
+            actionBusy={reconnecting}
+          />
+        )}
+
+        <View style={styles.actions}>
+          <TouchableOpacity
+            onPress={handleLike}
+            disabled={likeBusy}
+            activeOpacity={0.8}
+            style={[
+              styles.likeBtn,
+              liked ? styles.likeBtnOn : styles.likeBtnOff,
+              likeBusy && { opacity: 0.6 },
+            ]}
+            accessibilityRole="button"
+            accessibilityState={{ selected: liked, busy: likeBusy }}
+            accessibilityLabel={liked ? "Unlike this video" : "Like this video"}
+          >
+            <HeartIcon
+              color={liked ? colors.buttonText : colors.accent}
+              filled={liked}
+            />
+            <SansText
+              style={[
+                styles.likeBtnText,
+                { color: liked ? colors.buttonText : colors.accent },
+              ]}
+            >
+              Like this video
             </SansText>
+          </TouchableOpacity>
 
-            <View style={styles.fullDivider} />
-
-            {error && (
-              <ErrorBanner
-                message={error}
-                onDismiss={() => setError(null)}
-                actionLabel={error === RECONNECT_HINT ? "Reconnect" : undefined}
-                onAction={error === RECONNECT_HINT ? handleReconnect : undefined}
-                actionBusy={reconnecting}
+          {!postedUrl ? (
+            <View>
+              <SansText style={styles.sectionLabel}>Leave a comment</SansText>
+              <TextInput
+                style={styles.textarea}
+                placeholder="Share your thoughts…"
+                placeholderTextColor={colors.queued}
+                value={comment}
+                onChangeText={setComment}
+                multiline
+                maxLength={COMMENT_MAX + 50}
+                textAlignVertical="top"
               />
-            )}
-
-            <View style={styles.actions}>
-              <TouchableOpacity
-                onPress={handleLike}
-                disabled={likeBusy}
-                activeOpacity={0.8}
-                style={[
-                  styles.likeBtn,
-                  liked ? styles.likeBtnOn : styles.likeBtnOff,
-                  likeBusy && { opacity: 0.6 },
-                ]}
-                accessibilityRole="button"
-                accessibilityState={{ selected: liked, busy: likeBusy }}
-                accessibilityLabel={liked ? "Unlike this video" : "Like this video"}
-              >
-                <HeartIcon
-                  color={liked ? colors.buttonText : colors.accent}
-                  filled={liked}
-                />
-                <SansText
+              <View style={styles.commentFooter}>
+                <TouchableOpacity
+                  onPress={handleChipTap}
+                  activeOpacity={0.8}
                   style={[
-                    styles.likeBtnText,
-                    { color: liked ? colors.buttonText : colors.accent },
+                    styles.tsChip,
+                    chipTapped ? styles.tsChipOn : styles.tsChipOff,
                   ]}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: chipTapped }}
+                  accessibilityLabel={
+                    chipTapped
+                      ? `Timestamp ${tsLabel} added`
+                      : `Add timestamp ${tsLabel}`
+                  }
                 >
-                  Like this video
-                </SansText>
-              </TouchableOpacity>
-
-              {!postedUrl ? (
-                <View>
-                  <SansText style={styles.sectionLabel}>Leave a comment</SansText>
-                  <TextInput
-                    style={styles.textarea}
-                    placeholder="Share your thoughts…"
-                    placeholderTextColor={colors.queued}
-                    value={comment}
-                    onChangeText={setComment}
-                    multiline
-                    maxLength={COMMENT_MAX + 50}
-                    textAlignVertical="top"
+                  <ClockIcon
+                    color={chipTapped ? colors.green : colors.warmMid}
                   />
-                  <View style={styles.commentFooter}>
-                    <TouchableOpacity
-                      onPress={handleChipTap}
-                      activeOpacity={0.8}
-                      style={[
-                        styles.tsChip,
-                        chipTapped ? styles.tsChipOn : styles.tsChipOff,
-                      ]}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: chipTapped }}
-                      accessibilityLabel={
-                        chipTapped
-                          ? `Timestamp ${tsLabel} added`
-                          : `Add timestamp ${tsLabel}`
-                      }
-                    >
-                      <ClockIcon
-                        color={chipTapped ? colors.green : colors.warmMid}
-                      />
-                      <SansText
-                        style={[
-                          styles.tsChipText,
-                          { color: chipTapped ? colors.green : colors.warmMid },
-                        ]}
-                      >
-                        {chipTapped ? `${tsLabel} added` : `${tsLabel} +`}
-                      </SansText>
-                    </TouchableOpacity>
-
-                    <View style={styles.footerRight}>
-                      {(comment.length > COMMENT_MAX - 60 || overLimit) && (
-                        <SansText
-                          style={[
-                            styles.charCount,
-                            overLimit && { color: colors.accent },
-                          ]}
-                        >
-                          {charsRemaining}
-                        </SansText>
-                      )}
-                      <TouchableOpacity
-                        onPress={handlePost}
-                        disabled={!canPost}
-                        activeOpacity={0.8}
-                        style={[
-                          styles.postBtn,
-                          { backgroundColor: colors.accent },
-                          !canPost && { opacity: 0.4 },
-                        ]}
-                        accessibilityRole="button"
-                        accessibilityLabel="Post comment to YouTube"
-                      >
-                        <SansText
-                          style={[
-                            styles.postBtnText,
-                            { color: colors.buttonText },
-                          ]}
-                        >
-                          {posting ? "Posting…" : "Post to YouTube"}
-                        </SansText>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </View>
-              ) : (
-                <View style={styles.postedBlock}>
-                  <SansText style={styles.postedText}>
-                    Posted to YouTube. Replies live there, not here, by design.
-                  </SansText>
-                  <TouchableOpacity
-                    onPress={() => Linking.openURL(postedUrl).catch(() => {})}
-                    activeOpacity={0.7}
-                    accessibilityRole="link"
-                    accessibilityLabel="View your comment on YouTube"
+                  <SansText
+                    style={[
+                      styles.tsChipText,
+                      { color: chipTapped ? colors.green : colors.warmMid },
+                    ]}
                   >
-                    <SansText style={styles.postedLink}>
-                      View your comment on YouTube
+                    {chipTapped ? `${tsLabel} added` : `${tsLabel} +`}
+                  </SansText>
+                </TouchableOpacity>
+
+                <View style={styles.footerRight}>
+                  {(comment.length > COMMENT_MAX - 60 || overLimit) && (
+                    <SansText
+                      style={[
+                        styles.charCount,
+                        overLimit && { color: colors.accent },
+                      ]}
+                    >
+                      {charsRemaining}
+                    </SansText>
+                  )}
+                  <TouchableOpacity
+                    onPress={handlePost}
+                    disabled={!canPost}
+                    activeOpacity={0.8}
+                    style={[
+                      styles.postBtn,
+                      { backgroundColor: colors.accent },
+                      !canPost && { opacity: 0.4 },
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityLabel="Post comment to YouTube"
+                  >
+                    <SansText
+                      style={[
+                        styles.postBtnText,
+                        { color: colors.buttonText },
+                      ]}
+                    >
+                      {posting ? "Posting…" : "Post to YouTube"}
                     </SansText>
                   </TouchableOpacity>
                 </View>
-              )}
+              </View>
             </View>
+          ) : (
+            <View style={styles.postedBlock}>
+              <SansText style={styles.postedText}>
+                Posted to YouTube. Replies live there, not here, by design.
+              </SansText>
+              <TouchableOpacity
+                onPress={() => Linking.openURL(postedUrl).catch(() => {})}
+                activeOpacity={0.7}
+                accessibilityRole="link"
+                accessibilityLabel="View your comment on YouTube"
+              >
+                <SansText style={styles.postedLink}>
+                  View your comment on YouTube
+                </SansText>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
 
-            <SansText style={styles.disclaimer}>
-              Your interactions go to the creator, not to Kew. We never use them to personalize your experience.
-            </SansText>
-          </Animated.View>
-        </KeyboardAvoidingView>
-
-        <Toast message={toastMsg} visible={toastVisible} />
+        <SansText style={styles.disclaimer}>
+          Your interactions go to the creator, not to Kew. We never use them to personalize your experience.
+        </SansText>
       </View>
-    </Modal>
+    </BottomSheet>
   );
 }
 
 function makeStyles(c: ColorPalette) {
   return StyleSheet.create({
-    root: { flex: 1 },
-    backdrop: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: "rgba(26,23,20,0.5)",
-    },
-    kbContainer: {
-      flex: 1,
-      justifyContent: "flex-end",
-    },
-    sheet: {
-      backgroundColor: c.cardBg,
-      borderTopLeftRadius: Radius.lg,
-      borderTopRightRadius: Radius.lg,
+    // Override BottomSheet's default content padding — the headerRow,
+    // subheader, actions, and disclaimer each carry their own
+    // paddingHorizontal, and the fullDivider needs to span edge-to-edge.
+    content: {
+      paddingHorizontal: 0,
       paddingTop: 6,
-      // Width cap so the sheet doesn't span an iPad's full landscape width.
-      // Phones (< 520pt wide) get full width naturally; iPad caps at 520pt
-      // and centers via alignSelf.
-      width: "100%",
-      maxWidth: 520,
-      alignSelf: "center",
-    },
-    handle: {
-      alignSelf: "center",
-      width: 36,
-      height: 4,
-      borderRadius: 999,
-      backgroundColor: c.divider,
-      marginBottom: 4,
+      paddingBottom: 0,
     },
     headerRow: {
       flexDirection: "row",
@@ -593,7 +512,7 @@ function makeStyles(c: ColorPalette) {
       alignItems: "center",
       gap: 4,
       borderWidth: 1.5,
-      borderRadius: 999,
+      borderRadius: Radius.pill,
       paddingVertical: 4,
       paddingHorizontal: 10,
     },

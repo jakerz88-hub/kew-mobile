@@ -23,6 +23,10 @@ interface BottomSheetProps {
   keyboardAvoiding?: boolean;
   maxHeightPct?: number;
   contentStyle?: ViewStyle;
+  /** Extra nodes rendered as siblings of the sheet, inside the Modal.
+   *  Use for absolutely-positioned overlays (e.g. Toast) that need the
+   *  Modal's screen-relative coordinate space. */
+  overlayChildren?: React.ReactNode;
 }
 
 export function BottomSheet({
@@ -34,6 +38,7 @@ export function BottomSheet({
   keyboardAvoiding = true,
   maxHeightPct = 0.85,
   contentStyle,
+  overlayChildren,
 }: BottomSheetProps) {
   const { colors } = useTheme();
   const { height: screenHeight } = useWindowDimensions();
@@ -131,6 +136,8 @@ export function BottomSheet({
         ) : (
           sheet
         )}
+
+        {overlayChildren}
       </View>
     </Modal>
   );
