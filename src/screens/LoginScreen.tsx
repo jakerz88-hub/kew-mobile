@@ -10,7 +10,7 @@ import Constants from "expo-constants";
 import { supabase } from "../services/supabase";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
-import { KewLogo, SansText } from "../components/UI";
+import { KewLogo, SansText, ErrorBanner } from "../components/UI";
 import { LogoMark } from "../components/TabIcons";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -237,7 +237,7 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.ctaSection}>
-            {error && <SansText style={styles.errorText}>{error}</SansText>}
+            {error && <ErrorBanner message={error} onDismiss={() => setError(null)} />}
 
             {/* Google — primary */}
             <TouchableOpacity
@@ -407,7 +407,6 @@ function makeStyles(c: ColorPalette) {
     emailCancelText: { fontSize: FontSize.xs, color: c.warmMid },
 
     // Shared
-    errorText:   { color: c.accent, fontSize: FontSize.xs, textAlign: "center" },
     disclaimer:  { fontSize: FontSize.xxs, color: c.queued, textAlign: "center", lineHeight: 16 },
   });
 }
