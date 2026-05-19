@@ -16,6 +16,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Alert,
   Keyboard,
   StyleSheet,
   TextInput,
@@ -99,9 +100,31 @@ export function ReflectModule({
     }
   }, [visible]);
 
+  // Direct close — used by the save flow once the entry is persisted.
+  // Bypasses the unsaved-work guard intentionally.
   const requestClose = () => {
     Keyboard.dismiss();
     onClose();
+  };
+
+  // User-driven dismiss: backdrop tap, X button, hardware back. Confirms
+  // before closing if there's unsaved work, so a stray tap doesn't wipe a
+  // typed-out journal entry. Per DESIGN_SYSTEM §10, Alert.alert is the
+  // documented pattern for destructive binary confirms.
+  const handleClose = () => {
+    const hasUnsavedWork = saving || text.trim().length > 0;
+    if (!hasUnsavedWork) {
+      requestClose();
+      return;
+    }
+    Alert.alert(
+      "Discard entry?",
+      "Your journal entry hasn't been saved.",
+      [
+        { text: "Keep editing", style: "cancel" },
+        { text: "Discard", style: "destructive", onPress: requestClose },
+      ],
+    );
   };
 
   /**
@@ -141,7 +164,7 @@ export function ReflectModule({
   return (
     <BottomSheet
       visible={visible}
-      onClose={requestClose}
+      onClose={handleClose}
       handleMarginBottom={4}
       contentStyle={styles.content}
     >
@@ -152,7 +175,7 @@ export function ReflectModule({
         <View style={styles.headerRow}>
           <SansText style={styles.headerTitle}>Reflect</SansText>
           <TouchableOpacity
-            onPress={requestClose}
+            onPress={handleClose}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             accessibilityRole="button"
             accessibilityLabel="Close"
