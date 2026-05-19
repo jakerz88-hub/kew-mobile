@@ -2,7 +2,7 @@ import React from "react";
 import { View, StyleSheet } from "react-native";
 import { SansText } from "./UI";
 import { formatDuration } from "../types";
-import { Colors, FontSize } from "../types/theme";
+import { Colors, FontSize, withAlpha } from "../types/theme";
 
 interface Props {
   seconds: number | null | undefined;
@@ -22,7 +22,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 6,
     right: 6,
-    backgroundColor: "rgba(26,23,20,0.75)",
+    backgroundColor: withAlpha(Colors.ink, 0.75),
     paddingHorizontal: 5,
     paddingVertical: 2,
     borderRadius: 3,

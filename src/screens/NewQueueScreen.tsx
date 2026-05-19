@@ -8,7 +8,7 @@ import { Feather } from "@expo/vector-icons";
 import { useStore } from "../store";
 import { useTheme } from "../contexts/ThemeContext";
 import { SansText, SerifText, Divider } from "../components/UI";
-import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
+import { ColorPalette, FontFamily, FontSize, Spacing, Radius, withAlpha } from "../types/theme";
 
 const VIBE_PILLS = [
   "Workout Watch",
@@ -202,7 +202,7 @@ function makeStyles(c: ColorPalette) {
     },
     emojiCellActive: {
       borderColor: c.accent,
-      backgroundColor: `${c.accent}15`,
+      backgroundColor: withAlpha(c.accent, 0.08),
     },
     emojiChar:       { fontSize: FontSize.xxl },
 

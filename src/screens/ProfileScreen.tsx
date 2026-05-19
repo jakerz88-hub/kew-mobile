@@ -13,7 +13,7 @@ import { connectYouTube } from "../utils/youtubeConnect";
 import { useSubscription } from "../hooks/useSubscription";
 
 import { SansText, SerifText, Divider, SkipCounter, Toast, ErrorBanner } from "../components/UI";
-import { ColorPalette, FontFamily, FontSize, Spacing, Radius, KEW_PLUS_GOLD, KEW_PLUS_GOLD_BORDER } from "../types/theme";
+import { Colors, ColorPalette, FontFamily, FontSize, Spacing, Radius, KEW_PLUS_GOLD, KEW_PLUS_GOLD_BORDER, withAlpha } from "../types/theme";
 import { useTheme, type ThemeId } from "../contexts/ThemeContext";
 import { MiniWeekChart, formatMinutesShort } from "./InsightsScreen";
 import { ICON_THEMES, normalizeCurrentSlot, type IconSlot } from "./AppIconScreen";
@@ -689,7 +689,7 @@ export default function ProfileScreen() {
                 disabled={syncing}
                 activeOpacity={0.7}
               >
-                <Feather name="refresh-cw" size={13} color="#fff" style={{ marginRight: 6 }} />
+                <Feather name="refresh-cw" size={13} color={colors.buttonText} style={{ marginRight: 6 }} />
                 <SansText style={styles.ytConnectBtnText}>
                   {syncing ? "Syncing…" : "Sync Accounts"}
                 </SansText>
@@ -765,7 +765,7 @@ function makeStyles(c: ColorPalette) {
     avatar:          { width: 80, height: 80, borderRadius: 40 },
     avatarFallback:  { backgroundColor: c.green, alignItems: "center", justifyContent: "center" },
     avatarInitial:   { color: c.buttonText, fontSize: FontSize.xxl, fontFamily: FontFamily.sansMedium },
-    avatarOverlay:   { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: 40, backgroundColor: "rgba(0,0,0,0.45)", alignItems: "center", justifyContent: "center" },
+    avatarOverlay:   { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, borderRadius: 40, backgroundColor: withAlpha(Colors.ink, 0.45), alignItems: "center", justifyContent: "center" },
     avatarEditBadge: { position: "absolute", bottom: 0, right: 0, width: 24, height: 24, borderRadius: 12, backgroundColor: c.accent, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: c.cream },
     usernameRow:     { flexDirection: "row", alignItems: "center", gap: 8 },
     displayName:     { fontSize: FontSize.md, color: c.ink },
@@ -800,7 +800,7 @@ function makeStyles(c: ColorPalette) {
     themeCardLabel:  { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 0.8, fontFamily: FontFamily.sansMedium, marginBottom: Spacing.sm },
     themePill:            { flexDirection: "row", backgroundColor: c.divider, borderRadius: Radius.pill, padding: 3 },
     themeOption:          { flex: 1, alignItems: "center", paddingVertical: 6, borderRadius: Radius.pill },
-    themeOptionActive:    { backgroundColor: c.cardElevated, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 1 },
+    themeOptionActive:    { backgroundColor: c.cardElevated, shadowColor: Colors.ink, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 1 },
     themeOptionText:      { fontSize: FontSize.xs, color: c.warmMid, fontFamily: FontFamily.sansMedium },
     themeOptionTextActive: { color: c.ink },
     // Premium themes

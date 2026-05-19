@@ -19,7 +19,7 @@ import {
   EmptyState, ErrorBanner, AvatarBubble, SkipCounter, Toast,
 } from "../components/UI";
 import { LogoMark } from "../components/TabIcons";
-import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
+import { Colors, ColorPalette, FontFamily, FontSize, Spacing, Radius, withAlpha } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
 import type { QueueEntry } from "../types";
 import { formatDuration, formatProgress, timeAgo, formatDate } from "../types";
@@ -344,7 +344,7 @@ export default function QueueScreen() {
               {q.emoji ? (
                 <SansText style={{ fontSize: FontSize.xs }}>{q.emoji}</SansText>
               ) : (
-                <LogoMark color={activeQueueId === q.id ? "#fff" : colors.warmMid} size={12} />
+                <LogoMark color={activeQueueId === q.id ? colors.buttonText : colors.warmMid} size={12} />
               )}
               <SansText style={[
                 { fontSize: FontSize.xs, fontFamily: "DMSans_500Medium" },
@@ -514,7 +514,7 @@ export default function QueueScreen() {
               >
                 {/* YouTube embed — letterbox bg always dark */}
                 <View
-                  style={{ backgroundColor: "#1A1714" }}
+                  style={{ backgroundColor: Colors.ink }}
                   onLayout={(e) => {
                     const w = Math.round(e.nativeEvent.layout.width);
                     if (w > 0 && w !== measuredPlayerWidth) setMeasuredPlayerWidth(w);
@@ -944,7 +944,7 @@ export default function QueueScreen() {
                   {q.emoji ? (
                     <SansText style={{ fontSize: FontSize.xs }}>{q.emoji}</SansText>
                   ) : (
-                    <LogoMark color={activeQueueId === q.id ? "#fff" : colors.warmMid} size={12} />
+                    <LogoMark color={activeQueueId === q.id ? colors.buttonText : colors.warmMid} size={12} />
                   )}
                   <SansText style={[
                     { fontSize: FontSize.xs, fontFamily: "DMSans_500Medium" },
@@ -1080,7 +1080,7 @@ export default function QueueScreen() {
       {/* Reorder toast */}
       {!!reorderToast && (
         <View style={{ position: "absolute", bottom: 90, left: 0, right: 0, alignItems: "center", pointerEvents: "none" } as any}>
-          <View style={{ backgroundColor: "#1A1714", paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 }}>
+          <View style={{ backgroundColor: Colors.ink, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 }}>
             <SansText style={{ fontSize: FontSize.xs, color: colors.buttonText }}>{reorderToast}</SansText>
           </View>
         </View>
@@ -1089,7 +1089,7 @@ export default function QueueScreen() {
       {/* Move to queue toast */}
       {!!moveToast && (
         <View style={{ position: "absolute", bottom: 90, left: 0, right: 0, alignItems: "center", pointerEvents: "none" } as any}>
-          <View style={{ backgroundColor: "#1A1714", paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 }}>
+          <View style={{ backgroundColor: Colors.ink, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 }}>
             <SansText style={{ fontSize: FontSize.xs, color: colors.buttonText }}>{moveToast}</SansText>
           </View>
         </View>
@@ -1314,7 +1314,7 @@ function DraggableQueueList({
                 position: "absolute", left: 0, right: 0, height: ITEM_H,
                 top: dragAnimY, zIndex: 10,
                 backgroundColor: colors.cardBg,
-                shadowColor: "#000", shadowOpacity: 0.14, shadowRadius: 8,
+                shadowColor: Colors.ink, shadowOpacity: 0.14, shadowRadius: 8,
                 shadowOffset: { width: 0, height: 3 },
                 elevation: 5,
               }}
@@ -1642,11 +1642,11 @@ function makeTabletStyles(c: ColorPalette) {
       flexDirection: "row", alignItems: "center", gap: Spacing.sm,
       paddingVertical: Spacing.sm + 2, paddingHorizontal: Spacing.md,
       paddingLeft: Spacing.sm,
-      backgroundColor: `${c.accent}08`,
+      backgroundColor: withAlpha(c.accent, 0.03),
     },
     nowPlayingAccent: { width: 3, alignSelf: "stretch", backgroundColor: c.accent, borderRadius: 2, marginRight: 4 },
     nowThumb:         { width: 72, height: 44, borderRadius: Radius.sm, overflow: "hidden", backgroundColor: c.divider },
-    nowProgressBar:   { position: "absolute", bottom: 0, left: 0, right: 0, height: 3, backgroundColor: "rgba(0,0,0,0.2)" },
+    nowProgressBar:   { position: "absolute", bottom: 0, left: 0, right: 0, height: 3, backgroundColor: withAlpha(Colors.ink, 0.2) },
     nowProgressFill:  { height: 3, backgroundColor: c.accent },
     nowTag:           { fontSize: FontSize.xxs, color: c.accent, fontFamily: FontFamily.sansMedium, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 },
     nowTitle:         { fontSize: FontSize.sm, color: c.ink, lineHeight: 17 },
@@ -1717,14 +1717,14 @@ function makePhoneStyles(c: ColorPalette) {
     skipMiniLabel: { fontSize: FontSize.xxs, color: c.warmMid, fontFamily: FontFamily.sansMedium, textTransform: "uppercase", letterSpacing: 0.5 },
 
     // Now Playing card — intentionally always dark (immersive cinema surface)
-    nowPlayingCard:    { marginHorizontal: Spacing.md, marginBottom: Spacing.md, backgroundColor: "#1A1714", borderRadius: Radius.lg, overflow: "hidden" },
+    nowPlayingCard:    { marginHorizontal: Spacing.md, marginBottom: Spacing.md, backgroundColor: Colors.ink, borderRadius: Radius.lg, overflow: "hidden" },
     nowPlayingThumb:   { width: "100%", height: 160, position: "relative", justifyContent: "center", alignItems: "center" },
-    nowPlayingOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.25)" },
+    nowPlayingOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: withAlpha(Colors.ink, 0.25) },
     nowTag:            { position: "absolute", top: 10, left: 10, backgroundColor: c.accent, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 },
     nowTagText:        { color: c.buttonText, fontSize: FontSize.xxs, fontFamily: FontFamily.sansMedium, letterSpacing: 0.5, textTransform: "uppercase" },
     playBtn:           { width: 48, height: 48, backgroundColor: c.accent, borderRadius: 24, alignItems: "center", justifyContent: "center", paddingLeft: 3 },
     playBtnIcon:       { color: c.buttonText, fontSize: FontSize.lg },
-    progressBar:       { height: 3, backgroundColor: "rgba(255,255,255,0.15)" },
+    progressBar:       { height: 3, backgroundColor: withAlpha(Colors.cream, 0.15) },
     progressFill:      { height: 3, backgroundColor: c.accent },
     nowPlayingInfo:    { padding: Spacing.sm + 2 },
     nowChannel:        { color: c.buttonText, opacity: 0.5, fontSize: FontSize.xxs, textTransform: "uppercase", letterSpacing: 0.7, marginBottom: 3 },
@@ -1752,7 +1752,7 @@ function makePhoneStyles(c: ColorPalette) {
     importBtn:      { borderColor: c.green, backgroundColor: c.green },
     importBtnText:  { color: c.buttonText, fontSize: FontSize.sm, fontFamily: FontFamily.sansMedium },
 
-    sheetOverlay:    { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" },
+    sheetOverlay:    { flex: 1, backgroundColor: withAlpha(Colors.ink, 0.4), justifyContent: "flex-end" },
     sheetContainer:  { backgroundColor: c.cardBg, borderTopLeftRadius: Radius.lg, borderTopRightRadius: Radius.lg, padding: Spacing.lg, paddingBottom: 40, gap: Spacing.sm },
     sheetHandle:     { width: 36, height: 4, borderRadius: 2, backgroundColor: c.divider, alignSelf: "center", marginBottom: Spacing.sm },
     sheetTitle:      { fontSize: FontSize.md, color: c.ink, textAlign: "center" },
@@ -1762,7 +1762,7 @@ function makePhoneStyles(c: ColorPalette) {
     sheetCancelBtn:  { borderRadius: Radius.pill, borderWidth: 1.5, borderColor: c.divider, paddingVertical: Spacing.sm + 2, alignItems: "center" },
     sheetCancelText: { color: c.warmMid, fontSize: FontSize.sm, fontFamily: FontFamily.sansMedium },
 
-    modalOverlay:        { flex: 1, backgroundColor: "rgba(26,23,20,0.5)", justifyContent: "flex-end", padding: Spacing.md },
+    modalOverlay:        { flex: 1, backgroundColor: withAlpha(Colors.ink, 0.5), justifyContent: "flex-end", padding: Spacing.md },
     modalCard:           { backgroundColor: c.cardBg, borderRadius: Radius.lg, padding: Spacing.lg, gap: Spacing.md },
     modalTitle:          { fontSize: FontSize.lg },
     modalBody:           { fontSize: FontSize.sm, color: c.warmMid, lineHeight: 22 },

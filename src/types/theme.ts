@@ -23,6 +23,20 @@ export const KEW_PLUS_GOLD        = "#C49A28";
 export const KEW_PLUS_GOLD_TINT   = "rgba(196,154,40,0.12)";
 export const KEW_PLUS_GOLD_BORDER = "rgba(196,154,40,0.35)";
 
+/**
+ * Build an rgba() string from a #RRGGBB hex token at the given alpha.
+ * Use for translucent surfaces (chip tints, scrim variants, etc.) so
+ * we don't ship raw hex/rgba literals into screen code.
+ *
+ *   backgroundColor: withAlpha(c.accent, 0.08)
+ */
+export function withAlpha(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 export const DarkColors = {
   cream:        "#171410",   // screen backgrounds in dark
   ink:          "#F0EAE0",   // primary text in dark

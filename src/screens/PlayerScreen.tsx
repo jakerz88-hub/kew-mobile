@@ -14,7 +14,7 @@ import { useStore } from "../store";
 import { api } from "../services/api";
 import { KewLogo, SansText, SerifText, Divider, ThumbPlaceholder, SkipCounter, Toast } from "../components/UI";
 import { LogoMark } from "../components/TabIcons";
-import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
+import { Colors, ColorPalette, FontFamily, FontSize, Spacing, Radius, withAlpha } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
 import { handleLastSkipUsed } from "../utils/kewPlusUpsell";
 import type { QueueEntry } from "../types";
@@ -710,7 +710,7 @@ function makeStyles(c: ColorPalette) {
     noVideo:             { flex: 1, alignItems: "center", justifyContent: "center" },
     noVideoText:         { fontSize: FontSize.lg, color: c.warmMid },
     backBtn:             { flex: 1, padding: Spacing.md },
-    modalOverlay:        { flex: 1, backgroundColor: "rgba(26,23,20,0.5)", justifyContent: "flex-end", padding: Spacing.md },
+    modalOverlay:        { flex: 1, backgroundColor: withAlpha(Colors.ink, 0.5), justifyContent: "flex-end", padding: Spacing.md },
     modalCard:           { backgroundColor: c.cardBg, borderRadius: Radius.lg, padding: Spacing.lg, gap: Spacing.md },
     modalTitle:          { fontSize: FontSize.lg },
     modalBody:           { fontSize: FontSize.sm, color: c.warmMid, lineHeight: 22 },

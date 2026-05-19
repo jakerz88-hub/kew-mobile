@@ -9,7 +9,7 @@ import { useStore } from "../store";
 import { useTheme } from "../contexts/ThemeContext";
 import { SansText, SerifText, Divider, EmptyState } from "../components/UI";
 import { LogoMark } from "../components/TabIcons";
-import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
+import { Colors, ColorPalette, FontFamily, FontSize, Spacing, Radius, withAlpha } from "../types/theme";
 import type { KewQueue } from "../types";
 
 export default function AllQueuesScreen() {
@@ -298,7 +298,7 @@ function makeStyles(c: ColorPalette) {
       paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm + 2,
       gap: Spacing.sm, backgroundColor: c.cream,
     },
-    rowActive:       { backgroundColor: `${c.accent}0a` },
+    rowActive:       { backgroundColor: withAlpha(c.accent, 0.04) },
     iconWrap: {
       width: 36, height: 36, borderRadius: 18,
       backgroundColor: c.cardBg, borderWidth: 1, borderColor: c.divider,
@@ -341,7 +341,7 @@ function makeStyles(c: ColorPalette) {
     },
     // Android action sheet modal
     modalOverlay: {
-      flex: 1, backgroundColor: "rgba(26,23,20,0.5)",
+      flex: 1, backgroundColor: withAlpha(Colors.ink, 0.5),
       justifyContent: "flex-end",
     },
     modalCard: {

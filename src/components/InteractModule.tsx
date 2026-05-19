@@ -8,7 +8,7 @@ import {
   View,
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
-import { ColorPalette, FontFamily, FontSize, Radius } from "../types/theme";
+import { ColorPalette, FontFamily, FontSize, Radius, withAlpha } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
 import { SansText, ErrorBanner, Toast } from "./UI";
 import { BottomSheet } from "./BottomSheet";
@@ -522,7 +522,7 @@ function makeStyles(c: ColorPalette) {
     },
     tsChipOn: {
       borderColor: c.green,
-      backgroundColor: `${c.green}10`,
+      backgroundColor: withAlpha(c.green, 0.06),
     },
     tsChipText: {
       fontSize: FontSize.xxs,

@@ -72,6 +72,7 @@ const ICON_THEMES: IconTheme[] = [
   },
 ];
 
+// eslint-disable-next-line kew/no-raw-colors -- intentional non-palette green: brighter saturation reads better as a selection ring over the varied iOS app-icon backgrounds than Colors.green (#4A7C59)
 const SELECTION_GREEN = "#1D9E75";
 
 // When iOS is showing the primary icon (the one in app.json's `icon` field),

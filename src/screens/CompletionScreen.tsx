@@ -4,7 +4,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { useStore } from "../store";
 import { SerifText, SansText, ThumbPlaceholder } from "../components/UI";
 import { InteractModule } from "../components/InteractModule";
-import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
+import { Colors, ColorPalette, FontFamily, FontSize, Spacing, Radius, withAlpha } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
 import { formatDuration } from "../types";
 
@@ -147,13 +147,15 @@ function makeStyles(c: ColorPalette) {
     interactBtnText:{ fontSize: FontSize.sm, color: c.buttonText, fontFamily: FontFamily.sansMedium },
     nextSection:  { gap: Spacing.sm },
     nextHeading:  { fontSize: FontSize.lg, color: c.ink },
-    // next card — intentionally always dark (immersive cinema surface)
-    nextCard:     { backgroundColor: "#1A1714", borderRadius: Radius.lg, overflow: "hidden" },
+    // next card — intentionally always dark (immersive cinema surface).
+    // Uses static Colors.ink (light-theme value) so the dark surface persists
+    // across light + dark modes rather than inverting to cream-ink.
+    nextCard:     { backgroundColor: Colors.ink, borderRadius: Radius.lg, overflow: "hidden" },
     nextThumbArea:{ height: 120, justifyContent: "center", alignItems: "center", position: "relative" },
     readyTag:     { position: "absolute", top: 8, left: 8, backgroundColor: c.green, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 },
     readyTagText: { color: c.buttonText, fontSize: FontSize.xxs, fontFamily: FontFamily.sansMedium, letterSpacing: 0.5 },
     nextInfo:     { padding: Spacing.sm + 2 },
-    nextChannel:  { color: "rgba(255,255,255,0.45)", fontSize: FontSize.xxs, textTransform: "uppercase", letterSpacing: 0.5 },
+    nextChannel:  { color: withAlpha(Colors.cream, 0.45), fontSize: FontSize.xxs, textTransform: "uppercase", letterSpacing: 0.5 },
     nextTitle:    { color: c.buttonText, fontSize: FontSize.md, lineHeight: 22, marginTop: 3 },
     emptyNext:    { alignItems: "center", gap: Spacing.xs },
     emptyNextText:{ fontSize: FontSize.lg, color: c.ink },

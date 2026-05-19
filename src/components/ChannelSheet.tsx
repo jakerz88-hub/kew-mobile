@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { View, Modal, TouchableOpacity, TouchableWithoutFeedback, Alert, Image, StyleSheet, Dimensions } from "react-native";
 import { SansText, Divider, ErrorBanner } from "./UI";
 import { BottomSheet } from "./BottomSheet";
-import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
+import { Colors, ColorPalette, FontFamily, FontSize, Spacing, Radius, withAlpha } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
 import { useIsTablet } from "../hooks/useIsTablet";
 import { api } from "../services/api";
@@ -275,7 +275,7 @@ function makeStyles(c: ColorPalette) {
   return StyleSheet.create({
     tabletOverlay: {
       flex: 1,
-      backgroundColor: "rgba(26,23,20,0.5)",
+      backgroundColor: withAlpha(Colors.ink, 0.5),
       justifyContent: "center",
       alignItems: "center",
     },

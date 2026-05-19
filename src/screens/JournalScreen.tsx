@@ -74,7 +74,7 @@ import {
 } from "../components/UI";
 import { LogoMark } from "../components/TabIcons";
 import { QueuePickerModal } from "../components/QueuePickerModal";
-import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
+import { Colors, ColorPalette, FontFamily, FontSize, Spacing, Radius, withAlpha } from "../types/theme";
 import { formatDuration } from "../types";
 import type { JournalEntry, JournalFeedItem } from "../types";
 
@@ -1065,7 +1065,7 @@ function makeStyles(c: ColorPalette) {
     entryChannel:    { fontFamily: FontFamily.sansMedium, fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 0.5 },
     entryTitle:      { fontFamily: FontFamily.sans, fontSize: FontSize.xs, color: c.warmMid, marginTop: 1 },
 
-    tsChip:          { paddingHorizontal: 6, paddingVertical: 2, borderRadius: Radius.pill, backgroundColor: `${c.accent}15`, borderWidth: 1, borderColor: c.accent },
+    tsChip:          { paddingHorizontal: 6, paddingVertical: 2, borderRadius: Radius.pill, backgroundColor: withAlpha(c.accent, 0.08), borderWidth: 1, borderColor: c.accent },
     tsChipText:      { fontSize: FontSize.xxs, color: c.accent, fontFamily: FontFamily.sansMedium },
 
     // Un-entered watched item
@@ -1101,7 +1101,7 @@ function makeStyles(c: ColorPalette) {
 
 function composerStyles(c: ColorPalette) {
   return StyleSheet.create({
-    backdrop:        { ...StyleSheet.absoluteFillObject, backgroundColor: "#000" },
+    backdrop:        { ...StyleSheet.absoluteFillObject, backgroundColor: Colors.ink },
     kbContainer:     { flex: 1, justifyContent: "flex-end" },
     sheet:           { backgroundColor: c.cardBg, borderTopLeftRadius: Radius.lg, borderTopRightRadius: Radius.lg, paddingTop: 6 },
     handle:          { alignSelf: "center", width: 32, height: 3, borderRadius: Radius.pill, backgroundColor: c.divider, marginBottom: 4 },

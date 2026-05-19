@@ -17,7 +17,7 @@ import { useAddToQueue } from "../hooks/useAddToQueue";
 import { QueuePickerModal } from "../components/QueuePickerModal";
 import { ChannelSheet } from "../components/ChannelSheet";
 import { DurationBadge } from "../components/DurationBadge";
-import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
+import { ColorPalette, FontFamily, FontSize, Spacing, Radius, withAlpha } from "../types/theme";
 import { timeAgo } from "../types";
 import { useTheme } from "../contexts/ThemeContext";
 import { useInTabletSidebar } from "../contexts/TabletSidebarContext";
@@ -666,7 +666,7 @@ function makeStyles(c: ColorPalette) {
 
     // Results
     loadingRow:     { flex: 1, alignItems: "center", justifyContent: "center" },
-    errorRow:       { margin: Spacing.md, padding: Spacing.md, backgroundColor: `${c.accent}18`, borderRadius: Radius.md },
+    errorRow:       { margin: Spacing.md, padding: Spacing.md, backgroundColor: withAlpha(c.accent, 0.09), borderRadius: Radius.md },
     errorText:      { fontSize: FontSize.sm, color: c.accent },
     resultsList:    { paddingBottom: 40 },
     resultsLabel:   { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 0.8, fontFamily: FontFamily.sansMedium, paddingHorizontal: Spacing.md, paddingTop: Spacing.sm, paddingBottom: Spacing.xs },

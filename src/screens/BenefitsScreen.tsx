@@ -265,7 +265,7 @@ export default function BenefitsScreen() {
               disabled={purchasing || isLoading}
             >
               {purchasing ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
+                <ActivityIndicator color={colors.buttonText} size="small" />
               ) : (
                 <SansText style={styles.ctaBtnText}>Subscribe to Kew+</SansText>
               )}
