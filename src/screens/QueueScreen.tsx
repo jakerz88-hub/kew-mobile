@@ -297,7 +297,7 @@ export default function QueueScreen() {
       const { shareToken } = await api.shareQueue();
       const url = `https://yourkew.app/s/${shareToken}`;
       setSharing(false);
-      Share.share({ message: `Check out my Kew queue: ${url}`, url });
+      Share.share({ message: `Here's what I'm watching in Kew`, url });
     } catch {
       setSharing(false);
     }
