@@ -3,7 +3,7 @@ import {
   View, FlatList, TouchableOpacity, Animated, SafeAreaView, useWindowDimensions,
 } from "react-native";
 import { Feather, Ionicons } from "@expo/vector-icons";
-import { SansText, SerifText } from "../components/UI";
+import { SansText, SerifText, SkipIcon } from "../components/UI";
 import { LogoMark } from "../components/TabIcons";
 import { useTheme } from "../contexts/ThemeContext";
 import { useIsTablet } from "../hooks/useIsTablet";
@@ -234,7 +234,7 @@ function SkipsIllustration() {
         backgroundColor: colors.cardBg, borderWidth: 1.5, borderColor: colors.divider,
         alignItems: "center", justifyContent: "center",
       }}>
-        <Feather name="skip-forward" size={44} color={colors.ink} />
+        <SkipIcon size={44} color={colors.ink} />
       </View>
 
       {/* Skip counter dots — generous spacing per spec */}

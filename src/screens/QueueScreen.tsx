@@ -16,7 +16,7 @@ import { useStore } from "../store";
 import { api } from "../services/api";
 import {
   KewLogo, SansText, SerifText, Divider, ThumbPlaceholder,
-  EmptyState, ErrorBanner, AvatarBubble, SkipCounter, Toast,
+  EmptyState, ErrorBanner, AvatarBubble, SkipCounter, SkipIcon, Toast,
 } from "../components/UI";
 import { LogoMark } from "../components/TabIcons";
 import { Colors, ColorPalette, FontFamily, FontSize, Spacing, Radius, withAlpha } from "../types/theme";
@@ -687,10 +687,7 @@ export default function QueueScreen() {
                           accessibilityRole="button"
                           accessibilityLabel="Skip"
                         >
-                          <Svg width={16} height={16} viewBox="0 0 24 24">
-                            <Path d="M5 4 L15 12 L5 20 Z" fill={colors.accent} />
-                            <Path d="M19 5 L19 19" stroke={colors.accent} strokeWidth={2} strokeLinecap="round" />
-                          </Svg>
+                          <SkipIcon size={16} color={colors.accent} />
                         </TouchableOpacity>
                       )}
 

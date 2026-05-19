@@ -12,7 +12,7 @@ import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import YoutubePlayer from "react-native-youtube-iframe";
 import { useStore } from "../store";
 import { api } from "../services/api";
-import { KewLogo, SansText, SerifText, Divider, ThumbPlaceholder, SkipCounter, Toast } from "../components/UI";
+import { KewLogo, SansText, SerifText, Divider, ThumbPlaceholder, SkipCounter, SkipIcon, Toast } from "../components/UI";
 import { LogoMark } from "../components/TabIcons";
 import { Colors, ColorPalette, FontFamily, FontSize, Spacing, Radius, withAlpha } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
@@ -461,11 +461,8 @@ export default function PlayerScreen() {
             accessibilityRole="button"
             accessibilityLabel="Skip"
           >
-            {/* Skip-forward: filled triangle + vertical bar (per spec). */}
-            <Svg width={16} height={16} viewBox="0 0 24 24">
-              <Path d="M5 4 L15 12 L5 20 Z" fill={colors.accent} />
-              <Path d="M19 5 L19 19" stroke={colors.accent} strokeWidth={2} strokeLinecap="round" />
-            </Svg>
+            {/* Canonical skip-to-next icon (shared with iPad Skip button + Kew+ upsell row). */}
+            <SkipIcon size={16} color={colors.accent} />
           </TouchableOpacity>
 
           <TouchableOpacity

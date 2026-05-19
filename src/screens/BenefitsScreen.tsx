@@ -5,7 +5,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import Svg, { Rect, Path, Polyline, Circle, Line } from "react-native-svg";
-import { SansText, SerifText, ErrorBanner } from "../components/UI";
+import { SansText, SerifText, ErrorBanner, SkipIcon } from "../components/UI";
 import { ProIcon } from "../components/ProIcon";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius, KEW_PLUS_GOLD, KEW_PLUS_GOLD_TINT } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
@@ -51,13 +51,7 @@ const FEATURES: FeatureRow[] = [
     key: "skips",
     title: "More skips",
     subtitle: "Higher skip limit, earned by finishing videos",
-    icon: (color, s) => (
-      <Svg width={s} height={s} viewBox="0 0 24 24">
-        <Polyline points="4,5 11,12 4,19" stroke={color} strokeWidth={2.5} fill="none" strokeLinecap="round" strokeLinejoin="round" />
-        <Polyline points="11,5 18,12 11,19" stroke={color} strokeWidth={2.5} fill="none" strokeLinecap="round" strokeLinejoin="round" />
-        <Rect x={19} y={5} width={2.4} height={14} rx={1.2} fill={color} />
-      </Svg>
-    ),
+    icon: (color, s) => <SkipIcon size={s} color={color} />,
   },
   {
     key: "journal",

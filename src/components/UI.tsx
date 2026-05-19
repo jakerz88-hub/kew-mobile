@@ -3,6 +3,7 @@ import {
   View, Text, TouchableOpacity, ActivityIndicator, Image, Animated,
   StyleSheet, ViewStyle, TextStyle,
 } from "react-native";
+import Svg, { Path } from "react-native-svg";
 import { Colors, ColorPalette, FontFamily, FontSize, Spacing, Radius, KEW_PLUS_GOLD } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
 import { useStore } from "../store";
@@ -125,6 +126,21 @@ export function Button({ label, onPress, variant = "primary", loading, disabled,
 export function Divider({ style }: { style?: ViewStyle }) {
   const { colors } = useTheme();
   return <View style={[staticStyles.divider, { backgroundColor: colors.divider }, style]} />;
+}
+
+// Canonical "skip-to-next" icon: filled triangle + vertical bar. Used by the
+// PlayerScreen + QueueScreen Skip buttons (the click points users associate with
+// the action), by the BenefitsScreen / web benefits "More skips" upsell row, and
+// by the skips hero slide in NUXScreen / KewPlusWelcomeScreen. Pass `color` to
+// recolor (e.g. colors.accent on the button, colors.ink on the hero, the
+// upsell-row color arg in the FEATURES callback).
+export function SkipIcon({ size = 16, color }: { size?: number; color: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Path d="M5 4 L15 12 L5 20 Z" fill={color} />
+      <Path d="M19 5 L19 19" stroke={color} strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  );
 }
 
 export function ChannelDot({ title, size = 26, color }: { title: string; size?: number; color?: string }) {
