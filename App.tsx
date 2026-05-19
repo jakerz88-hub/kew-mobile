@@ -24,6 +24,7 @@ import { KewPlusSheet } from "./src/components/KewPlusSheet";
 
 // Screens
 import LoginScreen from "./src/screens/LoginScreen";
+import NUXScreen from "./src/screens/NUXScreen";
 import OnboardingScreen from "./src/screens/OnboardingScreen";
 import QueueScreen from "./src/screens/QueueScreen";
 import BrowseScreen from "./src/screens/BrowseScreen";
@@ -45,7 +46,8 @@ import AppIconScreen from "./src/screens/AppIconScreen";
 import TabletNavigator from "./src/navigation/TabletNavigator";
 import { useIsTablet } from "./src/hooks/useIsTablet";
 
-const ONBOARDING_KEY = "kew_onboarding_done";
+const NUX_KEY         = "kew_nux_done";
+const ONBOARDING_KEY  = "kew_onboarding_done";
 
 const Tab   = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -153,6 +155,7 @@ function AppNavigator() {
 
 export default function App() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
+  const [nuxDone, setNuxDone] = useState<boolean | undefined>(undefined);
   const [onboardingDone, setOnboardingDone] = useState<boolean | undefined>(undefined);
   const { fetchUser, fetchQueue, fetchQueues, user, isLoadingUser } = useStore();
 
@@ -200,7 +203,9 @@ export default function App() {
         // signing in on the same device doesn't inherit the previous user's
         // queue, activeQueueId, or onboarding-skip state.
         useStore.getState().reset();
+        AsyncStorage.removeItem(NUX_KEY).catch(() => {});
         AsyncStorage.removeItem(ONBOARDING_KEY).catch(() => {});
+        setNuxDone(undefined);
         setOnboardingDone(undefined);
         logoutPurchases();
       }
@@ -215,21 +220,33 @@ export default function App() {
     configurePurchases(user.id);
   }, [user?.id]);
 
-  // Once user is loaded, check whether to skip onboarding
+  // Once user is loaded, check whether to skip NUX + onboarding.
+  // Existing users (hasYoutube === true) skip both: they've already linked
+  // their account and don't need to see the welcome carousel or playlist
+  // import flow again.
   useEffect(() => {
     if (!user) return;
-    AsyncStorage.getItem(ONBOARDING_KEY).then((val) => {
-      if (val === "true") {
-        setOnboardingDone(true);
-      } else if (user.hasYoutube) {
-        // Existing user — mark onboarding done so they don't see it
-        AsyncStorage.setItem(ONBOARDING_KEY, "true");
+    Promise.all([
+      AsyncStorage.getItem(NUX_KEY),
+      AsyncStorage.getItem(ONBOARDING_KEY),
+    ]).then(([nuxVal, onbVal]) => {
+      if (user.hasYoutube) {
+        // Existing user — mark both done so they go straight to the app
+        if (nuxVal !== "true") AsyncStorage.setItem(NUX_KEY, "true");
+        if (onbVal !== "true") AsyncStorage.setItem(ONBOARDING_KEY, "true");
+        setNuxDone(true);
         setOnboardingDone(true);
       } else {
-        setOnboardingDone(false);
+        setNuxDone(nuxVal === "true");
+        setOnboardingDone(onbVal === "true");
       }
     });
   }, [user]);
+
+  const markNuxDone = () => {
+    AsyncStorage.setItem(NUX_KEY, "true");
+    setNuxDone(true);
+  };
 
   const markOnboardingDone = () => {
     AsyncStorage.setItem(ONBOARDING_KEY, "true");
@@ -239,7 +256,7 @@ export default function App() {
   const isLoading =
     (!fontsLoaded && !fontError) ||
     session === undefined ||
-    (session !== null && user !== null && onboardingDone === undefined);
+    (session !== null && user !== null && (nuxDone === undefined || onboardingDone === undefined));
 
   if (isLoading) {
     return (
@@ -274,14 +291,20 @@ export default function App() {
           <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="Login" component={LoginScreen} />
           </Stack.Navigator>
-        ) : onboardingDone ? (
-          <AppNavigator />
-        ) : (
+        ) : !nuxDone ? (
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="NUX">
+              {() => <NUXScreen onDone={markNuxDone} />}
+            </Stack.Screen>
+          </Stack.Navigator>
+        ) : !onboardingDone ? (
           <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="Onboarding">
               {() => <OnboardingScreen onDone={markOnboardingDone} />}
             </Stack.Screen>
           </Stack.Navigator>
+        ) : (
+          <AppNavigator />
         )}
         <GlobalKewPlusSheet />
       </NavigationContainer>
