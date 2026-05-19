@@ -5,7 +5,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import Svg, { Rect, Path, Polyline, Circle, Line } from "react-native-svg";
-import { SansText, SerifText } from "../components/UI";
+import { SansText, SerifText, ErrorBanner } from "../components/UI";
 import { ProIcon } from "../components/ProIcon";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius, KEW_PLUS_GOLD, KEW_PLUS_GOLD_TINT } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
@@ -134,6 +134,7 @@ export default function BenefitsScreen() {
   const [plan, setPlan] = useState<Plan>("annual");
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const fetchUser = useStore(s => s.fetchUser);
   const {
     isPro, isLoading, monthlyPackage, annualPackage,
@@ -142,6 +143,7 @@ export default function BenefitsScreen() {
 
   const handleSubscribe = async () => {
     if (purchasing) return;
+    setError(null);
     setPurchasing(true);
     try {
       const success = plan === "annual" ? await purchaseAnnual() : await purchaseMonthly();
@@ -151,6 +153,10 @@ export default function BenefitsScreen() {
         fetchUser().catch(() => {});
         navigation.goBack();
       }
+      // success === false means the user cancelled. Stay on the screen
+      // silently — surfacing an error would be annoying.
+    } catch (e: any) {
+      setError(e?.message ?? "Couldn't complete purchase. Please try again.");
     } finally {
       setPurchasing(false);
     }
@@ -158,9 +164,18 @@ export default function BenefitsScreen() {
 
   const handleRestore = async () => {
     if (restoring) return;
+    setError(null);
     setRestoring(true);
     try {
-      await restorePurchases();
+      const restored = await restorePurchases();
+      if (!restored) {
+        setError("No active subscription found on this Apple ID.");
+      }
+      // If restored is true, the customerInfo listener inside useSubscription
+      // updates isPro and the screen re-renders into the pro state. No further
+      // UI feedback needed.
+    } catch (e: any) {
+      setError(e?.message ?? "Couldn't restore purchases. Please try again.");
     } finally {
       setRestoring(false);
     }
@@ -182,6 +197,8 @@ export default function BenefitsScreen() {
         </View>
         <View style={styles.headerSide} />
       </View>
+
+      {error && <ErrorBanner message={error} onDismiss={() => setError(null)} />}
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.hero}>

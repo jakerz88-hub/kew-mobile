@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Linking } from "react-native";
+import { Linking } from "react-native";
 import Purchases, {
   CustomerInfo,
   PurchasesOffering,
@@ -70,16 +70,16 @@ export function useSubscription(): UseSubscription {
       setCustomerInfo(updated);
       return isProActive(updated);
     } catch (e: any) {
-      // PurchasesError has userCancelled and code fields. Don't alert on cancel.
+      // PurchasesError has userCancelled + code fields. A user cancel is not
+      // a failure — return false silently so the consumer doesn't surface an
+      // error banner. Any other failure throws so the consumer can render
+      // its own feedback (per DESIGN_SYSTEM §10, ErrorBanner is the canonical
+      // persistent-failure surface).
       if (e?.userCancelled) return false;
       const code = e?.code as PURCHASES_ERROR_CODE | undefined;
       if (code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) return false;
       console.warn("[useSubscription] purchase failed", e);
-      Alert.alert(
-        "Purchase didn't go through",
-        "Something went wrong. Please try again.",
-      );
-      return false;
+      throw e;
     }
   }, []);
 
@@ -89,16 +89,14 @@ export function useSubscription(): UseSubscription {
 
   const purchaseMonthly = useCallback(async () => {
     if (!monthlyPackage) {
-      Alert.alert("Plan unavailable", "Monthly plan isn't available right now.");
-      return false;
+      throw new Error("Monthly plan isn't available right now.");
     }
     return purchasePackage(monthlyPackage);
   }, [monthlyPackage, purchasePackage]);
 
   const purchaseAnnual = useCallback(async () => {
     if (!annualPackage) {
-      Alert.alert("Plan unavailable", "Annual plan isn't available right now.");
-      return false;
+      throw new Error("Annual plan isn't available right now.");
     }
     return purchasePackage(annualPackage);
   }, [annualPackage, purchasePackage]);
@@ -108,18 +106,10 @@ export function useSubscription(): UseSubscription {
     try {
       const info = await Purchases.restorePurchases();
       setCustomerInfo(info);
-      const restored = isProActive(info);
-      Alert.alert(
-        restored ? "Purchases restored" : "Nothing to restore",
-        restored
-          ? "Welcome back to Kew+."
-          : "We couldn't find an active subscription on this Apple ID.",
-      );
-      return restored;
+      return isProActive(info);
     } catch (e) {
       console.warn("[useSubscription] restore failed", e);
-      Alert.alert("Restore failed", "Please try again in a moment.");
-      return false;
+      throw e;
     }
   }, []);
 
