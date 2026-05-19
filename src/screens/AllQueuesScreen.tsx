@@ -295,7 +295,7 @@ function makeStyles(c: ColorPalette) {
     separator:       { height: 1, backgroundColor: c.divider, marginLeft: 60 },
     row: {
       flexDirection: "row", alignItems: "center",
-      paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm + 2,
+      paddingHorizontal: Spacing.md, paddingVertical: Spacing.s10,
       gap: Spacing.sm, backgroundColor: c.cream,
     },
     rowActive:       { backgroundColor: withAlpha(c.accent, 0.04) },
@@ -333,7 +333,7 @@ function makeStyles(c: ColorPalette) {
     },
     newQueueBtn: {
       backgroundColor: c.accent, borderRadius: Radius.pill,
-      paddingVertical: Spacing.sm + 2, alignItems: "center",
+      paddingVertical: Spacing.s10, alignItems: "center",
     },
     newQueueBtnText: { fontSize: FontSize.sm, color: c.buttonText, fontFamily: FontFamily.sansMedium },
     proNote: {
@@ -355,7 +355,7 @@ function makeStyles(c: ColorPalette) {
     },
     modalOption: {
       flexDirection: "row", alignItems: "center", gap: Spacing.sm,
-      paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm + 4,
+      paddingHorizontal: Spacing.md, paddingVertical: Spacing.s12,
     },
     modalOptionText: { fontSize: FontSize.sm, color: c.ink, fontFamily: FontFamily.sans },
   });

@@ -52,7 +52,7 @@ export function QueuePickerModal({
         keyExtractor={q => q.id}
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={{ flexDirection: "row", alignItems: "center", gap: Spacing.sm, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm + 2 }}
+            style={{ flexDirection: "row", alignItems: "center", gap: Spacing.sm, paddingHorizontal: Spacing.md, paddingVertical: Spacing.s10 }}
             onPress={() => onSelect(item.id)}
             activeOpacity={0.7}
           >
@@ -67,7 +67,7 @@ export function QueuePickerModal({
       />
       <View style={{ height: 1, backgroundColor: colors.divider }} />
       <TouchableOpacity
-        style={{ flexDirection: "row", alignItems: "center", gap: Spacing.sm, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm + 2 }}
+        style={{ flexDirection: "row", alignItems: "center", gap: Spacing.sm, paddingHorizontal: Spacing.md, paddingVertical: Spacing.s10 }}
         onPress={() => { onDismiss(); navigation.navigate("NewQueue"); }}
         activeOpacity={0.7}
       >

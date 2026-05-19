@@ -154,7 +154,7 @@ function makeStyles(c: ColorPalette) {
     nextThumbArea:{ height: 120, justifyContent: "center", alignItems: "center", position: "relative" },
     readyTag:     { position: "absolute", top: 8, left: 8, backgroundColor: c.green, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 },
     readyTagText: { color: c.buttonText, fontSize: FontSize.xxs, fontFamily: FontFamily.sansMedium, letterSpacing: 0.5 },
-    nextInfo:     { padding: Spacing.sm + 2 },
+    nextInfo:     { padding: Spacing.s10 },
     nextChannel:  { color: withAlpha(Colors.cream, 0.45), fontSize: FontSize.xxs, textTransform: "uppercase", letterSpacing: 0.5 },
     nextTitle:    { color: c.buttonText, fontSize: FontSize.md, lineHeight: 22, marginTop: 3 },
     emptyNext:    { alignItems: "center", gap: Spacing.xs },

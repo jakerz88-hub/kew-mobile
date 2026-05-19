@@ -10,21 +10,23 @@
 const tsParser = require("@typescript-eslint/parser");
 const globals  = require("globals");
 
-const noEmDash          = require("./eslint-rules/no-em-dash");
-const noSystemFontFamily = require("./eslint-rules/no-system-font-family");
-const noRawColors       = require("./eslint-rules/no-raw-colors");
-const noRawFontSize     = require("./eslint-rules/no-raw-font-size");
-const noRawWhite        = require("./eslint-rules/no-raw-white");
-const noBorderRadius999 = require("./eslint-rules/no-border-radius-999");
+const noEmDash             = require("./eslint-rules/no-em-dash");
+const noSystemFontFamily   = require("./eslint-rules/no-system-font-family");
+const noRawColors          = require("./eslint-rules/no-raw-colors");
+const noRawFontSize        = require("./eslint-rules/no-raw-font-size");
+const noRawWhite           = require("./eslint-rules/no-raw-white");
+const noBorderRadius999    = require("./eslint-rules/no-border-radius-999");
+const noSpacingArithmetic  = require("./eslint-rules/no-spacing-arithmetic");
 
 const kewPlugin = {
   rules: {
-    "no-em-dash":           noEmDash,
-    "no-system-font-family": noSystemFontFamily,
-    "no-raw-colors":        noRawColors,
-    "no-raw-font-size":     noRawFontSize,
-    "no-raw-white":         noRawWhite,
-    "no-border-radius-999": noBorderRadius999,
+    "no-em-dash":             noEmDash,
+    "no-system-font-family":  noSystemFontFamily,
+    "no-raw-colors":          noRawColors,
+    "no-raw-font-size":       noRawFontSize,
+    "no-raw-white":           noRawWhite,
+    "no-border-radius-999":   noBorderRadius999,
+    "no-spacing-arithmetic":  noSpacingArithmetic,
   },
 };
 
@@ -63,6 +65,7 @@ module.exports = [
       "kew/no-raw-font-size":     "error", // numeric fontSize → FontSize.* (ratcheted 2026-05-18)
       "kew/no-raw-white":         "error", // color:"white" → colors.cream/buttonText (ratcheted 2026-05-18)
       "kew/no-border-radius-999": "error", // borderRadius:999 → Radius.pill (ratcheted 2026-05-18)
+      "kew/no-spacing-arithmetic": "error", // Spacing.X + N → intermediate Spacing.sN (added 2026-05-19)
     },
   },
 ];

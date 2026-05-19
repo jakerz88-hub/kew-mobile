@@ -638,6 +638,9 @@ function makeStyles(c: ColorPalette) {
     cancelText:     { fontSize: FontSize.sm, color: c.accent, fontFamily: FontFamily.sansMedium },
 
     // Landing hero
+    // 28px paddingTop is a one-off hero size between Spacing.lg (24) and
+    // Spacing.xl (32); not worth a new intermediate token for a single use.
+    // eslint-disable-next-line kew/no-spacing-arithmetic
     hero:           { alignItems: "center", paddingTop: Spacing.lg + 4, paddingBottom: Spacing.md, paddingHorizontal: Spacing.md, gap: Spacing.xs },
     heroTitle:      { fontSize: FontSize.xxl, textAlign: "center", lineHeight: 34 },
     heroSub:        { fontSize: FontSize.sm, color: c.warmMid, textAlign: "center", lineHeight: 20 },

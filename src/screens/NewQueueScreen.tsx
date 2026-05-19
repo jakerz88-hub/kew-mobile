@@ -173,7 +173,7 @@ function makeStyles(c: ColorPalette) {
     },
     nameInput: {
       backgroundColor: c.cardBg, borderWidth: 1, borderColor: c.divider,
-      borderRadius: Radius.md, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm + 2,
+      borderRadius: Radius.md, paddingHorizontal: Spacing.md, paddingVertical: Spacing.s10,
       fontSize: FontSize.md, color: c.ink, fontFamily: FontFamily.sans,
     },
 
@@ -209,7 +209,7 @@ function makeStyles(c: ColorPalette) {
     createBtn: {
       marginTop: Spacing.sm,
       backgroundColor: c.accent, borderRadius: Radius.pill,
-      paddingVertical: Spacing.sm + 4, alignItems: "center",
+      paddingVertical: Spacing.s12, alignItems: "center",
     },
     createBtnDisabled: { opacity: 0.45 },
     createBtnText: {

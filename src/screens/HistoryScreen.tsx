@@ -219,7 +219,7 @@ function makeStyles(c: ColorPalette) {
     pageHeader:      { padding: Spacing.md, paddingBottom: Spacing.sm },
     pageTitle:       { fontSize: FontSize.lg },
     pageSubtitle:    { fontSize: FontSize.xs, color: c.warmMid, marginTop: 2 },
-    item:            { flexDirection: "row", alignItems: "center", paddingVertical: Spacing.sm + 2, paddingHorizontal: Spacing.md, gap: Spacing.sm },
+    item:            { flexDirection: "row", alignItems: "center", paddingVertical: Spacing.s10, paddingHorizontal: Spacing.md, gap: Spacing.sm },
     thumb:           { width: 88, height: 56, borderRadius: Radius.sm, overflow: "hidden", backgroundColor: c.divider, flexShrink: 0, position: "relative" },
     thumbImg:        { borderRadius: Radius.sm },
     completedBadge:  { position: "absolute", bottom: 4, right: 4, width: 18, height: 18, borderRadius: 9, backgroundColor: c.green, alignItems: "center", justifyContent: "center" },

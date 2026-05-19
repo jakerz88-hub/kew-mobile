@@ -201,7 +201,7 @@ function makeStyles(c: ColorPalette) {
     listHeader:        { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm },
     countText:         { fontSize: FontSize.xs, color: c.warmMid },
     selectAllText:     { fontSize: FontSize.xs, color: c.accent, fontFamily: FontFamily.sansMedium },
-    row:               { flexDirection: "row", alignItems: "center", gap: Spacing.sm, paddingVertical: Spacing.sm + 2, paddingHorizontal: Spacing.md },
+    row:               { flexDirection: "row", alignItems: "center", gap: Spacing.sm, paddingVertical: Spacing.s10, paddingHorizontal: Spacing.md },
     rowDisabled:       { opacity: 0.4 },
     checkbox:          { width: 22, height: 22, borderRadius: 5, borderWidth: 1.5, borderColor: c.divider, alignItems: "center", justifyContent: "center", flexShrink: 0 },
     checkboxSelected:  { backgroundColor: c.accent, borderColor: c.accent },

@@ -287,7 +287,7 @@ function makeStyles(c: ColorPalette) {
       borderTopLeftRadius: Radius.lg,
       borderTopRightRadius: Radius.lg,
       paddingHorizontal: Spacing.lg,
-      paddingTop: Spacing.sm + 2,
+      paddingTop: Spacing.s10,
       paddingBottom: Spacing.xl,
       maxHeight: height * 0.85,
     },
@@ -410,7 +410,7 @@ function makeStyles(c: ColorPalette) {
     },
     subscribeButton: {
       width: 160,
-      paddingVertical: Spacing.md - 2,
+      paddingVertical: Spacing.s14,
       borderRadius: Radius.pill,
       justifyContent: "center",
       alignItems: "center",

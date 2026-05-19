@@ -316,7 +316,7 @@ const staticStyles = StyleSheet.create({
   emptyIconNode: { marginBottom: Spacing.md, alignItems: "center", justifyContent: "center" },
   emptyTitle:    { fontSize: FontSize.lg, textAlign: "center", marginBottom: Spacing.sm },
   emptySubtitle: { fontSize: FontSize.sm, textAlign: "center", lineHeight: 20 },
-  emptyAction:   { marginTop: Spacing.lg, paddingVertical: Spacing.sm + 2, paddingHorizontal: Spacing.xl, borderRadius: Radius.pill },
+  emptyAction:   { marginTop: Spacing.lg, paddingVertical: Spacing.s10, paddingHorizontal: Spacing.xl, borderRadius: Radius.pill },
   emptyActionText: { fontSize: FontSize.sm, fontFamily: FontFamily.sansMedium },
   errorBanner:   { padding: Spacing.sm, margin: Spacing.md, borderRadius: Radius.sm, flexDirection: "row", alignItems: "center", gap: Spacing.sm },
   errorText:     { fontSize: FontSize.xs, textAlign: "center" },
@@ -327,7 +327,7 @@ const staticStyles = StyleSheet.create({
   toast: {
     position: "absolute", bottom: 32, left: Spacing.lg, right: Spacing.lg,
     borderRadius: Radius.md,
-    paddingVertical: Spacing.sm + 2, paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.s10, paddingHorizontal: Spacing.md,
     zIndex: 99,
   },
   toastText: { fontSize: FontSize.xs, textAlign: "center", lineHeight: 18 },

@@ -149,7 +149,7 @@ const staticStyles = StyleSheet.create({
   kbContainer: { flex: 1, justifyContent: "flex-end" },
   content: {
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.sm + 2,
+    paddingTop: Spacing.s10,
     paddingBottom: Spacing.xl,
   },
   handle: {

@@ -318,11 +318,15 @@ function makeStyles(c: ColorPalette) {
     heroHeadline:     { fontSize: FontSize.xl, color: c.ink, textAlign: "center", marginTop: Spacing.xs },
     heroSubhead:      { fontSize: FontSize.sm, color: c.warmMid, textAlign: "center", lineHeight: 19, paddingHorizontal: Spacing.md },
     featuresCard:     { backgroundColor: c.cardBg, borderWidth: 1, borderColor: c.divider, borderRadius: Radius.md, paddingVertical: Spacing.xs },
-    featureRow:       { flexDirection: "row", alignItems: "center", gap: Spacing.sm, paddingVertical: Spacing.sm + 2, paddingHorizontal: Spacing.md },
+    featureRow:       { flexDirection: "row", alignItems: "center", gap: Spacing.sm, paddingVertical: Spacing.s10, paddingHorizontal: Spacing.md },
     featureIconBox:   { width: 28, height: 28, borderRadius: Radius.sm, backgroundColor: KEW_PLUS_GOLD_TINT, alignItems: "center", justifyContent: "center" },
     featureText:      { flex: 1, minWidth: 0 },
     featureTitle:     { fontSize: FontSize.sm, color: c.ink, fontFamily: FontFamily.sansMedium, marginBottom: 2 },
     featureSubtitle:  { fontSize: FontSize.xs, color: c.warmMid, lineHeight: 17 },
+    // Composite layout calc: align divider under the feature text column,
+    // skipping the leading Spacing.md inset + 28px icon box + Spacing.sm
+    // gap. The 28 isn't a spacing value — it's the icon width.
+    // eslint-disable-next-line kew/no-spacing-arithmetic
     featureDivider:   { height: StyleSheet.hairlineWidth, backgroundColor: c.divider, marginLeft: Spacing.md + 28 + Spacing.sm, marginRight: Spacing.md },
     toggleWrap:       { marginTop: Spacing.lg, alignItems: "center" },
     togglePill:       { flexDirection: "row", backgroundColor: c.divider, borderRadius: Radius.pill, padding: 3, alignSelf: "center" },
@@ -333,7 +337,7 @@ function makeStyles(c: ColorPalette) {
     priceBlock:       { alignItems: "center", marginTop: Spacing.md, gap: 4 },
     priceMain:        { fontSize: FontSize.xl, color: c.ink },
     priceSub:         { fontSize: FontSize.xs, color: c.warmMid },
-    ctaBtn:           { marginTop: Spacing.lg, backgroundColor: KEW_PLUS_GOLD, borderRadius: Radius.pill, paddingVertical: Spacing.md - 2, alignItems: "center", justifyContent: "center" },
+    ctaBtn:           { marginTop: Spacing.lg, backgroundColor: KEW_PLUS_GOLD, borderRadius: Radius.pill, paddingVertical: Spacing.s14, alignItems: "center", justifyContent: "center" },
     ctaBtnDisabled:   { opacity: 0.6 },
     ctaBtnText:       { fontSize: FontSize.sm, color: c.buttonText, fontFamily: FontFamily.sansMedium, letterSpacing: 0.3 },
     restoreBtn:       { marginTop: Spacing.md, alignItems: "center", paddingVertical: Spacing.sm },

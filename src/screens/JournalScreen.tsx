@@ -1079,7 +1079,7 @@ function makeStyles(c: ColorPalette) {
     addEntryDashedText: { fontSize: FontSize.xs, color: c.queued, fontFamily: FontFamily.sansMedium },
 
     // History view rows
-    historyItemWrap: { paddingVertical: Spacing.sm + 2, paddingHorizontal: Spacing.md, gap: 6 },
+    historyItemWrap: { paddingVertical: Spacing.s10, paddingHorizontal: Spacing.md, gap: 6 },
     historyRow:      { flexDirection: "row", alignItems: "center", gap: Spacing.sm },
     historyThumb:    { width: 64, height: 42, borderRadius: 5, overflow: "hidden", backgroundColor: c.divider, position: "relative", flexShrink: 0 },
     historyMeta:     { flex: 1, minWidth: 0 },

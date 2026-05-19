@@ -561,7 +561,7 @@ function makeStyles(c: ColorPalette) {
     chartHint:    { fontSize: FontSize.xxs, color: c.warmMid, textAlign: "right", fontStyle: "italic" },
 
     // Insight strip
-    insightStrip: { backgroundColor: c.greenText, borderRadius: Radius.md, paddingHorizontal: Spacing.md, paddingVertical: Spacing.md - 2 },
+    insightStrip: { backgroundColor: c.greenText, borderRadius: Radius.md, paddingHorizontal: Spacing.md, paddingVertical: Spacing.s14 },
     insightText:  { fontSize: FontSize.sm, color: c.buttonText, lineHeight: 21 },
 
     // Intentionality

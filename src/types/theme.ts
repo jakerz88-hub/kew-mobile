@@ -329,7 +329,15 @@ export const FontFamily = {
 
 export const Spacing = {
   xs:  4,
+  // Intermediates that fill gaps between the abstract scale below md.
+  // Pixel-suffix names (sN = N pixels) are deliberately distinct from the
+  // xs/sm/md primary scale so the difference is visible at a glance, and
+  // they migrate one-to-one off the old `Spacing.X + N` arithmetic.
+  s6:  6,    // was `Spacing.xs + 2`
   sm:  8,
+  s10: 10,   // was `Spacing.sm + 2`
+  s12: 12,   // was `Spacing.sm + 4`
+  s14: 14,   // was `Spacing.md - 2`
   md:  16,
   lg:  24,
   xl:  32,

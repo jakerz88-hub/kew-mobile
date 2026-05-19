@@ -111,7 +111,7 @@ function makeStyles(c: ColorPalette) {
     centered:         { flex: 1, alignItems: "center", justifyContent: "center", gap: Spacing.md },
     loadingText:      { fontSize: FontSize.sm, color: c.warmMid },
     hint:             { fontSize: FontSize.xs, color: c.warmMid, paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm },
-    row:              { flexDirection: "row", alignItems: "center", gap: Spacing.sm, paddingVertical: Spacing.sm + 2, paddingHorizontal: Spacing.md },
+    row:              { flexDirection: "row", alignItems: "center", gap: Spacing.sm, paddingVertical: Spacing.s10, paddingHorizontal: Spacing.md },
     thumb:            { width: 72, height: 54, borderRadius: Radius.sm, flexShrink: 0 },
     thumbPlaceholder: { backgroundColor: c.divider, alignItems: "center", justifyContent: "center" },
     info:             { flex: 1, minWidth: 0, gap: 3 },
