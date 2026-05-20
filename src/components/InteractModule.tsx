@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { friendlyError } from "../utils/friendlyError";
 import {
   Keyboard,
   Linking,
@@ -209,7 +210,7 @@ export function InteractModule({
         setError(connectErr);
       }
     } catch (e: any) {
-      setError(e?.message ?? "Could not reconnect YouTube.");
+      setError(friendlyError(e, "Could not reconnect YouTube."));
     } finally {
       setReconnecting(false);
     }

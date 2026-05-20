@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useMemo } from "react";
+import { friendlyError } from "../utils/friendlyError";
 import {
   View, TouchableOpacity, StyleSheet, SafeAreaView,
   FlatList, Alert, TextInput, Platform, Modal,
@@ -43,7 +44,7 @@ export default function AllQueuesScreen() {
     try {
       await pinQueue(q.id, !q.pinned);
     } catch (e: any) {
-      Alert.alert("Error", e.message ?? "Could not update queue.");
+      Alert.alert("Error", friendlyError(e, "Could not update queue."));
     }
   };
 
@@ -86,7 +87,7 @@ export default function AllQueuesScreen() {
             try {
               await deleteQueue(q.id);
             } catch (e: any) {
-              Alert.alert("Error", e.message ?? "Could not delete queue.");
+              Alert.alert("Error", friendlyError(e, "Could not delete queue."));
             }
           },
         },
@@ -101,7 +102,7 @@ export default function AllQueuesScreen() {
       await updateQueue(renamingId, renameText.trim(), undefined);
       setRenamingId(null);
     } catch (e: any) {
-      Alert.alert("Error", e.message ?? "Could not rename queue.");
+      Alert.alert("Error", friendlyError(e, "Could not rename queue."));
     } finally {
       setSavingRename(false);
     }

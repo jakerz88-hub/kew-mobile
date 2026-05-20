@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { friendlyError } from "../utils/friendlyError";
 import { View, Modal, TouchableOpacity, TouchableWithoutFeedback, Alert, Image, StyleSheet, Dimensions } from "react-native";
 import { SansText, Divider, ErrorBanner } from "./UI";
 import { BottomSheet } from "./BottomSheet";
@@ -69,7 +70,7 @@ export function ChannelSheet({
         }))
       );
     } catch (e: any) {
-      setError(e?.message || "Failed to load channel");
+      setError(friendlyError(e, "Failed to load channel"));
     } finally {
       setIsLoading(false);
     }
@@ -88,7 +89,7 @@ export function ChannelSheet({
         { subscriptionId: result.subscriptionId, ytChannelId },
       ]);
     } catch (e: any) {
-      setError(e?.message || "Failed to subscribe");
+      setError(friendlyError(e, "Failed to subscribe"));
     } finally {
       setIsSubscribing(false);
     }
@@ -109,7 +110,7 @@ export function ChannelSheet({
               prev.filter((s) => s.ytChannelId !== ytChannelId)
             );
           } catch (e: any) {
-            setError(e?.message || "Failed to unsubscribe");
+            setError(friendlyError(e, "Failed to unsubscribe"));
           } finally {
             setIsSubscribing(false);
           }

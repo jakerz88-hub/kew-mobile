@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from "react";
+import { friendlyError } from "../utils/friendlyError";
 import {
   View, TextInput, FlatList, ScrollView, TouchableOpacity, StyleSheet,
   SafeAreaView, Image, ActivityIndicator, Keyboard, Platform, RefreshControl,
@@ -134,7 +135,7 @@ export default function ExploreScreen() {
       const res = await api.searchYouTube(trimmed, limit);
       setResults(res);
     } catch (e: any) {
-      setSearchError(e.message ?? "Search failed. Please try again.");
+      setSearchError(friendlyError(e, "Search failed. Please try again."));
     } finally {
       setSearching(false);
     }
@@ -150,7 +151,7 @@ export default function ExploreScreen() {
       setResults(res);
       setResultLimit(nextLimit);
     } catch (e: any) {
-      setSearchError(e.message ?? "Failed to load more results.");
+      setSearchError(friendlyError(e, "Failed to load more results."));
     } finally {
       setLoadingMore(false);
     }
@@ -167,7 +168,7 @@ export default function ExploreScreen() {
       const res = await api.searchYouTube(submittedQuery, resultLimit);
       setResults(res);
     } catch (e: any) {
-      setSearchError(e.message ?? "Refresh failed. Please try again.");
+      setSearchError(friendlyError(e, "Refresh failed. Please try again."));
     } finally {
       setRefreshing(false);
     }

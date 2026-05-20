@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { friendlyError } from "../utils/friendlyError";
 import {
   View, TouchableOpacity, StyleSheet, SafeAreaView,
   TextInput, ScrollView, Alert,
@@ -62,7 +63,7 @@ export default function NewQueueScreen() {
       await createQueue(trimmed, selectedEmoji);
       navigation.navigate("AllQueues");
     } catch (e: any) {
-      Alert.alert("Error", e.message ?? "Could not create queue.");
+      Alert.alert("Error", friendlyError(e, "Could not create queue."));
     } finally {
       setCreating(false);
     }

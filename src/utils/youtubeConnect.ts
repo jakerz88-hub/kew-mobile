@@ -1,4 +1,5 @@
 /**
+import { friendlyError } from "./friendlyError";
  * connectYouTube — in-app YouTube OAuth for already-authenticated users.
  *
  * Lessons applied (see memory/auth_gotchas.md):
@@ -104,6 +105,6 @@ export async function connectYouTube(): Promise<YouTubeConnectResult> {
 
     return { success: true };
   } catch (e: any) {
-    return { success: false, error: e.message || "Could not connect YouTube." };
+    return { success: false, error: friendlyError(e, "Could not connect YouTube.") };
   }
 }

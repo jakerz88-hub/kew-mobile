@@ -1,4 +1,5 @@
 /**
+import { friendlyError } from "../utils/friendlyError";
  * ReflectModule — bottom sheet on the Player screen for capturing a private
  * journal entry while watching a video. Persists via POST /v1/journal/entries
  * (api.createJournalEntry).
@@ -153,7 +154,7 @@ export function ReflectModule({
       onSaved?.();
       requestClose();
     } catch (e: any) {
-      setError(e?.message ?? "Couldn't save entry.");
+      setError(friendlyError(e, "Couldn't save entry."));
     } finally {
       setSaving(false);
     }

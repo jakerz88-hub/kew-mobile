@@ -1,4 +1,5 @@
 import React, { useState, useRef, useMemo } from "react";
+import { friendlyError } from "../utils/friendlyError";
 import {
   View, Text, TextInput, StyleSheet, SafeAreaView, ScrollView,
   TouchableOpacity, ActivityIndicator, Platform, KeyboardAvoidingView,
@@ -105,7 +106,7 @@ export default function LoginScreen() {
         }
       }
     } catch (e: any) {
-      setError(e.message || "Something went wrong. Please try again.");
+      setError(friendlyError(e, "Something went wrong. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -140,7 +141,7 @@ export default function LoginScreen() {
       }
     } catch (e: any) {
       if (e.code === "ERR_REQUEST_CANCELED") return;
-      setError(e.message || "Apple sign-in failed. Please try again.");
+      setError(friendlyError(e, "Apple sign-in failed. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -166,7 +167,7 @@ export default function LoginScreen() {
       // Auto-focus the code input after the step transition
       setTimeout(() => codeInputRef.current?.focus(), 100);
     } catch (e: any) {
-      setError(e.message || "Could not send code. Please try again.");
+      setError(friendlyError(e, "Could not send code. Please try again."));
     } finally {
       setEmailLoading(false);
     }
@@ -187,7 +188,7 @@ export default function LoginScreen() {
       if (verifyError) throw verifyError;
       // Navigation happens automatically via onAuthStateChange in App.tsx
     } catch (e: any) {
-      setError(e.message || "Invalid code. Please try again.");
+      setError(friendlyError(e, "Invalid code. Please try again."));
     } finally {
       setEmailLoading(false);
     }
