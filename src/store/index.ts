@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { Queue, User, KewQueue } from "../types";
 import { api } from "../services/api";
+import { friendlyError } from "../utils/friendlyError";
 
 export interface KewPlusUpsell {
   headline: string;
@@ -112,7 +113,7 @@ export const useStore = create<AppState>((set, get) => ({
         get().fetchQueuedVideos();
       }
     } catch (e: any) {
-      set({ error: e.message, isLoadingUser: false });
+      set({ error: friendlyError(e), isLoadingUser: false });
     }
   },
 
@@ -122,7 +123,7 @@ export const useStore = create<AppState>((set, get) => ({
       const queue = await api.getQueue(get().activeQueueId ?? undefined);
       set({ queue, isLoadingQueue: false });
     } catch (e: any) {
-      set({ error: e.message, isLoadingQueue: false });
+      set({ error: friendlyError(e), isLoadingQueue: false });
     }
   },
 
@@ -198,7 +199,7 @@ export const useStore = create<AppState>((set, get) => ({
       const updated = await api.updateQueue(id, { pinned });
       set(s => ({ queues: s.queues.map(q => q.id === id ? updated : q) }));
     } catch (e: any) {
-      set({ error: e.message });
+      set({ error: friendlyError(e) });
       throw e;
     }
   },
@@ -262,7 +263,7 @@ export const useStore = create<AppState>((set, get) => ({
       // useAddToQueue handles it with a dedicated Alert. Other errors
       // still get the banner.
       if (e?.code !== "queue_limit_reached") {
-        set({ error: e.message });
+        set({ error: friendlyError(e) });
       }
       throw e;
     }
@@ -314,7 +315,7 @@ export const useStore = create<AppState>((set, get) => ({
         };
       });
     } catch (e: any) {
-      set({ error: e.message });
+      set({ error: friendlyError(e) });
       throw e;
     }
   },
@@ -356,7 +357,7 @@ export const useStore = create<AppState>((set, get) => ({
         };
       });
     } catch (e: any) {
-      set({ error: e.message });
+      set({ error: friendlyError(e) });
       throw e;
     }
   },
@@ -386,7 +387,7 @@ export const useStore = create<AppState>((set, get) => ({
         return { queue: { ...s.queue, entries: finalEntries, current: newCurrent } };
       });
     } catch (e: any) {
-      set({ error: e.message });
+      set({ error: friendlyError(e) });
       throw e;
     }
   },
@@ -396,7 +397,7 @@ export const useStore = create<AppState>((set, get) => ({
       await api.shuffleQueue();
       await get().fetchQueue();
     } catch (e: any) {
-      set({ error: e.message });
+      set({ error: friendlyError(e) });
       throw e;
     }
   },
@@ -421,7 +422,7 @@ export const useStore = create<AppState>((set, get) => ({
       });
       return result;
     } catch (e: any) {
-      set({ error: e.message });
+      set({ error: friendlyError(e) });
       throw e;
     }
   },
@@ -477,7 +478,7 @@ export const useStore = create<AppState>((set, get) => ({
         };
       });
     } catch (e: any) {
-      set({ error: e.message });
+      set({ error: friendlyError(e) });
     }
   },
 }));

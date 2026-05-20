@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { friendlyError } from "../utils/friendlyError";
 import { View, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, Image, ActivityIndicator, RefreshControl, Platform } from "react-native";
 import { useIsTablet } from "../hooks/useIsTablet";
 import { useNavigation } from "@react-navigation/native";
@@ -48,7 +49,7 @@ export default function RecentUploadsScreen() {
       const vids = await api.getRecentUploads(7, forceRefresh);
       setVideos(vids);
     } catch (e: any) {
-      setLoadError(e?.message ?? "Failed to load recent uploads");
+      setLoadError(friendlyError(e, "Failed to load recent uploads"));
     } finally {
       setLoading(false);
       setRefreshing(false);

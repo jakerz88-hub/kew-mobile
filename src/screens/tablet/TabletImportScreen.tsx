@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { friendlyError } from "../../utils/friendlyError";
 import {
   View, FlatList, TouchableOpacity, StyleSheet,
   SafeAreaView, Image, ActivityIndicator,
@@ -63,7 +64,7 @@ function ListView({
     if (!hasYoutube) { setLoading(false); return; }
     api.getPlaylists()
       .then(setPlaylists)
-      .catch(e => setError(e?.message ?? "Failed to load playlists."))
+      .catch(e => setError(friendlyError(e, "Failed to load playlists.")))
       .finally(() => setLoading(false));
   }, [hasYoutube]);
 
@@ -160,7 +161,7 @@ function PickerView({
         setVideos(result.videos);
         setSkipped(result.skippedCount);
       })
-      .catch(e => setLoadError(e?.message ?? "Failed to load videos."))
+      .catch(e => setLoadError(friendlyError(e, "Failed to load videos.")))
       .finally(() => setLoading(false));
   }, [playlist.id]);
 
@@ -210,7 +211,7 @@ function PickerView({
       if (e?.code === "queue_limit_reached") {
         await handleQueueLimitReached();
       } else {
-        showToast(e?.message ?? "Import failed. Please try again.");
+        showToast(friendlyError(e, "Import failed. Please try again."));
       }
     } finally {
       setImporting(false);

@@ -1,4 +1,5 @@
 /**
+import { friendlyError } from "../utils/friendlyError";
  * JournalScreen — replaces HistoryScreen for paid users. Free users get the
  * existing HistoryScreen verbatim (rendered inline below).
  *
@@ -231,7 +232,7 @@ function JournalScreenPaid() {
       const data = await api.getJournalFeed();
       setFeedItems(data);
     } catch (e: any) {
-      setLocalError(e?.message ?? "Couldn't load your journal.");
+      setLocalError(friendlyError(e, "Couldn't load your journal."));
     } finally {
       setLoading(false);
     }
@@ -279,7 +280,7 @@ function JournalScreenPaid() {
       closeComposer();
       await loadFeed();
     } catch (e: any) {
-      setLocalError(e?.message ?? "Couldn't save entry.");
+      setLocalError(friendlyError(e, "Couldn't save entry."));
     }
   };
 
@@ -296,7 +297,7 @@ function JournalScreenPaid() {
         showToast("Entry deleted");
         await loadFeed();
       } catch (e: any) {
-        setLocalError(e?.message ?? "Couldn't delete entry.");
+        setLocalError(friendlyError(e, "Couldn't delete entry."));
       }
     };
 

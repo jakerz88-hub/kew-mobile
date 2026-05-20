@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
+import { friendlyError } from "../utils/friendlyError";
 import { View, ScrollView, SafeAreaView, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
@@ -71,7 +72,7 @@ export default function InsightsScreen() {
       setIntent(n);
       setLimits(l);
     } catch (e: any) {
-      setError(e?.message ?? "Failed to load insights.");
+      setError(friendlyError(e, "Failed to load insights."));
     } finally {
       setLoading(false);
     }
@@ -94,7 +95,7 @@ export default function InsightsScreen() {
       const n = await api.getIntentionality(period);
       setIntent(n);
     } catch (e: any) {
-      setError(e?.message ?? "Failed to save limits.");
+      setError(friendlyError(e, "Failed to save limits."));
     }
   };
 

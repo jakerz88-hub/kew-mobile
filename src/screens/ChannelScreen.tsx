@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
+import { friendlyError } from "../utils/friendlyError";
 import { View, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, Image, RefreshControl, Platform } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
@@ -62,7 +63,7 @@ export default function ChannelScreen() {
       setVideos(vids);
       setStage(targetStage);
     } catch (e: any) {
-      setLoadError(e?.message ?? "Failed to load videos");
+      setLoadError(friendlyError(e, "Failed to load videos"));
     } finally {
       setLoading(false);
       setLoadingOlder(false);

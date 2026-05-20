@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { friendlyError } from "../utils/friendlyError";
 import {
   View, FlatList, TextInput, TouchableOpacity, StyleSheet,
   SafeAreaView, Image, RefreshControl, ActivityIndicator, ScrollView,
@@ -78,7 +79,7 @@ export default function BrowseScreen() {
       const ch = await api.listChannels();
       setChannels(ch);
     } catch (e: any) {
-      setLoadError(e?.message ?? "Failed to load channels");
+      setLoadError(friendlyError(e, "Failed to load channels"));
     }
   }, []);
 
@@ -108,7 +109,7 @@ export default function BrowseScreen() {
       setPanelVideos(vids);
       if (channelId) setPanelStage(targetStage);
     } catch (e: any) {
-      setLoadError(e?.message ?? "Failed to load videos");
+      setLoadError(friendlyError(e, "Failed to load videos"));
     } finally {
       setPanelLoading(false);
       setPanelLoadingOlder(false);
@@ -127,7 +128,7 @@ export default function BrowseScreen() {
       await fetchUser();
       // hasYoutube is now true — the gate render will disappear automatically
     } catch (e: any) {
-      setYtError(e?.message ?? "Could not connect YouTube.");
+      setYtError(friendlyError(e, "Could not connect YouTube."));
     } finally {
       setYtConnecting(false);
     }
@@ -141,7 +142,7 @@ export default function BrowseScreen() {
       setChannels(updated);
       if (isTablet) await loadPanelVideos(selectedChannelId);
     } catch (e: any) {
-      setLoadError(e?.message ?? "Sync failed. Pull down to try again.");
+      setLoadError(friendlyError(e, "Sync failed. Pull down to try again."));
     } finally {
       setSyncing(false);
     }

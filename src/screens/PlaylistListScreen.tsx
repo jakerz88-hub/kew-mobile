@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { friendlyError } from "../utils/friendlyError";
 import {
   View, FlatList, TouchableOpacity, StyleSheet,
   SafeAreaView, Image, ActivityIndicator,
@@ -25,7 +26,7 @@ export default function PlaylistListScreen() {
     if (!user?.hasYoutube) { setLoading(false); return; }
     api.getPlaylists()
       .then(setPlaylists)
-      .catch(e => setError(e?.message ?? "Failed to load playlists."))
+      .catch(e => setError(friendlyError(e, "Failed to load playlists.")))
       .finally(() => setLoading(false));
   }, [user?.hasYoutube]);
 

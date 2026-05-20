@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
+import { friendlyError } from "../utils/friendlyError";
 import {
   View, FlatList, TouchableOpacity, StyleSheet,
   SafeAreaView, Image, ActivityIndicator, Alert, Platform,
@@ -46,7 +47,7 @@ export default function PlaylistVideoPickerScreen() {
         setVideos(result.videos);
         setSkipped(result.skippedCount);
       })
-      .catch(e => setLoadError(e?.message ?? "Failed to load videos."))
+      .catch(e => setLoadError(friendlyError(e, "Failed to load videos.")))
       .finally(() => setLoading(false));
   }, [playlistId]);
 
@@ -98,7 +99,7 @@ export default function PlaylistVideoPickerScreen() {
       if (e?.code === "queue_limit_reached") {
         await handleQueueLimitReached();
       } else {
-        showToast(e?.message ?? "Import failed. Please try again.");
+        showToast(friendlyError(e, "Import failed. Please try again."));
       }
     } finally {
       setImporting(false);

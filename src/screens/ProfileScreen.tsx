@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
+import { friendlyError } from "../utils/friendlyError";
 import { View, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Alert, TextInput, Image, ActivityIndicator } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
@@ -231,7 +232,7 @@ export default function ProfileScreen() {
               setEditingUsername(false);
               setAvailability("idle");
             } catch (e: any) {
-              const msg = e?.message ?? "Failed to save username.";
+              const msg = friendlyError(e, "Failed to save username.");
               if (msg.toLowerCase().includes("taken") || msg.includes("409")) {
                 setAvailability("taken");
                 setUsernameError("That username is already taken.");
@@ -290,7 +291,7 @@ export default function ProfileScreen() {
       if (result.canceled || !result.assets?.[0]?.uri) return;
       await uploadAvatar(result.assets[0].uri);
     } catch (e: any) {
-      setProfileError(e?.message ?? "Failed to pick image.");
+      setProfileError(friendlyError(e, "Failed to pick image."));
     }
   };
 
@@ -325,7 +326,7 @@ export default function ProfileScreen() {
       await api.updateAvatar(cacheBustedUrl);
       await fetchUser();
     } catch (e: any) {
-      setProfileError(e?.message ?? "Could not upload photo.");
+      setProfileError(friendlyError(e, "Could not upload photo."));
     } finally {
       setUploadingAvatar(false);
     }
@@ -342,7 +343,7 @@ export default function ProfileScreen() {
       await api.updateAvatar(null);
       await fetchUser();
     } catch (e: any) {
-      setProfileError(e?.message ?? "Could not remove photo.");
+      setProfileError(friendlyError(e, "Could not remove photo."));
     } finally {
       setUploadingAvatar(false);
     }
@@ -354,7 +355,7 @@ export default function ProfileScreen() {
       await api.syncSubscriptions();
       showToast("Subscriptions synced");
     } catch (e: any) {
-      setProfileError(e?.message ?? "Could not sync your YouTube account.");
+      setProfileError(friendlyError(e, "Could not sync your YouTube account."));
     } finally {
       setSyncing(false);
     }
@@ -372,7 +373,7 @@ export default function ProfileScreen() {
       await fetchUser();
       showToast("YouTube connected");
     } catch (e: any) {
-      setProfileError(e?.message ?? "Could not connect YouTube.");
+      setProfileError(friendlyError(e, "Could not connect YouTube."));
     } finally {
       setYtConnecting(false);
     }
@@ -394,7 +395,7 @@ export default function ProfileScreen() {
               await fetchUser();
               showToast("YouTube disconnected");
             } catch (e: any) {
-              setProfileError(e?.message ?? "Could not disconnect YouTube.");
+              setProfileError(friendlyError(e, "Could not disconnect YouTube."));
             } finally {
               setYtDisconnecting(false);
             }
@@ -429,7 +430,7 @@ export default function ProfileScreen() {
               await api.deleteAccount();
               await supabase.auth.signOut();
             } catch (e: any) {
-              setProfileError(e?.message ?? "Could not delete account. Please try again.");
+              setProfileError(friendlyError(e, "Could not delete account. Please try again."));
             }
           },
         },

@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { friendlyError } from "../utils/friendlyError";
 import {
   View, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator,
 } from "react-native";
@@ -150,7 +151,7 @@ export default function BenefitsScreen() {
       // success === false means the user cancelled. Stay on the screen
       // silently — surfacing an error would be annoying.
     } catch (e: any) {
-      setError(e?.message ?? "Couldn't complete purchase. Please try again.");
+      setError(friendlyError(e, "Couldn't complete purchase. Please try again."));
     } finally {
       setPurchasing(false);
     }
@@ -169,7 +170,7 @@ export default function BenefitsScreen() {
       // updates isPro and the screen re-renders into the pro state. No further
       // UI feedback needed.
     } catch (e: any) {
-      setError(e?.message ?? "Couldn't restore purchases. Please try again.");
+      setError(friendlyError(e, "Couldn't restore purchases. Please try again."));
     } finally {
       setRestoring(false);
     }
