@@ -1,13 +1,14 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
   View, FlatList, TouchableOpacity, StyleSheet,
-  SafeAreaView, Image, ActivityIndicator, Alert,
+  SafeAreaView, Image, ActivityIndicator, Alert, Platform,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { api } from "../services/api";
 import { useStore } from "../store";
 import { SansText, SerifText, Divider, EmptyState, ErrorBanner, Toast } from "../components/UI";
+import { QueuePickerModal } from "../components/QueuePickerModal";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
 import { formatDuration } from "../types";
@@ -20,7 +21,7 @@ export default function PlaylistVideoPickerScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const { playlistId, playlistTitle } = route.params as { playlistId: string; playlistTitle: string };
-  const { fetchQueue } = useStore();
+  const { fetchQueue, queues, fetchQueues } = useStore();
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
@@ -32,6 +33,12 @@ export default function PlaylistVideoPickerScreen() {
   const [skippedCount, setSkipped]  = useState(0);
   const [toastMsg, setToastMsg]     = useState("");
   const [toastVisible, setToastVisible] = useState(false);
+  const [androidPickerOpen, setAndroidPickerOpen] = useState(false);
+
+  // Ensure queues are populated so the picker has data on first entry.
+  useEffect(() => {
+    if (queues.length === 0) fetchQueues();
+  }, []);
 
   useEffect(() => {
     api.getPlaylistVideos(playlistId)
@@ -68,11 +75,11 @@ export default function PlaylistVideoPickerScreen() {
 
   const clearAll = () => setSelected(new Set());
 
-  const handleImport = async () => {
+  const handleImport = async (queueId?: string) => {
     if (selected.size === 0) return;
     setImporting(true);
     try {
-      const result = await api.importToQueue([...selected]);
+      const result = await api.importToQueue([...selected], queueId);
       await fetchQueue();
 
       const parts: string[] = [];
@@ -98,6 +105,33 @@ export default function PlaylistVideoPickerScreen() {
     }
   };
 
+  // Tapping "Add" — multi-queue pro users get a picker first, everyone else
+  // imports straight into Main Queue. Mirrors useAddToQueue's branching for
+  // single-video adds.
+  const handleAddPress = () => {
+    if (selected.size === 0 || importing) return;
+    if (queues.length <= 1) {
+      handleImport();
+      return;
+    }
+    if (Platform.OS === "ios") {
+      const { ActionSheetIOS } = require("react-native");
+      const options = [
+        ...queues.map(q => (q.emoji ? `${q.emoji} ${q.name}` : q.name) + ` · ${q.videoCount}`),
+        "Cancel",
+      ];
+      ActionSheetIOS.showActionSheetWithOptions(
+        { options, cancelButtonIndex: options.length - 1, title: `Add ${selected.size} video${selected.size !== 1 ? "s" : ""} to:` },
+        (idx: number) => {
+          if (idx === options.length - 1) return; // Cancel
+          handleImport(queues[idx].id);
+        }
+      );
+    } else {
+      setAndroidPickerOpen(true);
+    }
+  };
+
   const allSelected = videos.length > 0 && selected.size === Math.min(videos.length, MAX_SELECT);
 
   return (
@@ -109,7 +143,7 @@ export default function PlaylistVideoPickerScreen() {
         <SerifText style={styles.headerTitle} numberOfLines={1}>{playlistTitle}</SerifText>
         <TouchableOpacity
           style={[styles.importBtn, (selected.size === 0 || importing) && styles.importBtnDisabled]}
-          onPress={handleImport}
+          onPress={handleAddPress}
           disabled={selected.size === 0 || importing}
           activeOpacity={0.75}
         >
@@ -183,6 +217,18 @@ export default function PlaylistVideoPickerScreen() {
       )}
 
       <Toast message={toastMsg} visible={toastVisible} />
+
+      {/* Android queue picker (iOS uses the native ActionSheetIOS above) */}
+      {Platform.OS !== "ios" && (
+        <QueuePickerModal
+          visible={androidPickerOpen}
+          onSelect={(queueId) => {
+            setAndroidPickerOpen(false);
+            handleImport(queueId);
+          }}
+          onDismiss={() => setAndroidPickerOpen(false)}
+        />
+      )}
     </SafeAreaView>
   );
 }
