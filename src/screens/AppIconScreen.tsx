@@ -7,7 +7,7 @@ import { setAppIcon, getAppIcon } from "expo-dynamic-app-icon";
 import { useStore } from "../store";
 import { useSubscription } from "../hooks/useSubscription";
 import { useTheme } from "../contexts/ThemeContext";
-import { SansText, SerifText, Divider, Toast } from "../components/UI";
+import { SansText, SerifText, Divider, Toast, ErrorBanner } from "../components/UI";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 
 // ── Icon catalog ─────────────────────────────────────────────────────────────
@@ -97,6 +97,7 @@ export default function AppIconScreen() {
   );
   const [toastMsg, setToastMsg] = useState("");
   const [toastVisible, setToastVisible] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
@@ -114,15 +115,23 @@ export default function AppIconScreen() {
 
   const handleSelect = useCallback(async (slot: IconSlot) => {
     if (slot === currentSlot) return;
+    setError(null);
     // iOS shows its own "An app has changed your icon" alert after success,
     // so we only add a brief in-app confirmation toast on top of that.
-    const result = await setAppIcon(slot);
-    if (result) {
-      setCurrentSlot(slot);
-      showToast("Icon updated");
+    try {
+      const result = await setAppIcon(slot);
+      if (result) {
+        setCurrentSlot(slot);
+        showToast("Icon updated");
+      } else {
+        // setAppIcon returned falsy without throwing — surface as a generic
+        // failure so the user isn't left wondering why the selection didn't
+        // stick (most common cause: the user denied the system prompt).
+        setError("Couldn't update app icon. Please try again.");
+      }
+    } catch {
+      setError("Couldn't update app icon. Please try again.");
     }
-    // On failure, leave selection unchanged. The OS will not have changed
-    // the icon, so the user's home-screen state stays consistent.
   }, [currentSlot]);
 
   const visibleThemes = ICON_THEMES.filter(t => !t.premium || isPro);
@@ -139,6 +148,8 @@ export default function AppIconScreen() {
         <View style={{ flex: 1 }} />
       </View>
       <Divider />
+
+      {error && <ErrorBanner message={error} onDismiss={() => setError(null)} />}
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <ThemeRow theme={standard} currentSlot={currentSlot} onSelect={handleSelect} styles={styles} />

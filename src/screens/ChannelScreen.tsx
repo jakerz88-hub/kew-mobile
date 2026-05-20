@@ -95,7 +95,15 @@ export default function ChannelScreen() {
       <Divider />
 
       {error && <ErrorBanner message={error} onDismiss={clearError} />}
-      {loadError && <ErrorBanner message={loadError} onDismiss={() => setLoadError(null)} />}
+      {loadError && (
+        <ErrorBanner
+          message={loadError}
+          onDismiss={() => setLoadError(null)}
+          actionLabel="Try again"
+          onAction={() => loadVideos(stage)}
+          actionBusy={loading}
+        />
+      )}
 
       <FlatList
         data={videos}

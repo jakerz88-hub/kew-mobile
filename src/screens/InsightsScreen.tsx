@@ -5,7 +5,7 @@ import { Feather } from "@expo/vector-icons";
 import { useStore } from "../store";
 import { api } from "../services/api";
 import { useTheme } from "../contexts/ThemeContext";
-import { SansText, SerifText, Divider, ErrorBanner } from "../components/UI";
+import { SansText, SerifText, Divider, ErrorBanner, EmptyState } from "../components/UI";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import type { Insights, Intentionality, WatchLimits, InsightsPeriod } from "../types";
 
@@ -156,6 +156,56 @@ export default function InsightsScreen() {
           <View style={styles.loadingBox}>
             <ActivityIndicator color={colors.accent} />
           </View>
+        ) : insights && insights.stats.videosWatched === 0 ? (
+          // No data yet: new pro users land on Insights before any completion.
+          // Show a friendly empty state instead of a grid of zeros, but keep
+          // the Watch Limits card visible below so they can configure limits
+          // before their first watch session.
+          <>
+            <View style={styles.loadingBox}>
+              <EmptyState
+                icon="⏱"
+                title="Come back after your first video"
+                subtitle="Insights show up here once you've watched at least one video from your queue."
+              />
+            </View>
+            {limits && (
+              <View style={styles.card}>
+                <SansText style={styles.sectionLabel}>Watch Limits</SansText>
+                <SansText style={styles.cardHint}>
+                  When you hit a limit, Kew will gently suggest you take a break. You can always continue.
+                </SansText>
+                <LimitRow
+                  label="Daily video limit"
+                  unit=""
+                  value={limits.dailyVideos}
+                  range={LIMIT_RANGES.dailyVideos}
+                  onToggle={(on) => toggleLimit("dailyVideos", on)}
+                  onStep={(d) => stepLimit("dailyVideos", d)}
+                  colors={colors} styles={styles}
+                />
+                <LimitRow
+                  label="Daily watch time"
+                  unit="min"
+                  value={limits.dailyMinutes}
+                  range={LIMIT_RANGES.dailyMinutes}
+                  onToggle={(on) => toggleLimit("dailyMinutes", on)}
+                  onStep={(d) => stepLimit("dailyMinutes", d)}
+                  colors={colors} styles={styles}
+                />
+                <LimitRow
+                  label="Consecutive videos"
+                  unit=""
+                  value={limits.consecutiveVideos}
+                  range={LIMIT_RANGES.consecutiveVideos}
+                  onToggle={(on) => toggleLimit("consecutiveVideos", on)}
+                  onStep={(d) => stepLimit("consecutiveVideos", d)}
+                  colors={colors} styles={styles}
+                  isLast
+                />
+              </View>
+            )}
+          </>
         ) : insights ? (
           <>
             {/* Stats grid */}

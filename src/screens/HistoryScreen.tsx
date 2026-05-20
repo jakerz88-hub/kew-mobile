@@ -35,6 +35,7 @@ export default function HistoryScreen() {
   const { handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId } = useAddToQueue();
   const [entries, setEntries] = useState<QueueEntry[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [totalSecs, setTotal] = useState(0);
   const listRef = useRef<FlatList | null>(null);
   useScrollToTopOnTabPress(listRef, "History");
@@ -43,6 +44,7 @@ export default function HistoryScreen() {
 
   const loadHistory = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
@@ -58,9 +60,14 @@ export default function HistoryScreen() {
         query = query.gte("completed_at", cutoff);
       }
 
-      const { data } = await query
+      const { data, error: queryError } = await query
         .order("completed_at", { ascending: false })
         .limit(100);
+
+      if (queryError) {
+        setLoadError("Couldn't load history. Pull down to try again.");
+        return;
+      }
 
       if (data) {
         const camel = keysToCamel<QueueEntry[]>(data);
@@ -68,8 +75,8 @@ export default function HistoryScreen() {
         const secs = camel.reduce((acc: number, e: QueueEntry) => acc + (e.video?.durationSecs ?? 0), 0);
         setTotal(secs);
       }
-    } catch (e) {
-      console.warn("History load error:", e);
+    } catch {
+      setLoadError("Couldn't load history. Pull down to try again.");
     } finally {
       setLoading(false);
     }
@@ -98,6 +105,7 @@ export default function HistoryScreen() {
       {!(isTablet && inSidebar) && <Divider />}
 
       {error && <ErrorBanner message={error} onDismiss={clearError} />}
+      {loadError && <ErrorBanner message={loadError} onDismiss={() => setLoadError(null)} />}
 
       <FlatList
         ref={listRef}

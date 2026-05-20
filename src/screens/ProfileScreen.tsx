@@ -98,6 +98,10 @@ export default function ProfileScreen() {
   const [toastMsg, setToastMsg] = useState("");
   const [toastVisible, setToastVisible] = useState(false);
   const [insightsPreview, setInsightsPreview] = useState<Insights | null>(null);
+  // Track preview-fetch failure separately so we can hide the card entirely
+  // rather than leaving it stuck on "Loading your week…" forever. Profile is
+  // a secondary surface — silent collapse beats a noisy error here.
+  const [insightsError, setInsightsError] = useState(false);
   const [kewPlusMsg, setKewPlusMsg] = useState<string | null>(null);
   const [activeIconSlot, setActiveIconSlot] = useState<IconSlot>(() =>
     normalizeCurrentSlot(getAppIcon()),
@@ -127,8 +131,11 @@ export default function ProfileScreen() {
 
   // Load insights preview for the collapsed card (Pro only)
   useEffect(() => {
-    if (user?.plan !== "pro") { setInsightsPreview(null); return; }
-    api.getInsights("week").then(setInsightsPreview).catch(() => setInsightsPreview(null));
+    if (user?.plan !== "pro") { setInsightsPreview(null); setInsightsError(false); return; }
+    setInsightsError(false);
+    api.getInsights("week")
+      .then((data) => { setInsightsPreview(data); setInsightsError(false); })
+      .catch(() => { setInsightsPreview(null); setInsightsError(true); });
   }, [user?.plan]);
 
   // Rotating Kew+ upsell message (free users only)
@@ -549,8 +556,11 @@ export default function ProfileScreen() {
           </View>
         )}
 
-        {/* Insights & Limits — Pro only */}
-        {user?.plan === "pro" && (
+        {/* Insights & Limits — Pro only. Hidden entirely when the preview
+            fetch fails — Profile is a secondary surface and a stuck card
+            reads worse than no card at all. The full Insights screen has
+            its own ErrorBanner if the user navigates there directly. */}
+        {user?.plan === "pro" && !insightsError && (
           <TouchableOpacity
             style={styles.insightsCard}
             onPress={() => navigation.navigate("Insights")}

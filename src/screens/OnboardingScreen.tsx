@@ -46,7 +46,6 @@ function makeStyles(c: ColorPalette) {
     centerSection:  { flex: 1, justifyContent: "center", alignItems: "center", gap: Spacing.md, paddingHorizontal: Spacing.sm },
     title:          { fontSize: FontSize.xl ?? FontSize.lg, color: c.ink, textAlign: "center" },
     subtitle:       { fontSize: FontSize.sm, color: c.warmMid, textAlign: "center", lineHeight: 22, fontFamily: FontFamily.sansLight },
-    errorText:      { fontSize: FontSize.xs, color: c.accent, textAlign: "center" },
     bottomSection:  { gap: Spacing.sm },
     primaryBtn:     { backgroundColor: c.accent, borderRadius: Radius.pill, height: 52, alignItems: "center", justifyContent: "center" },
     primaryBtnDisabled: { opacity: 0.6 },

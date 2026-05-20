@@ -46,6 +46,7 @@ export default function BrowseScreen() {
   const [ytError, setYtError]           = useState<string | null>(null);
   const [searchQuery, setSearchQuery]   = useState("");
   const [recentUploads, setRecentUploads] = useState<BrowseVideo[]>([]);
+  const [recentError, setRecentError]     = useState(false);
 
   // Tablet panel state
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
@@ -82,10 +83,15 @@ export default function BrowseScreen() {
   }, []);
 
   const loadRecentUploads = useCallback(async () => {
+    setRecentError(false);
     try {
       const recent = await api.getRecentUploads(7);
       setRecentUploads(recent.slice(0, 6));
-    } catch { /* silent — strip just won't show */ }
+    } catch {
+      // Surface inline in the strip's slot rather than as a full ErrorBanner —
+      // this is one strip among many on the page, not the primary surface.
+      setRecentError(true);
+    }
   }, []);
 
   const loadPanelVideos = useCallback(async (channelId: string | null, targetStage = 0) => {
@@ -443,7 +449,11 @@ export default function BrowseScreen() {
               )}
             </View>
 
-            {recentUploads.length > 0 && (
+            {recentError ? (
+              <View style={styles.recentStrip}>
+                <SansText style={styles.recentStripErrorText}>Couldn't load recent uploads.</SansText>
+              </View>
+            ) : recentUploads.length > 0 && (
               <View style={styles.recentStrip}>
                 <View style={styles.recentStripHeader}>
                   <SansText style={styles.recentStripLabel}>Latest uploads</SansText>
@@ -699,6 +709,7 @@ function makePhoneStyles(c: ColorPalette) {
     recentStripHeader:    { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: Spacing.xs },
     recentStripLabel:     { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 0.8, fontFamily: FontFamily.sansMedium },
     recentStripViewAll:   { fontSize: FontSize.xs, color: c.accent, fontFamily: FontFamily.sansMedium },
+    recentStripErrorText: { fontSize: FontSize.xs, color: c.warmMid },
     recentCards:          { flexDirection: "row", gap: 8, paddingRight: Spacing.md },
     recentCard:           { width: 106 },
     recentThumb:          { aspectRatio: 16/10, borderRadius: Radius.sm, overflow: "hidden", backgroundColor: c.divider, marginBottom: 4, position: "relative" },
