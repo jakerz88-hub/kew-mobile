@@ -104,10 +104,17 @@ export function BottomSheet({
   onCloseRef.current = onClose;
   const panResponder = useRef(
     PanResponder.create({
-      // Only claim the gesture once the user has moved a few pixels downward —
-      // lets short taps (if any ever happen on the handle) pass through.
-      onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (_, g) => g.dy > 4 && Math.abs(g.dy) > Math.abs(g.dx),
+      // Claim the responder immediately on touch start. The handle has no
+      // tap action of its own, so eagerly claiming keeps the gesture
+      // responsive (waiting for a move threshold lost races against the
+      // surrounding TouchableWithoutFeedback during early testing). A tap
+      // without motion lands in onPanResponderRelease with dy=0 → snap back
+      // (which is a no-op because translateY is already 0).
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      // Don't yield to other gestures mid-drag (e.g. an inner ScrollView
+      // requesting to take over). The handle owns this gesture.
+      onPanResponderTerminationRequest: () => false,
       onPanResponderMove: (_, g) => {
         if (g.dy <= 0) return; // ignore upward drag — sheet never floats above rest position
         const measured = sheetHeightRef.current > 0 ? sheetHeightRef.current : screenHeight;
