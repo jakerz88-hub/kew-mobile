@@ -311,56 +311,59 @@ export default function QueueScreen() {
       const mainQ = queues.find(q => q.isMain);
       const nonMain = queues.filter(q => !q.isMain);
       const pinnedNonMain = nonMain.filter(q => q.pinned);
-      const chipQueues = [
+      const baseOrder = [
         ...(mainQ ? [mainQ] : []),
-        ...(pinnedNonMain.length > 0 ? pinnedNonMain.slice(0, 3) : nonMain.slice(0, 3)),
+        ...(pinnedNonMain.length > 0 ? pinnedNonMain : nonMain),
       ];
+      const activeInList = baseOrder.find(q => q.id === activeQueueId);
+      const chipQueues = activeInList
+        ? [activeInList, ...baseOrder.filter(q => q.id !== activeInList.id)]
+        : baseOrder;
       return (
-        // Fixed-height outer wrapper pins the strip's vertical extent.
-        // Putting `height` on the ScrollView's own style didn't actually
-        // constrain it on iPad — the strip still stretched to the column
-        // height. The wrapper View bypasses RN's ScrollView sizing edge
-        // cases entirely. (A previous attempt using flexGrow:0 +
-        // alignItems:"center" hung iPad bootstrap on splash, so we avoid
-        // both flex hacks and let the wrapper do the work.)
-        <View style={{ height: 48 }}>
+        // Row container holds scrollable chips on the left and a locked
+        // "All queues" chip on the right. The explicit 48pt height keeps the
+        // ScrollView from stretching vertically on iPad in landscape sidebar
+        // mode (RN's horizontal ScrollView defaults to cross-axis stretch).
+        <View style={{ height: 48, flexDirection: "row", alignItems: "center", paddingHorizontal: 12 }}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            style={{ paddingVertical: 8, paddingHorizontal: 12 }}
-            contentContainerStyle={{ gap: 8, flexDirection: "row" }}
+            style={{ flex: 1 }}
+            contentContainerStyle={{ gap: 8, flexDirection: "row", paddingVertical: 8 }}
           >
-          {chipQueues.map(q => (
-            <TouchableOpacity
-              key={q.id}
-              onPress={() => handleQueueSwitch(q.id)}
-              style={[
-                { flexDirection: "row", alignItems: "center", gap: 4, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 },
-                activeQueueId === q.id
-                  ? { backgroundColor: colors.accent }
-                  : { backgroundColor: colors.cardBg, borderColor: colors.divider, borderWidth: 1 },
-              ]}
-            >
-              {q.emoji ? (
-                <SansText style={{ fontSize: FontSize.xs }}>{q.emoji}</SansText>
-              ) : (
-                <LogoMark color={activeQueueId === q.id ? colors.buttonText : colors.warmMid} size={12} />
-              )}
-              <SansText style={[
-                { fontSize: FontSize.xs, fontFamily: "DMSans_500Medium" },
-                activeQueueId === q.id ? { color: colors.buttonText } : { color: colors.warmMid },
-              ]}>
-                {q.name} · {q.videoCount}
-              </SansText>
-            </TouchableOpacity>
-          ))}
-          <TouchableOpacity
-            onPress={() => navigation.navigate("AllQueues")}
-            style={{ backgroundColor: colors.cardBg, borderColor: colors.divider, borderWidth: 1, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, flexDirection: "row", alignItems: "center", gap: 4 }}
-          >
-            <SansText style={{ color: colors.warmMid, fontSize: FontSize.xs, fontFamily: "DMSans_500Medium" }}>All queues</SansText>
-          </TouchableOpacity>
+            {chipQueues.map(q => (
+              <TouchableOpacity
+                key={q.id}
+                onPress={() => handleQueueSwitch(q.id)}
+                style={[
+                  { flexDirection: "row", alignItems: "center", gap: 4, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 },
+                  activeQueueId === q.id
+                    ? { backgroundColor: colors.accent }
+                    : { backgroundColor: colors.cardBg, borderColor: colors.divider, borderWidth: 1 },
+                ]}
+              >
+                {q.emoji ? (
+                  <SansText style={{ fontSize: FontSize.xs }}>{q.emoji}</SansText>
+                ) : (
+                  <LogoMark color={activeQueueId === q.id ? colors.buttonText : colors.warmMid} size={12} />
+                )}
+                <SansText style={[
+                  { fontSize: FontSize.xs, fontFamily: FontFamily.sansMedium },
+                  activeQueueId === q.id ? { color: colors.buttonText } : { color: colors.warmMid },
+                ]}>
+                  {q.name} · {q.videoCount}
+                </SansText>
+              </TouchableOpacity>
+            ))}
           </ScrollView>
+          <View style={{ paddingLeft: 8, paddingVertical: 8 }}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("AllQueues")}
+              style={{ backgroundColor: colors.cardBg, borderColor: colors.divider, borderWidth: 1, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, flexDirection: "row", alignItems: "center", gap: 4 }}
+            >
+              <SansText style={{ color: colors.warmMid, fontSize: FontSize.xs, fontFamily: FontFamily.sansMedium }}>All queues</SansText>
+            </TouchableOpacity>
+          </View>
         </View>
       );
     })() : null;
@@ -398,7 +401,7 @@ export default function QueueScreen() {
             {/* Queue pill strip — shown for pro users so they can discover / navigate queues */}
             {!inSidebar && chipsContent}
             <View style={tStyles.queueHeader}>
-              <SerifText style={tStyles.queueTitle}>Your Queue</SerifText>
+              <SerifText style={tStyles.queueTitle}>{user?.plan === "pro" ? "Your Queues" : "Your Queue"}</SerifText>
               {queue && (
                 <SansText style={tStyles.queueSub}>
                   {queue.total} video{queue.total !== 1 ? "s" : ""} · {_totalTimeRemaining(queue.entries)}
@@ -898,7 +901,7 @@ export default function QueueScreen() {
         {/* Queue header */}
         <View style={styles.queueHeader}>
           <View>
-            <SerifText style={styles.queueTitle}>Your Queue</SerifText>
+            <SerifText style={styles.queueTitle}>{user?.plan === "pro" ? "Your Queues" : "Your Queue"}</SerifText>
             <SansText style={styles.queueSubtitle}>
               {queue ? `${queue.total} video${queue.total !== 1 ? "s" : ""} · ${_totalTimeRemaining(queue.entries)}` : "Loading..."}
             </SansText>
@@ -916,10 +919,14 @@ export default function QueueScreen() {
           const mainQ = queues.find(q => q.isMain);
           const nonMain = queues.filter(q => !q.isMain);
           const pinnedNonMain = nonMain.filter(q => q.pinned);
-          const chipQueues = [
+          const baseOrder = [
             ...(mainQ ? [mainQ] : []),
             ...(pinnedNonMain.length > 0 ? pinnedNonMain.slice(0, 3) : nonMain.slice(0, 3)),
           ];
+          const activeInList = baseOrder.find(q => q.id === activeQueueId);
+          const chipQueues = activeInList
+            ? [activeInList, ...baseOrder.filter(q => q.id !== activeInList.id)]
+            : baseOrder;
           return (
             <ScrollView
               horizontal
@@ -944,7 +951,7 @@ export default function QueueScreen() {
                     <LogoMark color={activeQueueId === q.id ? colors.buttonText : colors.warmMid} size={12} />
                   )}
                   <SansText style={[
-                    { fontSize: FontSize.xs, fontFamily: "DMSans_500Medium" },
+                    { fontSize: FontSize.xs, fontFamily: FontFamily.sansMedium },
                     activeQueueId === q.id ? { color: colors.buttonText } : { color: colors.warmMid },
                   ]}>
                     {q.name} · {q.videoCount}
@@ -955,7 +962,7 @@ export default function QueueScreen() {
                 onPress={() => navigation.navigate("AllQueues")}
                 style={{ backgroundColor: colors.cardBg, borderColor: colors.divider, borderWidth: 1, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, flexDirection: "row", alignItems: "center", gap: 4 }}
               >
-                <SansText style={{ color: colors.warmMid, fontSize: FontSize.xs, fontFamily: "DMSans_500Medium" }}>All queues</SansText>
+                <SansText style={{ color: colors.warmMid, fontSize: FontSize.xs, fontFamily: FontFamily.sansMedium }}>All queues</SansText>
               </TouchableOpacity>
             </ScrollView>
           );
