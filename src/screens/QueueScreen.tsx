@@ -308,28 +308,38 @@ export default function QueueScreen() {
   // ══════════════════════════════════════════════════════════════
   if (isTablet) {
     const chipsContent = user?.plan === "pro" ? (() => {
+      // Tablet cap: main + up to 8 non-main chips. Active queue is always included
+      // (it replaces the last slot if it falls outside the natural top-N), then
+      // promoted to position 1. "All queues" sits inline at the end of the row.
+      const POOL_CAP = 8;
       const mainQ = queues.find(q => q.isMain);
       const nonMain = queues.filter(q => !q.isMain);
       const pinnedNonMain = nonMain.filter(q => q.pinned);
+      const activeQueue = queues.find(q => q.id === activeQueueId);
+      const pool = pinnedNonMain.length > 0 ? pinnedNonMain : nonMain;
+      let nonMainChips = pool.slice(0, POOL_CAP);
+      if (activeQueue && !activeQueue.isMain && !nonMainChips.find(q => q.id === activeQueue.id)) {
+        nonMainChips = [activeQueue, ...nonMainChips.slice(0, POOL_CAP - 1)];
+      }
       const baseOrder = [
         ...(mainQ ? [mainQ] : []),
-        ...(pinnedNonMain.length > 0 ? pinnedNonMain : nonMain),
+        ...nonMainChips,
       ];
       const activeInList = baseOrder.find(q => q.id === activeQueueId);
       const chipQueues = activeInList
         ? [activeInList, ...baseOrder.filter(q => q.id !== activeInList.id)]
         : baseOrder;
       return (
-        // Row container holds scrollable chips on the left and a locked
-        // "All queues" chip on the right. The explicit 48pt height keeps the
-        // ScrollView from stretching vertically on iPad in landscape sidebar
-        // mode (RN's horizontal ScrollView defaults to cross-axis stretch).
-        <View style={{ height: 48, flexDirection: "row", alignItems: "center", paddingHorizontal: 12 }}>
+        // Single horizontal ScrollView holds chips followed by "All queues" inline
+        // at the end. Explicit 48pt height keeps the ScrollView from stretching
+        // vertically on iPad in landscape sidebar mode (RN's horizontal ScrollView
+        // defaults to cross-axis stretch).
+        <View style={{ height: 48 }}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            style={{ flex: 1 }}
-            contentContainerStyle={{ gap: 8, flexDirection: "row", paddingVertical: 8 }}
+            style={{ paddingVertical: 8, paddingHorizontal: 12 }}
+            contentContainerStyle={{ gap: 8, flexDirection: "row" }}
           >
             {chipQueues.map(q => (
               <TouchableOpacity
@@ -355,15 +365,13 @@ export default function QueueScreen() {
                 </SansText>
               </TouchableOpacity>
             ))}
-          </ScrollView>
-          <View style={{ paddingLeft: 8, paddingVertical: 8 }}>
             <TouchableOpacity
               onPress={() => navigation.navigate("AllQueues")}
               style={{ backgroundColor: colors.cardBg, borderColor: colors.divider, borderWidth: 1, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, flexDirection: "row", alignItems: "center", gap: 4 }}
             >
               <SansText style={{ color: colors.warmMid, fontSize: FontSize.xs, fontFamily: FontFamily.sansMedium }}>All queues</SansText>
             </TouchableOpacity>
-          </View>
+          </ScrollView>
         </View>
       );
     })() : null;
@@ -916,12 +924,22 @@ export default function QueueScreen() {
 
         {/* Queue pill strip — shown for pro users so they can discover / navigate queues */}
         {user?.plan === "pro" && (() => {
+          // Phone cap: main + up to 3 non-main chips. Active queue is always included
+          // (it replaces the last slot if it falls outside the natural top-N), then
+          // promoted to position 1.
+          const POOL_CAP = 3;
           const mainQ = queues.find(q => q.isMain);
           const nonMain = queues.filter(q => !q.isMain);
           const pinnedNonMain = nonMain.filter(q => q.pinned);
+          const activeQueue = queues.find(q => q.id === activeQueueId);
+          const pool = pinnedNonMain.length > 0 ? pinnedNonMain : nonMain;
+          let nonMainChips = pool.slice(0, POOL_CAP);
+          if (activeQueue && !activeQueue.isMain && !nonMainChips.find(q => q.id === activeQueue.id)) {
+            nonMainChips = [activeQueue, ...nonMainChips.slice(0, POOL_CAP - 1)];
+          }
           const baseOrder = [
             ...(mainQ ? [mainQ] : []),
-            ...(pinnedNonMain.length > 0 ? pinnedNonMain.slice(0, 3) : nonMain.slice(0, 3)),
+            ...nonMainChips,
           ];
           const activeInList = baseOrder.find(q => q.id === activeQueueId);
           const chipQueues = activeInList
