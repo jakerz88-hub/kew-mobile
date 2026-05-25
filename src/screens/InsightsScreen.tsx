@@ -28,12 +28,14 @@ const LIMIT_RANGES = {
   consecutiveVideos: { min: 1,  max: 10,  step: 1 },
 };
 
-function formatDelta(cur: number, prev: number, suffix: string = ""): { text: string; tone: "up" | "down" | "neutral" } {
-  if (prev === 0 && cur === 0) return { text: "-", tone: "neutral" };
+function formatDelta(cur: number, prev: number, period: InsightsPeriod, suffix: string = ""): { text: string; tone: "up" | "down" | "neutral" } {
+  if (prev === 0 && cur === 0) return { text: "no data", tone: "neutral" };
   const diff = cur - prev;
   if (diff === 0) return { text: "no change", tone: "neutral" };
   const sign = diff > 0 ? "+" : "";
-  return { text: `${sign}${diff}${suffix} vs last`, tone: diff > 0 ? "up" : "down" };
+  // period is "week" | "month" | "year" — used directly in copy so the
+  // comparison frame matches the tab the user selected.
+  return { text: `${sign}${diff}${suffix} since last ${period}`, tone: diff > 0 ? "up" : "down" };
 }
 
 export function formatMinutesShort(min: number): string {
@@ -165,7 +167,7 @@ export default function InsightsScreen() {
           <>
             <View style={styles.loadingBox}>
               <EmptyState
-                icon="⏱"
+                icon="▮"
                 title="Come back after your first video"
                 subtitle="Insights show up here once you've watched at least one video from your queue."
               />
@@ -214,26 +216,26 @@ export default function InsightsScreen() {
               <StatCell
                 label="Videos watched"
                 value={String(insights.stats.videosWatched)}
-                delta={formatDelta(insights.stats.videosWatched, insights.prevPeriodComparison.videosWatched)}
+                delta={formatDelta(insights.stats.videosWatched, insights.prevPeriodComparison.videosWatched, period)}
                 colors={colors} styles={styles}
               />
               <StatCell
                 label="Watch time"
                 value={formatMinutesShort(insights.stats.watchTimeMinutes)}
-                delta={formatDelta(insights.stats.watchTimeMinutes, insights.prevPeriodComparison.watchTimeMinutes, "m")}
+                delta={formatDelta(insights.stats.watchTimeMinutes, insights.prevPeriodComparison.watchTimeMinutes, period, "m")}
                 deltaInverted
                 colors={colors} styles={styles}
               />
               <StatCell
                 label="Completion rate"
                 value={`${Math.round(insights.stats.completionRate)}%`}
-                delta={formatDelta(Math.round(insights.stats.completionRate), Math.round(insights.prevPeriodComparison.completionRate), "pp")}
+                delta={formatDelta(Math.round(insights.stats.completionRate), Math.round(insights.prevPeriodComparison.completionRate), period, "pp")}
                 colors={colors} styles={styles}
               />
               <StatCell
                 label="Skips used"
                 value={String(insights.stats.skipsUsed)}
-                delta={formatDelta(insights.stats.skipsUsed, insights.prevPeriodComparison.skipsUsed)}
+                delta={formatDelta(insights.stats.skipsUsed, insights.prevPeriodComparison.skipsUsed, period)}
                 deltaInverted
                 colors={colors} styles={styles}
               />
@@ -293,7 +295,7 @@ export default function InsightsScreen() {
                     <SansText style={styles.intentSmallLabel}>Days off</SansText>
                     <SerifText style={styles.intentSmallValue}>{insights.stats.daysOff}</SerifText>
                     <DeltaPill
-                      delta={formatDelta(insights.stats.daysOff, insights.prevPeriodComparison.daysOff)}
+                      delta={formatDelta(insights.stats.daysOff, insights.prevPeriodComparison.daysOff, period)}
                       inverted={false /* more days off is positive */}
                       colors={colors} styles={styles}
                     />
