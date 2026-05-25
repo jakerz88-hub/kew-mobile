@@ -113,7 +113,7 @@ export const useStore = create<AppState>((set, get) => ({
         get().fetchQueuedVideos();
       }
     } catch (e: any) {
-      set({ error: friendlyError(e), isLoadingUser: false });
+      const msg = friendlyError(e); set({ error: msg, isLoadingUser: false });
     }
   },
 
@@ -123,7 +123,7 @@ export const useStore = create<AppState>((set, get) => ({
       const queue = await api.getQueue(get().activeQueueId ?? undefined);
       set({ queue, isLoadingQueue: false });
     } catch (e: any) {
-      set({ error: friendlyError(e), isLoadingQueue: false });
+      const msg = friendlyError(e); set({ error: msg, isLoadingQueue: false });
     }
   },
 
@@ -199,7 +199,7 @@ export const useStore = create<AppState>((set, get) => ({
       const updated = await api.updateQueue(id, { pinned });
       set(s => ({ queues: s.queues.map(q => q.id === id ? updated : q) }));
     } catch (e: any) {
-      set({ error: friendlyError(e) });
+      const msg = friendlyError(e); set({ error: msg });
       throw e;
     }
   },
@@ -263,7 +263,7 @@ export const useStore = create<AppState>((set, get) => ({
       // useAddToQueue handles it with a dedicated Alert. Other errors
       // still get the banner.
       if (e?.code !== "queue_limit_reached") {
-        set({ error: friendlyError(e) });
+        const msg = friendlyError(e); set({ error: msg });
       }
       throw e;
     }
@@ -315,7 +315,7 @@ export const useStore = create<AppState>((set, get) => ({
         };
       });
     } catch (e: any) {
-      set({ error: friendlyError(e) });
+      const msg = friendlyError(e); set({ error: msg });
       throw e;
     }
   },
@@ -357,7 +357,7 @@ export const useStore = create<AppState>((set, get) => ({
         };
       });
     } catch (e: any) {
-      set({ error: friendlyError(e) });
+      const msg = friendlyError(e); set({ error: msg });
       throw e;
     }
   },
@@ -387,7 +387,7 @@ export const useStore = create<AppState>((set, get) => ({
         return { queue: { ...s.queue, entries: finalEntries, current: newCurrent } };
       });
     } catch (e: any) {
-      set({ error: friendlyError(e) });
+      const msg = friendlyError(e); set({ error: msg });
       throw e;
     }
   },
@@ -397,7 +397,7 @@ export const useStore = create<AppState>((set, get) => ({
       await api.shuffleQueue();
       await get().fetchQueue();
     } catch (e: any) {
-      set({ error: friendlyError(e) });
+      const msg = friendlyError(e); set({ error: msg });
       throw e;
     }
   },
@@ -422,7 +422,7 @@ export const useStore = create<AppState>((set, get) => ({
       });
       return result;
     } catch (e: any) {
-      set({ error: friendlyError(e) });
+      const msg = friendlyError(e); set({ error: msg });
       throw e;
     }
   },
@@ -478,7 +478,7 @@ export const useStore = create<AppState>((set, get) => ({
         };
       });
     } catch (e: any) {
-      set({ error: friendlyError(e) });
+      const msg = friendlyError(e); set({ error: msg });
     }
   },
 }));

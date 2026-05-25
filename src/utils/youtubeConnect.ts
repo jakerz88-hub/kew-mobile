@@ -105,6 +105,12 @@ export async function connectYouTube(): Promise<YouTubeConnectResult> {
 
     return { success: true };
   } catch (e: any) {
-    return { success: false, error: friendlyError(e, "Could not connect YouTube.") };
+    // Bind to a local variable first so the bundled output doesn't emit a
+    // source-context line starting with `error:`. Xcode 26's script-phase
+    // parser misclassifies any literal "error:" prefix in the bundle warning
+    // output as a build error, failing the archive step. See Hermes warning
+    // at main.jsbundle:188043 in build b09d14b3 (2026-05-25) for the trace.
+    const message = friendlyError(e, "Could not connect YouTube.");
+    return { success: false, error: message };
   }
 }
