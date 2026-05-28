@@ -303,15 +303,19 @@ export default function ProfileScreen() {
       if (!session) throw new Error("Not authenticated");
       const userId = session.user.id;
 
-      // Fetch the image as a blob
+      // Fetch the image as raw bytes. NOTE: do not use response.blob() here —
+      // on React Native iOS, fetch(file:// URI).blob() returns a Blob with
+      // size 0 (the bytes are never read from the local file). The upload
+      // succeeds, the server stores 0 bytes, and the file renders blank.
+      // arrayBuffer() reads the bytes correctly across both platforms.
       const response = await fetch(uri);
-      const blob = await response.blob();
+      const arrayBuffer = await response.arrayBuffer();
 
       // Upload to Supabase Storage (upsert to overwrite)
       const filePath = `${userId}.jpg`;
       const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(filePath, blob, { contentType: "image/jpeg", upsert: true });
+        .upload(filePath, arrayBuffer, { contentType: "image/jpeg", upsert: true });
 
       if (uploadError) throw new Error(uploadError.message);
 
