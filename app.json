@@ -14,13 +14,15 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.kew.app",
-      "buildNumber": "11",
+      "buildNumber": "12",
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
         },
         "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Kew uses your camera so you can take a photo to use as your profile picture, which appears on your account in the app.",
+        "NSPhotoLibraryUsageDescription": "Kew accesses your photo library so you can choose a photo to use as your profile picture, which appears on your account in the app.",
         "UISupportedInterfaceOrientations~ipad": [
           "UIInterfaceOrientationPortrait",
           "UIInterfaceOrientationPortraitUpsideDown",
@@ -116,6 +118,7 @@
     },
     "updates": {
       "url": "https://u.expo.dev/d7d74b72-c5d5-4f5a-95b2-1deacc44b4d4"
-    }
+    },
+    "owner": "jakerz88"
   }
 }
