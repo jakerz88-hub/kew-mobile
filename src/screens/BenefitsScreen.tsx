@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import * as WebBrowser from "expo-web-browser";
 import { friendlyError } from "../utils/friendlyError";
 import {
   View, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator,
@@ -293,6 +294,20 @@ export default function BenefitsScreen() {
                 {restoring ? "Restoring…" : "Restore purchases"}
               </SansText>
             </TouchableOpacity>
+
+            {/* Apple paywall requirement: Terms and Privacy Policy must be
+                accessible directly on the purchase screen, near the CTA. */}
+            <View style={styles.legalRow}>
+              <SansText style={styles.legalText}>By subscribing, you agree to our </SansText>
+              <TouchableOpacity onPress={() => WebBrowser.openBrowserAsync("https://yourkew.app/terms").catch(() => {})} activeOpacity={0.7}>
+                <SansText style={styles.legalLink}>Terms</SansText>
+              </TouchableOpacity>
+              <SansText style={styles.legalText}> and </SansText>
+              <TouchableOpacity onPress={() => WebBrowser.openBrowserAsync("https://yourkew.app/privacy").catch(() => {})} activeOpacity={0.7}>
+                <SansText style={styles.legalLink}>Privacy Policy</SansText>
+              </TouchableOpacity>
+              <SansText style={styles.legalText}>.</SansText>
+            </View>
           </>
         )}
       </ScrollView>
@@ -337,6 +352,9 @@ function makeStyles(c: ColorPalette) {
     ctaBtnText:       { fontSize: FontSize.sm, color: c.buttonText, fontFamily: FontFamily.sansMedium, letterSpacing: 0.3 },
     restoreBtn:       { marginTop: Spacing.md, alignItems: "center", paddingVertical: Spacing.sm },
     restoreText:      { fontSize: FontSize.xs, color: c.warmMid, fontFamily: FontFamily.sansMedium, textDecorationLine: "underline" },
+    legalRow:         { marginTop: Spacing.md, flexDirection: "row", flexWrap: "wrap", justifyContent: "center", alignItems: "center", paddingHorizontal: Spacing.md },
+    legalText:        { fontSize: FontSize.xxs, color: c.warmMid, textAlign: "center", lineHeight: 16 },
+    legalLink:        { fontSize: FontSize.xxs, color: c.warmMid, textAlign: "center", lineHeight: 16, textDecorationLine: "underline" },
     activeWrap:       { marginTop: Spacing.lg, alignItems: "center", gap: Spacing.xs },
     activeHeadline:   { fontSize: FontSize.lg, color: c.ink },
     activeSubhead:    { fontSize: FontSize.sm, color: c.warmMid, marginBottom: Spacing.sm },

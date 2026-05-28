@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
+import * as WebBrowser from "expo-web-browser";
 import { friendlyError } from "../utils/friendlyError";
 import { View, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Alert, TextInput, Image, ActivityIndicator } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
@@ -754,6 +755,19 @@ export default function ProfileScreen() {
           <SansText style={styles.deleteBtnText}>Delete account</SansText>
         </TouchableOpacity>
 
+        {/* Legal footer — Terms and Privacy Policy access from anywhere in the
+            app. Apple's paywall requirement covers the purchase surface; this
+            secondary placement makes them findable post-purchase too. */}
+        <View style={styles.legalRow}>
+          <TouchableOpacity onPress={() => WebBrowser.openBrowserAsync("https://yourkew.app/terms").catch(() => {})} activeOpacity={0.7}>
+            <SansText style={styles.legalLink}>Terms</SansText>
+          </TouchableOpacity>
+          <SansText style={styles.legalSeparator}>·</SansText>
+          <TouchableOpacity onPress={() => WebBrowser.openBrowserAsync("https://yourkew.app/privacy").catch(() => {})} activeOpacity={0.7}>
+            <SansText style={styles.legalLink}>Privacy Policy</SansText>
+          </TouchableOpacity>
+        </View>
+
         {APP_VERSION_STRING && (
           <SansText style={styles.versionText}>App version: {APP_VERSION_STRING}</SansText>
         )}
@@ -844,6 +858,9 @@ function makeStyles(c: ColorPalette) {
     signOutText:     { fontSize: FontSize.sm, color: c.accent, fontFamily: FontFamily.sansMedium },
     deleteBtn:       { marginTop: Spacing.xs, paddingVertical: Spacing.sm, paddingHorizontal: Spacing.md, alignItems: "center", alignSelf: "center" },
     deleteBtnText:   { fontSize: FontSize.xs, color: c.warmMid, fontFamily: FontFamily.sans },
-    versionText:     { fontSize: FontSize.xxs, color: c.warmMid, textAlign: "center", marginTop: Spacing.xl, paddingBottom: Spacing.md },
+    legalRow:        { marginTop: Spacing.xl, flexDirection: "row", justifyContent: "center", alignItems: "center", gap: Spacing.sm },
+    legalLink:       { fontSize: FontSize.xxs, color: c.warmMid, textDecorationLine: "underline" },
+    legalSeparator:  { fontSize: FontSize.xxs, color: c.warmMid },
+    versionText:     { fontSize: FontSize.xxs, color: c.warmMid, textAlign: "center", marginTop: Spacing.md, paddingBottom: Spacing.md },
   });
 }
