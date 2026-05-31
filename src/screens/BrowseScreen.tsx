@@ -617,7 +617,7 @@ function BrowseVideoCard({ video, inQueue, adding, onAdd, onLongPress }: {
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
