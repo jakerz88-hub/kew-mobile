@@ -577,8 +577,18 @@ function BrowseVideoCard({ video, inQueue, adding, onAdd, onLongPress }: {
 }) {
   const { colors } = useTheme();
   const tStyles = useMemo(() => makeTabletStyles(colors), [colors]);
+  // Long-press anywhere on the card opens Watch Now — the "+ Add" pill is
+  // too small to reliably long-press on iPad, and the card has no tap
+  // affordance otherwise, so wrapping the whole thing in a TouchableOpacity
+  // with only onLongPress is unambiguous. Tap (onPress) is intentionally
+  // omitted so the pill remains the only way to tap-to-add.
   return (
-    <View style={tStyles.videoCard}>
+    <TouchableOpacity
+      style={tStyles.videoCard}
+      onLongPress={inQueue ? undefined : onLongPress}
+      delayLongPress={400}
+      activeOpacity={1}
+    >
       <View style={{ aspectRatio: 16 / 9, position: "relative", overflow: "hidden" }}>
         {video.thumbnailUrl
           ? <Image source={{ uri: video.thumbnailUrl }} style={StyleSheet.absoluteFill} resizeMode="cover" />
