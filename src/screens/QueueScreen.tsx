@@ -156,6 +156,22 @@ export default function QueueScreen() {
   useEffect(() => { fetchQueue(); }, []);
   useEffect(() => { loadRemoved().then(setRemovedList); }, []);
   useFocusEffect(useCallback(() => { fetchQueue(); }, []));
+
+  // Watch Now toast (iPad only) — TabletNavigator switches tabs via internal
+  // state, not React Navigation routes, so useFocusEffect would never fire on
+  // tab change. A plain useEffect on the store value works because QueueScreen
+  // is always mounted inside the tablet shell. Phone takes the Player path
+  // instead and PlayerScreen consumes via useFocusEffect — keeping the gate
+  // here on `isTablet` avoids both screens racing for the same toast.
+  const pendingToast = useStore(s => s.pendingToast);
+  const setPendingToast = useStore(s => s.setPendingToast);
+  useEffect(() => {
+    if (isTablet && pendingToast) {
+      showToast(pendingToast);
+      setPendingToast(null);
+    }
+  }, [isTablet, pendingToast, showToast, setPendingToast]);
+
   const onRefresh = useCallback(async () => {
     setIsManualRefreshing(true);
     try { await fetchQueue(); }
@@ -830,7 +846,7 @@ export default function QueueScreen() {
               </SansText>
               <View style={styles.modalBtns}>
                 <TouchableOpacity style={[styles.modalBtn, styles.modalBtnCancel]} onPress={() => setShowSkipModal(false)}>
-                  <SansText style={styles.modalBtnCancelText}>Stay here</SansText>
+                  <SansText style={styles.modalBtnCancelText}>Cancel</SansText>
                 </TouchableOpacity>
                 <TouchableOpacity style={[styles.modalBtn, styles.modalBtnConfirm]} onPress={handleSkipConfirm}>
                   <SansText style={styles.modalBtnConfirmText}>Move to end</SansText>
@@ -1790,8 +1806,8 @@ function makePhoneStyles(c: ColorPalette) {
     modalBody:           { fontSize: FontSize.sm, color: c.warmMid, lineHeight: 22 },
     modalBtns:           { flexDirection: "row", gap: Spacing.sm },
     modalBtn:            { flex: 1, height: 48, borderRadius: Radius.pill, alignItems: "center", justifyContent: "center" },
-    modalBtnCancel:      { backgroundColor: c.divider },
-    modalBtnCancelText:  { fontSize: FontSize.sm, color: c.ink },
+    modalBtnCancel:      { borderWidth: 1.5, borderColor: c.divider, backgroundColor: "transparent" },
+    modalBtnCancelText:  { fontSize: FontSize.sm, color: c.warmMid },
     modalBtnConfirm:     { backgroundColor: c.accent },
     modalBtnConfirmText: { fontSize: FontSize.sm, color: c.buttonText, fontFamily: FontFamily.sansMedium },
   });

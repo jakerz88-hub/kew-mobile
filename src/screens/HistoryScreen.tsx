@@ -6,6 +6,7 @@ import { supabase } from "../services/supabase";
 import { useStore } from "../store";
 import { KewLogo, SansText, SerifText, Divider, ThumbPlaceholder, EmptyState, ErrorBanner, AvatarBubble } from "../components/UI";
 import { QueuePickerModal } from "../components/QueuePickerModal";
+import { WatchNowSheet } from "../components/WatchNowSheet";
 import { useAddToQueue } from "../hooks/useAddToQueue";
 import { LogoMark } from "../components/TabIcons";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius, KEW_PLUS_GOLD, KEW_PLUS_GOLD_TINT, KEW_PLUS_GOLD_BORDER } from "../types/theme";
@@ -32,7 +33,10 @@ export default function HistoryScreen() {
   const inSidebar = useInTabletSidebar();
   const { error, clearError, user } = useStore();
   const queuedVideos = useStore(s => s.queuedVideos);
-  const { handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId } = useAddToQueue();
+  const {
+    handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId,
+    handleWatchNow, closeWatchNow, watchNowVideoId, watchNowTitle,
+  } = useAddToQueue();
   const [entries, setEntries] = useState<QueueEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -128,6 +132,7 @@ export default function HistoryScreen() {
             readded={!!queuedVideos[item.video.ytVideoId]}
             adding={addingId === item.video.ytVideoId}
             onReadd={() => handleReadd(item)}
+            onWatchNow={() => handleWatchNow(item.video.ytVideoId, item.video.title)}
           />
         )}
         ItemSeparatorComponent={() => <Divider style={{ marginHorizontal: 0 }} />}
@@ -167,15 +172,25 @@ export default function HistoryScreen() {
           onDismiss={() => setPickerVideoId(null)}
         />
       )}
+
+      {watchNowVideoId && (
+        <WatchNowSheet
+          visible={!!watchNowVideoId}
+          ytVideoId={watchNowVideoId}
+          videoTitle={watchNowTitle}
+          onClose={closeWatchNow}
+        />
+      )}
     </SafeAreaView>
   );
 }
 
-function HistoryItem({ entry, readded, adding, onReadd }: {
+function HistoryItem({ entry, readded, adding, onReadd, onWatchNow }: {
   entry: QueueEntry;
   readded: boolean;
   adding: boolean;
   onReadd: () => void;
+  onWatchNow?: () => void;
 }) {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -202,6 +217,8 @@ function HistoryItem({ entry, readded, adding, onReadd }: {
       <TouchableOpacity
         style={[styles.readdBtn, readded && styles.readdBtnDone]}
         onPress={onReadd}
+        onLongPress={readded ? undefined : onWatchNow}
+        delayLongPress={400}
         disabled={readded || adding}
         activeOpacity={0.7}
       >

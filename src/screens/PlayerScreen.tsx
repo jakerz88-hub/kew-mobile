@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback, useMemo } from "react";
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Modal, Image, StatusBar, useWindowDimensions } from "react-native";
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Modal, Image, StatusBar, useWindowDimensions, ActivityIndicator } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import * as ScreenOrientation from "expo-screen-orientation";
 import * as WebBrowser from "expo-web-browser";
@@ -136,6 +136,21 @@ export default function PlayerScreen() {
 
   // Keep queue in sync whenever this screen comes into focus
   useFocusEffect(useCallback(() => { fetchQueue(); }, []));
+
+  // Watch Now toast — drain the store's pendingToast as soon as it's set.
+  // Phone always lands here after Watch Now, and useEffect (rather than
+  // useFocusEffect) also catches the in-Player case (e.g. user taps
+  // "Watch now" on an upcoming entry from QueueActionSheet while already
+  // on the Player). QueueScreen's mirror is gated on isTablet, so on phone
+  // only PlayerScreen consumes — no race.
+  const pendingToast = useStore(s => s.pendingToast);
+  const setPendingToast = useStore(s => s.setPendingToast);
+  useEffect(() => {
+    if (pendingToast) {
+      showToast(pendingToast);
+      setPendingToast(null);
+    }
+  }, [pendingToast, showToast, setPendingToast]);
 
   // Report progress every 10s while playing
   useEffect(() => {
@@ -592,10 +607,14 @@ export default function PlayerScreen() {
             </SansText>
             <View style={styles.modalBtns}>
               <TouchableOpacity style={[styles.modalBtn, styles.modalBtnCancel]} onPress={() => setShowRemoveModal(false)}>
-                <SansText style={styles.modalBtnCancelText}>Keep it</SansText>
+                <SansText style={styles.modalBtnCancelText}>Cancel</SansText>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.modalBtn, styles.modalBtnDestructive]} onPress={handleRemoveConfirm} disabled={removing}>
-                <SansText style={styles.modalBtnDestructiveText}>{removing ? "..." : "Remove"}</SansText>
+                {removing ? (
+                  <ActivityIndicator size="small" color={colors.cream} />
+                ) : (
+                  <SansText style={styles.modalBtnDestructiveText}>Remove</SansText>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -613,7 +632,7 @@ export default function PlayerScreen() {
             </SansText>
             <View style={styles.modalBtns}>
               <TouchableOpacity style={[styles.modalBtn, styles.modalBtnCancel]} onPress={() => setShowSkipModal(false)}>
-                <SansText style={styles.modalBtnCancelText}>Never mind</SansText>
+                <SansText style={styles.modalBtnCancelText}>Cancel</SansText>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.modalBtn, styles.modalBtnConfirm]} onPress={handleSkipConfirm}>
                 <SansText style={styles.modalBtnConfirmText}>Skip this video</SansText>
@@ -713,8 +732,8 @@ function makeStyles(c: ColorPalette) {
     modalBody:           { fontSize: FontSize.sm, color: c.warmMid, lineHeight: 22 },
     modalBtns:           { flexDirection: "row", gap: Spacing.sm },
     modalBtn:            { flex: 1, height: 48, borderRadius: Radius.pill, alignItems: "center", justifyContent: "center" },
-    modalBtnCancel:      { backgroundColor: c.divider },
-    modalBtnCancelText:  { fontSize: FontSize.sm, color: c.ink },
+    modalBtnCancel:      { borderWidth: 1.5, borderColor: c.divider, backgroundColor: "transparent" },
+    modalBtnCancelText:  { fontSize: FontSize.sm, color: c.warmMid },
     modalBtnConfirm:        { backgroundColor: c.accent },
     modalBtnConfirmText:    { fontSize: FontSize.sm, color: c.buttonText, fontFamily: FontFamily.sansMedium },
     modalBtnDestructive:    { backgroundColor: c.ink },

@@ -25,6 +25,7 @@ import { useScrollToTopOnTabPress } from "../hooks/useScrollToTopOnTabPress";
 import { useInTabletSidebar } from "../contexts/TabletSidebarContext";
 import { useAddToQueue } from "../hooks/useAddToQueue";
 import { QueuePickerModal } from "../components/QueuePickerModal";
+import { WatchNowSheet } from "../components/WatchNowSheet";
 import { ChannelSheet } from "../components/ChannelSheet";
 
 const CHANNEL_COL_WIDTH = 260;
@@ -70,7 +71,10 @@ export default function BrowseScreen() {
   useScrollToTopOnTabPress(tabletPanelRef, "Browse");
 
   // Queue picker (shared hook — handles iOS ActionSheet + Android modal)
-  const { handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId } = useAddToQueue(
+  const {
+    handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId,
+    handleWatchNow, closeWatchNow, watchNowVideoId, watchNowTitle,
+  } = useAddToQueue(
     (ytVideoId) => setPanelVideos(v => v.map(x => x.ytVideoId === ytVideoId ? { ...x, inQueue: true } : x))
   );
 
@@ -372,6 +376,7 @@ export default function BrowseScreen() {
                       inQueue={inQueue}
                       adding={addingId === item.ytVideoId}
                       onAdd={handleAdd}
+                      onLongPress={() => handleWatchNow(item.ytVideoId, item.title)}
                     />
                   );
                 }}
@@ -537,6 +542,16 @@ export default function BrowseScreen() {
         />
       )}
 
+      {/* Watch now (long-press) */}
+      {watchNowVideoId && (
+        <WatchNowSheet
+          visible={!!watchNowVideoId}
+          ytVideoId={watchNowVideoId}
+          videoTitle={watchNowTitle}
+          onClose={closeWatchNow}
+        />
+      )}
+
       {/* Channel sheet modal */}
       {selectedChannel && (
         <ChannelSheet
@@ -553,11 +568,12 @@ export default function BrowseScreen() {
 
 // ── Sub-components ─────────────────────────────────────────────
 
-function BrowseVideoCard({ video, inQueue, adding, onAdd }: {
+function BrowseVideoCard({ video, inQueue, adding, onAdd, onLongPress }: {
   video: BrowseVideo;
   inQueue: boolean;
   adding: boolean;
   onAdd: (id: string) => void;
+  onLongPress?: () => void;
 }) {
   const { colors } = useTheme();
   const tStyles = useMemo(() => makeTabletStyles(colors), [colors]);
@@ -580,6 +596,8 @@ function BrowseVideoCard({ video, inQueue, adding, onAdd }: {
           <TouchableOpacity
             style={[tStyles.addBtn, inQueue && tStyles.addBtnQueued]}
             onPress={inQueue ? undefined : () => onAdd(video.ytVideoId)}
+            onLongPress={inQueue ? undefined : onLongPress}
+            delayLongPress={400}
             disabled={inQueue || adding}
             activeOpacity={0.7}
           >

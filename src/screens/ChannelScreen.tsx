@@ -9,6 +9,7 @@ import type { BrowseVideo } from "../types";
 import { SansText, Divider, ThumbPlaceholder, EmptyState, ErrorBanner } from "../components/UI";
 import { QueueActionSheet } from "../components/QueueActionSheet";
 import { QueuePickerModal } from "../components/QueuePickerModal";
+import { WatchNowSheet } from "../components/WatchNowSheet";
 import { ChannelSheet } from "../components/ChannelSheet";
 import { DurationBadge } from "../components/DurationBadge";
 import { useAddToQueue } from "../hooks/useAddToQueue";
@@ -33,7 +34,10 @@ export default function ChannelScreen() {
   const isPro = user?.plan === "pro";
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
-  const { handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId } = useAddToQueue();
+  const {
+    handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId,
+    handleWatchNow, closeWatchNow, watchNowVideoId, watchNowTitle,
+  } = useAddToQueue();
 
   const [videos, setVideos]             = useState<BrowseVideo[]>([]);
   const [loading, setLoading]           = useState(false);
@@ -125,6 +129,7 @@ export default function ChannelScreen() {
               adding={addingId === item.ytVideoId}
               onAdd={() => handleAdd(item.ytVideoId)}
               onRemove={removeEntryId ? () => setRemoveTarget({ entryId: removeEntryId, title: item.title, queueName }) : undefined}
+              onWatchNow={() => handleWatchNow(item.ytVideoId, item.title)}
             />
           );
         }}
@@ -147,6 +152,15 @@ export default function ChannelScreen() {
           visible={!!pickerVideoId}
           onSelect={(queueId) => { const vid = pickerVideoId; setPickerVideoId(null); doAddVideo(vid, queueId); }}
           onDismiss={() => setPickerVideoId(null)}
+        />
+      )}
+
+      {watchNowVideoId && (
+        <WatchNowSheet
+          visible={!!watchNowVideoId}
+          ytVideoId={watchNowVideoId}
+          videoTitle={watchNowTitle}
+          onClose={closeWatchNow}
         />
       )}
 
@@ -216,12 +230,13 @@ function LoadMoreFooter({ stage, loadingOlder, onLoadOlder }: { stage: number; l
   );
 }
 
-function VideoCard({ video, inQueue, adding, onAdd, onRemove }: {
+function VideoCard({ video, inQueue, adding, onAdd, onRemove, onWatchNow }: {
   video: BrowseVideo;
   inQueue: boolean;
   adding: boolean;
   onAdd: () => void;
   onRemove?: () => void;
+  onWatchNow?: () => void;
 }) {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -242,7 +257,7 @@ function VideoCard({ video, inQueue, adding, onAdd, onRemove }: {
         <TouchableOpacity
           style={[styles.addBtn, inQueue && styles.addBtnAdded]}
           onPress={inQueue ? undefined : onAdd}
-          onLongPress={inQueue ? onRemove : undefined}
+          onLongPress={inQueue ? onRemove : onWatchNow}
           delayLongPress={400}
           disabled={adding}
           activeOpacity={0.7}

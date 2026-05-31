@@ -16,6 +16,7 @@ import { LogoMark } from "../components/TabIcons";
 import { useStore } from "../store";
 import { useAddToQueue } from "../hooks/useAddToQueue";
 import { QueuePickerModal } from "../components/QueuePickerModal";
+import { WatchNowSheet } from "../components/WatchNowSheet";
 import { ChannelSheet } from "../components/ChannelSheet";
 import { DurationBadge } from "../components/DurationBadge";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius, withAlpha } from "../types/theme";
@@ -79,7 +80,10 @@ export default function ExploreScreen() {
   const inSidebar = useInTabletSidebar();
   const { user } = useStore();
   const queuedVideos = useStore(s => s.queuedVideos);
-  const { handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId } = useAddToQueue();
+  const {
+    handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId,
+    handleWatchNow, closeWatchNow, watchNowVideoId, watchNowTitle,
+  } = useAddToQueue();
 
   const [query, setQuery]                   = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
@@ -330,6 +334,8 @@ export default function ExploreScreen() {
                     <TouchableOpacity
                       style={styles.surpriseActionBtn}
                       onPress={() => handleAddToQueue(surpriseVideo)}
+                      onLongPress={() => handleWatchNow(surpriseVideo.ytVideoId, surpriseVideo.title)}
+                      delayLongPress={400}
                       disabled={addingId === surpriseVideo.ytVideoId}
                       activeOpacity={0.75}
                     >
@@ -581,6 +587,8 @@ export default function ExploreScreen() {
                     <TouchableOpacity
                       style={[styles.addBtn, queued && styles.addBtnQueued]}
                       onPress={() => !queued && handleAddToQueue(item)}
+                      onLongPress={queued ? undefined : () => handleWatchNow(item.ytVideoId, item.title)}
+                      delayLongPress={400}
                       disabled={queued || adding}
                       activeOpacity={0.75}
                     >
@@ -604,6 +612,15 @@ export default function ExploreScreen() {
           visible={!!pickerVideoId}
           onSelect={(queueId) => { const vid = pickerVideoId; setPickerVideoId(null); doAddVideo(vid, queueId); }}
           onDismiss={() => setPickerVideoId(null)}
+        />
+      )}
+
+      {watchNowVideoId && (
+        <WatchNowSheet
+          visible={!!watchNowVideoId}
+          ytVideoId={watchNowVideoId}
+          videoTitle={watchNowTitle}
+          onClose={closeWatchNow}
         />
       )}
 

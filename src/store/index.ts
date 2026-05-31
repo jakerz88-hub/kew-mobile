@@ -33,6 +33,12 @@ interface AppState {
   kewPlusUpsell: KewPlusUpsell | null;
   showKewPlusUpsell: (upsell: KewPlusUpsell) => void;
   hideKewPlusUpsell: () => void;
+  // One-shot global toast queue. Set by an action; consumed by whichever
+  // screen mounts the Toast UI next. Needed for cross-tab confirmations on
+  // iPad where TabletNavigator switches via internal state, so React
+  // Navigation params don't reach the destination tab.
+  pendingToast: string | null;
+  setPendingToast: (msg: string | null) => void;
   fetchUser: () => Promise<void>;
   fetchQueue: () => Promise<void>;
   fetchQueues: () => Promise<void>;
@@ -48,6 +54,7 @@ interface AppState {
   moveToEnd: (entryId: string) => Promise<void>;
   shuffleQueue: () => Promise<void>;
   reorderQueue: (entryId: string, newPosition: number, useSkip: boolean) => Promise<{ skipsRemaining: number; skipsMax: number }>;
+  watchNow: (ytVideoId?: string, sourceEntryId?: string) => Promise<{ queueSwitched: boolean }>;
   updateProgress: (entryId: string, progressSecs: number) => Promise<void>;
   // Called by PlayerScreen after a video finishes naturally; drops the entry
   // from queuedVideos so re-add affordances flip back to ↺/+ across screens.
@@ -75,9 +82,12 @@ export const useStore = create<AppState>((set, get) => ({
   isLoadingQueues: false,
   error: null,
   kewPlusUpsell: null,
+  pendingToast: null,
 
   showKewPlusUpsell: (upsell) => set({ kewPlusUpsell: upsell }),
   hideKewPlusUpsell: () => set({ kewPlusUpsell: null }),
+
+  setPendingToast: (msg) => set({ pendingToast: msg }),
 
   clearError: () => set({ error: null }),
 
@@ -423,6 +433,30 @@ export const useStore = create<AppState>((set, get) => ({
       return result;
     } catch (e: any) {
       const msg = friendlyError(e); set({ error: msg });
+      throw e;
+    }
+  },
+
+  watchNow: async (ytVideoId?: string, sourceEntryId?: string) => {
+    const { activeQueueId } = get();
+    try {
+      const result = await api.watchNow(ytVideoId, sourceEntryId);
+      const queueSwitched = activeQueueId !== result.mainQueueId;
+      set(s => ({
+        activeQueueId: result.mainQueueId,
+        user: s.user
+          ? { ...s.user, skipsRemaining: result.skipsRemaining, skipsMax: result.skipsMax }
+          : s.user,
+      }));
+      await get().fetchQueue();
+      get().fetchQueuedVideos();
+      return { queueSwitched };
+    } catch (e: any) {
+      // Match addToQueue: don't double-surface queue_limit_reached as a banner;
+      // the consumer (WatchNowSheet) will trigger the existing kew+ upsell.
+      if (e?.code !== "queue_limit_reached") {
+        const msg = friendlyError(e); set({ error: msg });
+      }
       throw e;
     }
   },

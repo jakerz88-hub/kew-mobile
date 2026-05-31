@@ -21,6 +21,8 @@ export function useAddToQueue(onAdded?: (ytVideoId: string) => void) {
 
   const [addingId, setAddingId]         = useState<string | null>(null);
   const [pickerVideoId, setPickerVideoId] = useState<string | null>(null);
+  const [watchNowVideoId, setWatchNowVideoId] = useState<string | null>(null);
+  const [watchNowTitle, setWatchNowTitle]     = useState<string>("");
 
   // Ensure queues are populated so the picker has data regardless of
   // which tab the user landed on first.
@@ -73,5 +75,27 @@ export function useAddToQueue(onAdded?: (ytVideoId: string) => void) {
     }
   };
 
-  return { handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId, queues };
+  /** Call this on long-press of any "+ Add" button to open WatchNowSheet. */
+  const handleWatchNow = (ytVideoId: string, title: string) => {
+    setWatchNowVideoId(ytVideoId);
+    setWatchNowTitle(title);
+  };
+
+  const closeWatchNow = () => {
+    setWatchNowVideoId(null);
+    setWatchNowTitle("");
+  };
+
+  return {
+    handleAdd,
+    doAddVideo,
+    addingId,
+    pickerVideoId,
+    setPickerVideoId,
+    queues,
+    handleWatchNow,
+    closeWatchNow,
+    watchNowVideoId,
+    watchNowTitle,
+  };
 }

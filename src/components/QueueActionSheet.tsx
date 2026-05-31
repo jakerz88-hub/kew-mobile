@@ -1,10 +1,13 @@
 import React, { useState, useMemo } from "react";
-import { View, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
+import { View, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import { useStore } from "../store";
-import { SansText, SerifText } from "./UI";
+import { SansText, SerifText, EmptyState } from "./UI";
 import { BottomSheet } from "./BottomSheet";
 import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/theme";
 import { useTheme } from "../contexts/ThemeContext";
+import { useIsTablet } from "../hooks/useIsTablet";
+import { useTabletSwitchTab } from "../contexts/TabletSidebarContext";
 
 type Step = "options" | "confirm-remove" | "pick-queue";
 
@@ -34,10 +37,18 @@ export function QueueActionSheet({
   onMoved,
 }: Props) {
   const { colors } = useTheme();
-  const { removeFromQueue, moveToQueue, queues, activeQueueId, user } = useStore();
-  const [step, setStep]         = useState<Step>("options");
-  const [loading, setLoading]   = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const { removeFromQueue, moveToQueue, queues, activeQueueId, user, watchNow, setPendingToast } = useStore();
+  const navigation = useNavigation<any>();
+  const isTablet = useIsTablet();
+  const switchTab = useTabletSwitchTab();
+  const [step, setStep]             = useState<Step>("options");
+  const [loading, setLoading]       = useState(false);
+  const [movingToId, setMovingToId] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg]     = useState<string | null>(null);
+  const [watchNowLoading, setWatchNowLoading] = useState(false);
+
+  const skipsRemaining = user?.skipsRemaining ?? 0;
+  const canWatchNow = skipsRemaining > 0;
 
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
@@ -48,7 +59,34 @@ export function QueueActionSheet({
   const handleClose = () => {
     setStep("options");
     setErrorMsg(null);
+    setMovingToId(null);
+    setWatchNowLoading(false);
     onClose();
+  };
+
+  const handleWatchNow = async () => {
+    if (!canWatchNow || watchNowLoading) return;
+    setWatchNowLoading(true);
+    setErrorMsg(null);
+    try {
+      const { queueSwitched } = await watchNow(undefined, entryId);
+      handleClose();
+      onActionComplete?.();
+      if (queueSwitched) setPendingToast("Switched to your main queue.");
+      // Phone → Player; iPad → switch internal tab to Queue (split-view
+      // player picks it up). TabletNavigator owns iPad tabs via internal
+      // state, so React Navigation routes don't reach them.
+      if (isTablet && switchTab) {
+        switchTab("Queue");
+        if (navigation.canGoBack()) navigation.goBack();
+      } else {
+        navigation.navigate("Player");
+      }
+    } catch (e: any) {
+      setErrorMsg(e?.message ?? "Something went wrong. Please try again.");
+    } finally {
+      setWatchNowLoading(false);
+    }
   };
 
   const handleRemove = async () => {
@@ -69,6 +107,7 @@ export function QueueActionSheet({
   const handleMoveToQueue = async (targetQueueId: string) => {
     const targetQueue = moveTargets.find(q => q.id === targetQueueId);
     setLoading(true);
+    setMovingToId(targetQueueId);
     setErrorMsg(null);
     try {
       await moveToQueue(entryId, targetQueueId);
@@ -79,6 +118,7 @@ export function QueueActionSheet({
       setErrorMsg(e?.message ?? "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
+      setMovingToId(null);
     }
   };
 
@@ -96,6 +136,21 @@ export function QueueActionSheet({
           {user?.plan === "pro" && queueName && (
             <SansText style={styles.queueSubtitle}>In your {queueName} queue</SansText>
           )}
+
+          <TouchableOpacity
+            style={[styles.btn, styles.btnWatchNow, !canWatchNow && styles.btnWatchNowDisabled]}
+            onPress={handleWatchNow}
+            disabled={!canWatchNow || watchNowLoading}
+            activeOpacity={0.7}
+          >
+            {watchNowLoading ? (
+              <ActivityIndicator size="small" color={colors.buttonText} />
+            ) : (
+              <SansText style={styles.btnWatchNowText}>
+                {canWatchNow ? "Watch now" : "No skips remaining"}
+              </SansText>
+            )}
+          </TouchableOpacity>
 
           <View style={styles.btnRow}>
             {canMoveToQueue ? (
@@ -131,7 +186,7 @@ export function QueueActionSheet({
 
           <View style={styles.btnRow}>
             <TouchableOpacity style={[styles.btn, styles.btnCancel]} onPress={() => setStep("options")} activeOpacity={0.7}>
-              <SansText style={styles.btnCancelText}>Go back</SansText>
+              <SansText style={styles.btnCancelText}>Cancel</SansText>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.btn, styles.btnDestructive]}
@@ -139,9 +194,11 @@ export function QueueActionSheet({
               disabled={loading}
               activeOpacity={0.7}
             >
-              <SansText style={styles.btnConfirmText}>
-                {loading ? "…" : "Remove"}
-              </SansText>
+              {loading ? (
+                <ActivityIndicator size="small" color={colors.cream} />
+              ) : (
+                <SansText style={styles.btnConfirmText}>Remove</SansText>
+              )}
             </TouchableOpacity>
           </View>
         </>
@@ -156,28 +213,40 @@ export function QueueActionSheet({
             <SansText style={styles.errorMsg}>{errorMsg}</SansText>
           )}
 
-          <ScrollView style={styles.queueList} bounces={false}>
-            {moveTargets.map(q => (
-              <TouchableOpacity
-                key={q.id}
-                style={styles.queueRow}
-                onPress={() => handleMoveToQueue(q.id)}
-                disabled={loading}
-                activeOpacity={0.7}
-              >
-                {q.emoji ? (
-                  <SansText style={styles.queueEmoji}>{q.emoji}</SansText>
-                ) : (
-                  <SansText style={styles.queueEmoji}>☰</SansText>
-                )}
-                <SansText style={styles.queueName}>{q.name}</SansText>
-                <SansText style={styles.queueCount}>{q.videoCount}</SansText>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+          {moveTargets.length === 0 ? (
+            <View style={styles.emptyWrap}>
+              <EmptyState
+                icon="☰"
+                title="No other queues"
+                subtitle="Create another queue to move videos between them."
+              />
+            </View>
+          ) : (
+            <ScrollView style={styles.queueList} bounces={false}>
+              {moveTargets.map(q => (
+                <TouchableOpacity
+                  key={q.id}
+                  style={styles.queueRow}
+                  onPress={() => handleMoveToQueue(q.id)}
+                  disabled={loading}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.queueIconSlot}>
+                    {movingToId === q.id ? (
+                      <ActivityIndicator size="small" color={colors.accent} />
+                    ) : (
+                      <SansText style={styles.queueEmoji}>{q.emoji ?? "☰"}</SansText>
+                    )}
+                  </View>
+                  <SansText style={styles.queueName}>{q.name}</SansText>
+                  <SansText style={styles.queueCount}>{q.videoCount}</SansText>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
 
           <TouchableOpacity style={styles.cancelOption} onPress={() => setStep("options")} activeOpacity={0.7}>
-            <SansText style={styles.cancelText}>Go back</SansText>
+            <SansText style={styles.cancelText}>Cancel</SansText>
           </TouchableOpacity>
         </>
       )}
@@ -205,12 +274,17 @@ function makeStyles(c: ColorPalette) {
     confirmBody:           { fontSize: FontSize.sm, color: c.warmMid, textAlign: "center", lineHeight: 20 },
     pickSubtitle:          { fontSize: FontSize.xs, color: c.warmMid, textAlign: "center", lineHeight: 18 },
     queueList:             { maxHeight: 220 },
+    emptyWrap:             { minHeight: 140, justifyContent: "center" },
     queueRow:              { flexDirection: "row", alignItems: "center", gap: Spacing.sm, paddingVertical: Spacing.sm, paddingHorizontal: Spacing.sm, borderRadius: Radius.md, borderWidth: 1, borderColor: c.divider, backgroundColor: c.cardElevated, marginBottom: Spacing.xs },
-    queueEmoji:            { fontSize: FontSize.md, color: c.ink, width: 24, textAlign: "center" },
+    queueIconSlot:         { width: 24, alignItems: "center" },
+    queueEmoji:            { fontSize: FontSize.md, color: c.ink, textAlign: "center" },
     queueName:             { flex: 1, fontSize: FontSize.sm, color: c.ink, fontFamily: FontFamily.sansMedium },
     queueCount:            { fontSize: FontSize.xs, color: c.warmMid },
     btnRow:                { flexDirection: "row", gap: Spacing.sm, marginTop: Spacing.xs },
     btn:                   { flex: 1, height: 48, borderRadius: Radius.pill, alignItems: "center", justifyContent: "center" },
+    btnWatchNow:           { backgroundColor: c.accent, flex: undefined, width: "100%", marginTop: Spacing.xs },
+    btnWatchNowDisabled:   { opacity: 0.4 },
+    btnWatchNowText:       { fontSize: FontSize.sm, color: c.buttonText, fontFamily: FontFamily.sansMedium },
     btnCancel:             { backgroundColor: c.divider },
     btnCancelText:         { fontSize: FontSize.sm, color: c.ink },
     btnConfirmText:        { fontSize: FontSize.sm, color: c.cream, fontFamily: FontFamily.sansMedium },

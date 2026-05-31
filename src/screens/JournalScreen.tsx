@@ -75,6 +75,7 @@ import {
 } from "../components/UI";
 import { LogoMark } from "../components/TabIcons";
 import { QueuePickerModal } from "../components/QueuePickerModal";
+import { WatchNowSheet } from "../components/WatchNowSheet";
 import { Colors, ColorPalette, FontFamily, FontSize, Spacing, Radius, withAlpha } from "../types/theme";
 import { formatDuration } from "../types";
 import type { JournalEntry, JournalFeedItem } from "../types";
@@ -222,8 +223,10 @@ function JournalScreenPaid() {
   }, []);
   useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
 
-  const { handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId } =
-    useAddToQueue();
+  const {
+    handleAdd, doAddVideo, addingId, pickerVideoId, setPickerVideoId,
+    handleWatchNow, closeWatchNow, watchNowVideoId, watchNowTitle,
+  } = useAddToQueue();
 
   const loadFeed = useCallback(async () => {
     setLoading(true);
@@ -381,6 +384,7 @@ function JournalScreenPaid() {
           onAddEntry={openCreateComposer}
           onEntryLongPress={handleEntryLongPress}
           onReadd={handleReadd}
+          onWatchNow={handleWatchNow}
           addingId={addingId}
           queuedVideos={queuedVideos}
         />
@@ -393,6 +397,7 @@ function JournalScreenPaid() {
           onToggleExpanded={toggleExpanded}
           onAddEntry={openCreateComposer}
           onReadd={handleReadd}
+          onWatchNow={handleWatchNow}
           addingId={addingId}
           queuedVideos={queuedVideos}
         />
@@ -415,6 +420,15 @@ function JournalScreenPaid() {
             doAddVideo(vid, queueId);
           }}
           onDismiss={() => setPickerVideoId(null)}
+        />
+      )}
+
+      {watchNowVideoId && (
+        <WatchNowSheet
+          visible={!!watchNowVideoId}
+          ytVideoId={watchNowVideoId}
+          videoTitle={watchNowTitle}
+          onClose={closeWatchNow}
         />
       )}
 
@@ -502,6 +516,7 @@ interface EntriesViewProps {
   onAddEntry: (videoId: string) => void;
   onEntryLongPress: (videoId: string, entry: JournalEntry) => void;
   onReadd: (ytVideoId: string) => void;
+  onWatchNow: (ytVideoId: string, title: string) => void;
   addingId: string | null;
   queuedVideos: Record<string, { entryId: string; queueId: string; queueName: string; queueEmoji: string | null }>;
 }
@@ -513,7 +528,7 @@ function EntriesView(props: EntriesViewProps) {
     monthGroups, loading, onRefresh,
     collapsedMonths, collapsedDays, expandedEntries,
     onToggleMonth, onToggleDay, onToggleExpanded,
-    onAddEntry, onEntryLongPress, onReadd, addingId, queuedVideos,
+    onAddEntry, onEntryLongPress, onReadd, onWatchNow, addingId, queuedVideos,
   } = props;
   const listRef = useRef<FlatList | null>(null);
   useScrollToTopOnTabPress(listRef, "History");
@@ -590,6 +605,7 @@ function EntriesView(props: EntriesViewProps) {
                               onToggleExpanded={() => onToggleExpanded(entry.id)}
                               onLongPress={() => onEntryLongPress(item.video.ytVideoId, entry)}
                               onReadd={() => onReadd(item.video.ytVideoId)}
+                              onReaddLongPress={() => onWatchNow(item.video.ytVideoId, item.video.title)}
                               adding={addingId === item.video.ytVideoId}
                               readded={!!queuedVideos[item.video.ytVideoId]}
                             />
@@ -599,6 +615,7 @@ function EntriesView(props: EntriesViewProps) {
                             video={item.video}
                             onAddEntry={() => onAddEntry(item.video.ytVideoId)}
                             onReadd={() => onReadd(item.video.ytVideoId)}
+                            onReaddLongPress={() => onWatchNow(item.video.ytVideoId, item.video.title)}
                             adding={addingId === item.video.ytVideoId}
                             readded={!!queuedVideos[item.video.ytVideoId]}
                           />
@@ -626,6 +643,7 @@ function EntryBlock({
   onToggleExpanded,
   onLongPress,
   onReadd,
+  onReaddLongPress,
   adding,
   readded,
 }: {
@@ -635,6 +653,7 @@ function EntryBlock({
   onToggleExpanded: () => void;
   onLongPress: () => void;
   onReadd: () => void;
+  onReaddLongPress?: () => void;
   adding: boolean;
   readded: boolean;
 }) {
@@ -685,7 +704,7 @@ function EntryBlock({
             <SansText style={styles.tsChipText}>at {formatTimestampShort(entry.videoTimestampSecs)}</SansText>
           </View>
         )}
-        <ReaddCircle onPress={onReadd} adding={adding} readded={readded} />
+        <ReaddCircle onPress={onReadd} onLongPress={onReaddLongPress} adding={adding} readded={readded} />
       </View>
     </TouchableOpacity>
   );
@@ -698,12 +717,14 @@ function UnenteredItem({
   video,
   onAddEntry,
   onReadd,
+  onReaddLongPress,
   adding,
   readded,
 }: {
   video: JournalFeedItem["video"];
   onAddEntry: () => void;
   onReadd: () => void;
+  onReaddLongPress?: () => void;
   adding: boolean;
   readded: boolean;
 }) {
@@ -727,7 +748,7 @@ function UnenteredItem({
           </TouchableOpacity>
         </View>
       </View>
-      <ReaddCircle onPress={onReadd} adding={adding} readded={readded} />
+      <ReaddCircle onPress={onReadd} onLongPress={onReaddLongPress} adding={adding} readded={readded} />
     </View>
   );
 }
@@ -743,6 +764,7 @@ interface HistoryViewProps {
   onToggleExpanded: (entryId: string) => void;
   onAddEntry: (videoId: string) => void;
   onReadd: (ytVideoId: string) => void;
+  onWatchNow: (ytVideoId: string, title: string) => void;
   addingId: string | null;
   queuedVideos: Record<string, { entryId: string; queueId: string; queueName: string; queueEmoji: string | null }>;
 }
@@ -752,7 +774,7 @@ function HistoryView(props: HistoryViewProps) {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const {
     items, loading, onRefresh, expandedEntries,
-    onToggleExpanded, onAddEntry, onReadd, addingId, queuedVideos,
+    onToggleExpanded, onAddEntry, onReadd, onWatchNow, addingId, queuedVideos,
   } = props;
   const listRef = useRef<FlatList | null>(null);
   useScrollToTopOnTabPress(listRef, "History");
@@ -795,6 +817,7 @@ function HistoryView(props: HistoryViewProps) {
               </View>
               <ReaddCircle
                 onPress={() => onReadd(item.video.ytVideoId)}
+                onLongPress={() => onWatchNow(item.video.ytVideoId, item.video.title)}
                 adding={addingId === item.video.ytVideoId}
                 readded={!!queuedVideos[item.video.ytVideoId]}
               />
@@ -840,10 +863,12 @@ function HistoryView(props: HistoryViewProps) {
 
 function ReaddCircle({
   onPress,
+  onLongPress,
   adding,
   readded,
 }: {
   onPress: () => void;
+  onLongPress?: () => void;
   adding: boolean;
   readded: boolean;
 }) {
@@ -852,6 +877,8 @@ function ReaddCircle({
   return (
     <TouchableOpacity
       onPress={onPress}
+      onLongPress={readded ? undefined : onLongPress}
+      delayLongPress={400}
       disabled={readded || adding}
       activeOpacity={0.7}
       style={[styles.readdBtn, readded && { backgroundColor: colors.green, borderColor: colors.green }]}

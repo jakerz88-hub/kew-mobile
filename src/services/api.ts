@@ -198,6 +198,16 @@ export const api = {
     });
   },
 
+  watchNow(ytVideoId?: string, sourceEntryId?: string): Promise<{ mainQueueId: string; skipsRemaining: number; skipsMax: number }> {
+    return request("/v1/queue/watch-now", {
+      method: "POST",
+      body: JSON.stringify({
+        ...(ytVideoId ? { yt_video_id: ytVideoId } : {}),
+        ...(sourceEntryId ? { source_entry_id: sourceEntryId } : {}),
+      }),
+    });
+  },
+
   skipCurrent(): Promise<SkipResult> {
     return request("/v1/queue/skip", { method: "POST" });
   },
