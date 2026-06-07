@@ -16,7 +16,7 @@ import { supabase } from "./src/services/supabase";
 import { api } from "./src/services/api";
 import { configurePurchases, logoutPurchases } from "./src/services/revenuecat";
 import { useStore } from "./src/store";
-import { Colors, FontFamily, FontSize } from "./src/types/theme";
+import { FontFamily, FontSize } from "./src/types/theme";
 import { ThemeProvider, useTheme } from "./src/contexts/ThemeContext";
 import { QueueTabIcon, BrowseTabIcon, ExploreTabIcon, HistoryTabIcon, JournalTabIcon, LogoMark } from "./src/components/TabIcons";
 import { KewLogo } from "./src/components/UI";
@@ -53,6 +53,19 @@ const Tab   = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 export const navigationRef = createNavigationContainerRef<any>();
+
+function LoadingScreen() {
+  const { colors } = useTheme();
+  return (
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.cream, gap: 32 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+        <LogoMark size={44} />
+        <KewLogo size={44} plus={false} />
+      </View>
+      <ActivityIndicator color={colors.accent} size="small" />
+    </View>
+  );
+}
 
 function GlobalKewPlusSheet() {
   const { kewPlusUpsell, hideKewPlusUpsell } = useStore();
@@ -153,7 +166,7 @@ function AppNavigator() {
   );
 }
 
-export default function App() {
+function AppInner() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
   const [nuxDone, setNuxDone] = useState<boolean | undefined>(undefined);
   const [onboardingDone, setOnboardingDone] = useState<boolean | undefined>(undefined);
@@ -259,55 +272,47 @@ export default function App() {
     (session !== null && user !== null && (nuxDone === undefined || onboardingDone === undefined));
 
   if (isLoading) {
-    return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: Colors.cream, gap: 32 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <LogoMark size={44} />
-          <KewLogo size={44} plus={false} />
-        </View>
-        <ActivityIndicator color={Colors.accent} size="small" />
-      </View>
-    );
+    return <LoadingScreen />;
   }
 
   return (
+    <NavigationContainer ref={navigationRef}>
+      {!session ? (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Login" component={LoginScreen} />
+        </Stack.Navigator>
+      ) : (user === null && isLoadingUser) ? (
+        // fetchUser in-flight — show splash
+        <LoadingScreen />
+      ) : user === null ? (
+        // fetchUser failed (expired token, 403, network error) — send to Login
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Login" component={LoginScreen} />
+        </Stack.Navigator>
+      ) : !nuxDone ? (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="NUX">
+            {() => <NUXScreen onDone={markNuxDone} />}
+          </Stack.Screen>
+        </Stack.Navigator>
+      ) : !onboardingDone ? (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Onboarding">
+            {() => <OnboardingScreen onDone={markOnboardingDone} />}
+          </Stack.Screen>
+        </Stack.Navigator>
+      ) : (
+        <AppNavigator />
+      )}
+      <GlobalKewPlusSheet />
+    </NavigationContainer>
+  );
+}
+
+export default function App() {
+  return (
     <ThemeProvider>
-      <NavigationContainer ref={navigationRef}>
-        {!session ? (
-          <Stack.Navigator screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="Login" component={LoginScreen} />
-          </Stack.Navigator>
-        ) : (user === null && isLoadingUser) ? (
-          // fetchUser in-flight — show splash
-          <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: Colors.cream, gap: 32 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-              <LogoMark size={44} />
-              <KewLogo size={44} plus={false} />
-            </View>
-            <ActivityIndicator color={Colors.accent} size="small" />
-          </View>
-        ) : user === null ? (
-          // fetchUser failed (expired token, 403, network error) — send to Login
-          <Stack.Navigator screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="Login" component={LoginScreen} />
-          </Stack.Navigator>
-        ) : !nuxDone ? (
-          <Stack.Navigator screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="NUX">
-              {() => <NUXScreen onDone={markNuxDone} />}
-            </Stack.Screen>
-          </Stack.Navigator>
-        ) : !onboardingDone ? (
-          <Stack.Navigator screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="Onboarding">
-              {() => <OnboardingScreen onDone={markOnboardingDone} />}
-            </Stack.Screen>
-          </Stack.Navigator>
-        ) : (
-          <AppNavigator />
-        )}
-        <GlobalKewPlusSheet />
-      </NavigationContainer>
+      <AppInner />
     </ThemeProvider>
   );
 }

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { friendlyError } from "../utils/friendlyError";
-import { View, Modal, TouchableOpacity, TouchableWithoutFeedback, Alert, Image, StyleSheet, Dimensions } from "react-native";
+import { View, Modal, TouchableOpacity, TouchableWithoutFeedback, Alert, Image, StyleSheet, Dimensions, ActivityIndicator } from "react-native";
 import { SansText, Divider, ErrorBanner } from "./UI";
 import { BottomSheet } from "./BottomSheet";
 import { Colors, ColorPalette, FontFamily, FontSize, Spacing, Radius, withAlpha } from "../types/theme";
@@ -218,20 +218,23 @@ export function ChannelSheet({
         disabled={isSubscribing}
         activeOpacity={0.8}
       >
-        <SansText
-          style={[
-            styles.subscribeButtonText,
-            isSubscribed
-              ? styles.subscribedButtonText
-              : styles.unsubscribedButtonText,
-          ]}
-        >
-          {isSubscribing
-            ? "..."
-            : isSubscribed
-              ? "Subscribed ✓"
-              : "Subscribe"}
-        </SansText>
+        {isSubscribing ? (
+          <ActivityIndicator
+            size="small"
+            color={isSubscribed ? colors.green : colors.buttonText}
+          />
+        ) : (
+          <SansText
+            style={[
+              styles.subscribeButtonText,
+              isSubscribed
+                ? styles.subscribedButtonText
+                : styles.unsubscribedButtonText,
+            ]}
+          >
+            {isSubscribed ? "Subscribed ✓" : "Subscribe"}
+          </SansText>
+        )}
       </TouchableOpacity>
     </>
   );
