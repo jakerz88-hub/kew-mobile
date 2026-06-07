@@ -548,6 +548,17 @@ export default function QueueScreen() {
                   }}
                 >
                   <YoutubePlayer
+                    // Key on the video id so the player fully remounts when
+                    // the current video changes. react-native-youtube-iframe
+                    // does NOT reliably reload on a `videoId` prop change when
+                    // the webview changed while in a display:none subtree —
+                    // which is exactly the iPad case, where TabletNavigator
+                    // keeps every tab mounted and Watch Now swaps the current
+                    // video while the Queue tab is hidden. Without the key the
+                    // embed stays stuck on the previous video even though all
+                    // the metadata updates. A fresh mount initializes the
+                    // iframe with the correct videoId from the start.
+                    key={current.video.ytVideoId}
                     ref={playerRef}
                     height={playerHeight}
                     width={measuredPlayerWidth}
