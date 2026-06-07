@@ -402,6 +402,19 @@ export default function BrowseScreen() {
           </View>
         </View>
 
+        {/* Watch now (long-press) — iPad path. The phone return block has its
+            own copy; this one is required because the tablet layout returns
+            early and never reaches that JSX. Without it, long-press sets
+            watchNowVideoId but the sheet has no mount point on iPad. */}
+        {watchNowVideoId && (
+          <WatchNowSheet
+            visible={!!watchNowVideoId}
+            ytVideoId={watchNowVideoId}
+            videoTitle={watchNowTitle}
+            onClose={closeWatchNow}
+          />
+        )}
+
         {/* Channel sheet modal */}
         {selectedChannel && (
           <ChannelSheet
