@@ -567,7 +567,14 @@ export default function QueueScreen() {
                     onChangeState={onPlayerStateChange}
                     // rel: 0 disables YouTube's "related videos" overlay,
                     // which on iOS can manifest as autoplay-next at end.
-                    initialPlayerParams={{ rel: 0 }}
+                    // preventFullScreen: true hides YouTube's native fullscreen
+                    // button. Entering YouTube's WKWebView fullscreen and then
+                    // rotating back to portrait leaves the iframe in an
+                    // unrecoverable stuck state that freezes navigation — the
+                    // same bug fixed on PlayerScreen (iPhone). This is the iPad
+                    // surface (split-view); users expand the video by rotating
+                    // the device, not via an in-iframe button.
+                    initialPlayerParams={{ preventFullScreen: true, rel: 0 }}
                     webViewProps={{
                       allowsInlineMediaPlayback: true,
                       mediaPlaybackRequiresUserAction: false,

@@ -57,14 +57,31 @@ export default function PlayerScreen() {
 
   const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
+  // Pillarbox/letterbox the player to 16:9 in landscape so the video shows
+  // at its native aspect ratio with black bars on the sides (or top/bottom
+  // on more square form factors) instead of stretching to fill the device.
+  const VIDEO_ASPECT = 16 / 9;
+  const fitWidth  = width / height > VIDEO_ASPECT;
+  const landscapePlayerHeight = fitWidth ? height : width / VIDEO_ASPECT;
+  const landscapePlayerWidth  = fitWidth ? height * VIDEO_ASPECT : width;
 
-  // Unlock rotation when entering player; restore portrait lock on exit
+  // Unlock rotation when entering player; restore portrait lock on exit.
+  // The re-lock is deferred so it doesn't fire mid-navigation-animation —
+  // a synchronous lockAsync during unmount blocks the animation pipeline
+  // and visibly freezes the screen for several seconds on swipe-back from
+  // fullscreen → portrait. 400ms clears the ~350ms nav transition window.
   useEffect(() => {
     ScreenOrientation.unlockAsync();
+
+    let lockTimer: ReturnType<typeof setTimeout> | null = null;
+
     return () => {
-      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+      lockTimer = setTimeout(() => {
+        ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+      }, 400);
     };
   }, []);
+
 
   const [playing, setPlaying]               = useState(false);
   const [showSkipModal, setShowSkipModal]   = useState(false);
@@ -354,18 +371,31 @@ export default function PlayerScreen() {
         Video is ALWAYS rendered here so React never unmounts/remounts it.
         In landscape it expands to cover the full screen via absolute positioning.
       */}
+      {/*
+        In landscape we pillarbox/letterbox the player to 16:9 inside the
+        full-screen black container, rather than stretching to fill the
+        device viewport. iPhones in landscape are wider than 16:9, so a
+        full-fill would crop content top/bottom; this preserves the video's
+        natural aspect ratio with black bars on the sides (or top/bottom
+        on more square form factors).
+      */}
       <View style={isLandscape ? styles.videoLandscape : undefined}>
         <YoutubePlayer
           ref={playerRef}
-          height={isLandscape ? height : 210}
-          width={isLandscape ? width : undefined}
+          height={isLandscape ? landscapePlayerHeight : 210}
+          width={isLandscape ? landscapePlayerWidth : undefined}
           videoId={current.video.ytVideoId}
           play={playing}
           onChangeState={onStateChange}
           // rel: 0 disables YouTube's "related videos" overlay, which on iOS
           // can manifest as an autoplay-next when a video ends. Always
           // present; `start` only when resuming mid-video.
+          // preventFullScreen: true hides YouTube's native fullscreen button
+          // — entering YouTube's WKWebView fullscreen state is what caused
+          // the rotation-back swipe-back freeze. Users rotate the device
+          // directly to expand the inline player into landscape.
           initialPlayerParams={{
+            preventFullScreen: true,
             ...(current.watchProgressSecs > 10
               ? { start: Math.max(0, current.watchProgressSecs - 3) }
               : {}),
@@ -677,6 +707,7 @@ export default function PlayerScreen() {
       )}
 
       <Toast message={toastMsg} visible={toastVisible} />
+
     </SafeAreaView>
   );
 }
@@ -684,7 +715,7 @@ export default function PlayerScreen() {
 function makeStyles(c: ColorPalette) {
   return StyleSheet.create({
     container:           { flex: 1, backgroundColor: c.cream },
-    videoLandscape:      { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 10, backgroundColor: "black" },
+    videoLandscape:      { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 10, backgroundColor: "black", alignItems: "center", justifyContent: "center" },
     nav:                 { flexDirection: "row", alignItems: "center", paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm },
     navLockup:           { flexDirection: "row", alignItems: "center", gap: 6 },
     scrollContent:       { paddingBottom: 60 },
