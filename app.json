@@ -14,7 +14,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.kew.app",
-      "buildNumber": "15",
+      "buildNumber": "16",
       "usesAppleSignIn": true,
       "associatedDomains": [
         "applinks:yourkew.app"
@@ -56,6 +56,7 @@
       "./plugins/withKotlinJvmTarget",
       "expo-secure-store",
       "expo-apple-authentication",
+      "./plugins/withIpadAlternateIcons",
       [
         "expo-dynamic-app-icon",
         {
@@ -117,7 +118,6 @@
           }
         }
       ],
-      "./plugins/withIpadAlternateIcons",
       "expo-font"
     ],
     "scheme": "kew",

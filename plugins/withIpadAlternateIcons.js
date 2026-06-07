@@ -22,10 +22,27 @@ const path = require("path");
  * upscales the iPhone icons at runtime so the app looks fine; the
  * warning is cosmetic ASC noise that fires on every submission.
  *
- * This plugin must run AFTER expo-dynamic-app-icon — register it
- * after that entry in app.json's plugins array. It piggybacks on the
- * DynamicAppIcons folder and CFBundleAlternateIcons dictionary the
- * parent plugin creates.
+ * !!! IMPORTANT — PLUGIN ORDER !!!
+ * Register this plugin BEFORE expo-dynamic-app-icon in app.json's
+ * plugins array. Expo's config-plugins system runs mods in LIFO
+ * order within each phase (see node_modules/@expo/config-plugins/
+ * build/plugins/withMod.js:204 — the wrapper runs the user action
+ * first, then calls nextMod to chain the previously-registered mod).
+ *
+ * So:
+ *   plugins: [
+ *     "./plugins/withIpadAlternateIcons",   // registered FIRST = runs LAST
+ *     ["expo-dynamic-app-icon", { ... }],   // registered SECOND = runs FIRST
+ *   ]
+ *
+ * This guarantees expo-dynamic-app-icon's mods run first (creating
+ * the DynamicAppIcons folder + iPhone PNGs + CFBundleAlternateIcons
+ * dictionary), then this plugin's mods run with that state in place.
+ *
+ * If this plugin is registered AFTER expo-dynamic-app-icon (the
+ * intuitive but wrong order), its mods run FIRST as the outer
+ * wrapper, see empty state, and the assertions below throw — the
+ * build fails loudly rather than shipping with ITMS-90892 returning.
  *
  * Source images are read from ./assets/icons/<name>.png by convention
  * (matches the keys in expo-dynamic-app-icon's props). If the source
@@ -64,10 +81,10 @@ function withIpadIconImages(config) {
     async (config) => {
       const keys = readKeysFromPluginsProp(config);
       if (!keys || keys.length === 0) {
-        console.warn(
-          "[withIpadAlternateIcons] No expo-dynamic-app-icon entry found in plugins — skipping."
+        throw new Error(
+          "[withIpadAlternateIcons] No expo-dynamic-app-icon entry found in app.json plugins array. " +
+            "This plugin only makes sense alongside expo-dynamic-app-icon — remove this plugin or add the parent."
         );
-        return config;
       }
       const projectRoot = config.modRequest.projectRoot;
       const iosRoot = path.join(
@@ -76,11 +93,14 @@ function withIpadIconImages(config) {
       );
       const outDir = path.join(iosRoot, iosFolderName);
       if (!fs.existsSync(outDir)) {
-        console.warn(
-          "[withIpadAlternateIcons] DynamicAppIcons directory missing — " +
-            "expo-dynamic-app-icon must run before this plugin."
+        throw new Error(
+          "[withIpadAlternateIcons] DynamicAppIcons directory missing at " +
+            outDir +
+            ". Expected expo-dynamic-app-icon's dangerousMod to have run first and created it. " +
+            "Most likely cause: this plugin is registered AFTER expo-dynamic-app-icon in app.json — " +
+            "swap them. Expo runs mods LIFO within a phase (withMod.js:204), so the parent must be " +
+            "registered LATER to run FIRST."
         );
-        return config;
       }
       for (const { key, src } of keys) {
         const absSrc = path.isAbsolute(src) ? src : path.join(projectRoot, src);
@@ -148,11 +168,13 @@ function withIpadIconInfoPlist(config) {
   return withInfoPlist(config, (config) => {
     const altIconKeys = getAlternateIconKeys(config);
     if (altIconKeys.length === 0) {
-      console.warn(
-        "[withIpadAlternateIcons] CFBundleAlternateIcons not found — " +
-          "ensure expo-dynamic-app-icon runs before this plugin in app.json."
+      throw new Error(
+        "[withIpadAlternateIcons] CFBundleAlternateIcons not found in Info.plist. " +
+          "Expected expo-dynamic-app-icon's infoPlist mod to have populated it first. " +
+          "Most likely cause: this plugin is registered AFTER expo-dynamic-app-icon in app.json — " +
+          "swap them. Expo runs mods LIFO within a phase (withMod.js:204), so the parent must be " +
+          "registered LATER to run FIRST."
       );
-      return config;
     }
     if (!config.modResults["CFBundleIcons~ipad"]) {
       config.modResults["CFBundleIcons~ipad"] = {};
