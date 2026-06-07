@@ -15,7 +15,7 @@ import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/th
 // Each entry maps to two slots registered in app.json's `expo-dynamic-app-icon`
 // plugin block. Image files live at `assets/icons/{slug}{Variant}.png` and are
 // 1024×1024 PNGs. To swap the active icon at runtime, call setAppIcon(name)
-// from `expo-dynamic-app-icon` with the slot key (e.g. "goldenHourLight").
+// from `expo-dynamic-app-icon` with the slot key (e.g. "golden_hour_light").
 //
 // Asset placeholders today come from `scripts/gen-icons.py` which renders a
 // theme-tinted version of `kew-web/public/logo-mark.svg`. Replace them with
@@ -23,10 +23,10 @@ import { ColorPalette, FontFamily, FontSize, Spacing, Radius } from "../types/th
 // just the slot name.
 
 type IconVariant = "light" | "dark";
-type IconSlot = `${string}Light` | `${string}Dark`;
+type IconSlot = string;
 
 type IconTheme = {
-  id: string;        // matches ThemeId slug, e.g. "standard", "goldenHour"
+  id: string;        // matches ThemeId slug, e.g. "standard", "golden_hour"
   name: string;      // human-readable
   premium: boolean;  // free users only see premium=false
   light: { slot: IconSlot; source: number };
@@ -37,38 +37,38 @@ type IconTheme = {
 const ICON_THEMES: IconTheme[] = [
   {
     id: "standard", name: "Standard", premium: false,
-    light: { slot: "standardLight", source: require("../../assets/icons/standardLight.png") },
-    dark:  { slot: "standardDark",  source: require("../../assets/icons/standardDark.png") },
+    light: { slot: "standard_light", source: require("../../assets/icons/standard_light.png") },
+    dark:  { slot: "standard_dark",  source: require("../../assets/icons/standard_dark.png") },
   },
   {
-    id: "goldenHour", name: "Golden Hour", premium: true,
-    light: { slot: "goldenHourLight", source: require("../../assets/icons/goldenHourLight.png") },
-    dark:  { slot: "goldenHourDark",  source: require("../../assets/icons/goldenHourDark.png") },
+    id: "golden_hour", name: "Golden Hour", premium: true,
+    light: { slot: "golden_hour_light", source: require("../../assets/icons/golden_hour_light.png") },
+    dark:  { slot: "golden_hour_dark",  source: require("../../assets/icons/golden_hour_dark.png") },
   },
   {
-    id: "leatherWine", name: "Leather & Wine", premium: true,
-    light: { slot: "leatherWineLight", source: require("../../assets/icons/leatherWineLight.png") },
-    dark:  { slot: "leatherWineDark",  source: require("../../assets/icons/leatherWineDark.png") },
+    id: "leather_wine", name: "Leather & Wine", premium: true,
+    light: { slot: "leather_wine_light", source: require("../../assets/icons/leather_wine_light.png") },
+    dark:  { slot: "leather_wine_dark",  source: require("../../assets/icons/leather_wine_dark.png") },
   },
   {
     id: "nectar", name: "Starlight Nectar", premium: true,
-    light: { slot: "nectarLight", source: require("../../assets/icons/nectarLight.png") },
-    dark:  { slot: "nectarDark",  source: require("../../assets/icons/nectarDark.png") },
+    light: { slot: "nectar_light", source: require("../../assets/icons/nectar_light.png") },
+    dark:  { slot: "nectar_dark",  source: require("../../assets/icons/nectar_dark.png") },
   },
   {
-    id: "brightTide", name: "Bright Tide", premium: true,
-    light: { slot: "brightTideLight", source: require("../../assets/icons/brightTideLight.png") },
-    dark:  { slot: "brightTideDark",  source: require("../../assets/icons/brightTideDark.png") },
+    id: "bright_tide", name: "Bright Tide", premium: true,
+    light: { slot: "bright_tide_light", source: require("../../assets/icons/bright_tide_light.png") },
+    dark:  { slot: "bright_tide_dark",  source: require("../../assets/icons/bright_tide_dark.png") },
   },
   {
-    id: "quietForest", name: "Forest Trail", premium: true,
-    light: { slot: "quietForestLight", source: require("../../assets/icons/quietForestLight.png") },
-    dark:  { slot: "quietForestDark",  source: require("../../assets/icons/quietForestDark.png") },
+    id: "quiet_forest", name: "Forest Trail", premium: true,
+    light: { slot: "quiet_forest_light", source: require("../../assets/icons/quiet_forest_light.png") },
+    dark:  { slot: "quiet_forest_dark",  source: require("../../assets/icons/quiet_forest_dark.png") },
   },
   {
-    id: "openWater", name: "Open Water", premium: true,
-    light: { slot: "openWaterLight", source: require("../../assets/icons/openWaterLight.png") },
-    dark:  { slot: "openWaterDark",  source: require("../../assets/icons/openWaterDark.png") },
+    id: "open_water", name: "Open Water", premium: true,
+    light: { slot: "open_water_light", source: require("../../assets/icons/open_water_light.png") },
+    dark:  { slot: "open_water_dark",  source: require("../../assets/icons/open_water_dark.png") },
   },
 ];
 
@@ -76,10 +76,10 @@ const ICON_THEMES: IconTheme[] = [
 const SELECTION_GREEN = "#1D9E75";
 
 // When iOS is showing the primary icon (the one in app.json's `icon` field),
-// getAppIcon() returns "DEFAULT". Treat that as standardLight for selection
-// state — the primary asset is visually identical to standardLight.
+// getAppIcon() returns "DEFAULT". Treat that as standard_light for selection
+// state — the primary asset is visually identical to standard_light.
 function normalizeCurrentSlot(raw: string | null): IconSlot {
-  if (!raw || raw === "DEFAULT") return "standardLight";
+  if (!raw || raw === "DEFAULT") return "standard_light";
   return raw as IconSlot;
 }
 

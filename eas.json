@@ -22,6 +22,9 @@
       "channel": "preview",
       "autoIncrement": true,
       "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://kew-backend-production.up.railway.app",
+        "EXPO_PUBLIC_REVENUECAT_IOS_KEY": "appl_ZFJRDePQxOoTfLabPQOpVQmLkVq",
+        "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY": "goog_tAGLDsiRIuZobJpopyBlCmTYuyC",
         "NPM_CONFIG_LEGACY_PEER_DEPS": "true"
       }
     }

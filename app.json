@@ -36,72 +36,75 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#F5F0E8"
       },
-      "package": "com.kew.app"
+      "package": "com.kew.app",
+      "versionCode": 5
     },
     "plugins": [
+      "./plugins/withKotlinJvmTarget",
       "expo-secure-store",
       "expo-apple-authentication",
       [
         "expo-dynamic-app-icon",
         {
-          "standardLight": {
-            "image": "./assets/icons/standardLight.png",
+          "standard_light": {
+            "image": "./assets/icons/standard_light.png",
             "prerendered": true
           },
-          "standardDark": {
-            "image": "./assets/icons/standardDark.png",
+          "standard_dark": {
+            "image": "./assets/icons/standard_dark.png",
             "prerendered": true
           },
-          "goldenHourLight": {
-            "image": "./assets/icons/goldenHourLight.png",
+          "golden_hour_light": {
+            "image": "./assets/icons/golden_hour_light.png",
             "prerendered": true
           },
-          "goldenHourDark": {
-            "image": "./assets/icons/goldenHourDark.png",
+          "golden_hour_dark": {
+            "image": "./assets/icons/golden_hour_dark.png",
             "prerendered": true
           },
-          "leatherWineLight": {
-            "image": "./assets/icons/leatherWineLight.png",
+          "leather_wine_light": {
+            "image": "./assets/icons/leather_wine_light.png",
             "prerendered": true
           },
-          "leatherWineDark": {
-            "image": "./assets/icons/leatherWineDark.png",
+          "leather_wine_dark": {
+            "image": "./assets/icons/leather_wine_dark.png",
             "prerendered": true
           },
-          "nectarLight": {
-            "image": "./assets/icons/nectarLight.png",
+          "nectar_light": {
+            "image": "./assets/icons/nectar_light.png",
             "prerendered": true
           },
-          "nectarDark": {
-            "image": "./assets/icons/nectarDark.png",
+          "nectar_dark": {
+            "image": "./assets/icons/nectar_dark.png",
             "prerendered": true
           },
-          "brightTideLight": {
-            "image": "./assets/icons/brightTideLight.png",
+          "bright_tide_light": {
+            "image": "./assets/icons/bright_tide_light.png",
             "prerendered": true
           },
-          "brightTideDark": {
-            "image": "./assets/icons/brightTideDark.png",
+          "bright_tide_dark": {
+            "image": "./assets/icons/bright_tide_dark.png",
             "prerendered": true
           },
-          "quietForestLight": {
-            "image": "./assets/icons/quietForestLight.png",
+          "quiet_forest_light": {
+            "image": "./assets/icons/quiet_forest_light.png",
             "prerendered": true
           },
-          "quietForestDark": {
-            "image": "./assets/icons/quietForestDark.png",
+          "quiet_forest_dark": {
+            "image": "./assets/icons/quiet_forest_dark.png",
             "prerendered": true
           },
-          "openWaterLight": {
-            "image": "./assets/icons/openWaterLight.png",
+          "open_water_light": {
+            "image": "./assets/icons/open_water_light.png",
             "prerendered": true
           },
-          "openWaterDark": {
-            "image": "./assets/icons/openWaterDark.png",
+          "open_water_dark": {
+            "image": "./assets/icons/open_water_dark.png",
             "prerendered": true
           }
         }
-      ]
+      ],
+      "expo-font"
     ],
     "scheme": "kew",
     "extra": {

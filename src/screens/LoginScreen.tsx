@@ -155,6 +155,12 @@ export default function LoginScreen() {
   const handleSendCode = async () => {
     const email = emailInput.trim();
     if (!email) return;
+    // Basic format check before hitting Supabase — prevents obvious typos
+    // (e.g. "jake@gmial.com", "jake@") from generating a bounce.
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
     setEmailLoading(true);
     setError(null);
     try {

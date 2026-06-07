@@ -4,23 +4,33 @@ import Purchases, { LOG_LEVEL } from "react-native-purchases";
 
 export const PRO_ENTITLEMENT_ID = "pro";
 
-// Final fallback: see src/services/supabase.ts — Constants.expoConfig.extra can return null
-// in OTA-delivered manifests. With "" as the previous fallback, isRevenueCatAvailable() would
-// return false on prod, silently skipping configure (no Kew+ entitlement on those devices).
+// iOS key — hardcoded prod fallback prevents OTA-manifest null breaking purchases.
 const PROD_IOS_KEY = "appl_ZFJRDePQxOoTfLabPQOpVQmLkVq";
-const IOS_KEY = (process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY
-  || Constants.expoConfig?.extra?.REVENUECAT_IOS_KEY
-  || PROD_IOS_KEY) as string;
+const IOS_KEY = (
+  process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY ||
+  Constants.expoConfig?.extra?.REVENUECAT_IOS_KEY ||
+  PROD_IOS_KEY
+) as string;
+
+// Android key — no hardcoded fallback; if absent, RC is disabled on Android.
+const ANDROID_KEY = (
+  process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY ||
+  Constants.expoConfig?.extra?.REVENUECAT_ANDROID_KEY ||
+  ""
+) as string;
 
 let configured = false;
 let currentUserId: string | null = null;
 
 export function getRevenueCatKey(): string {
-  return Platform.OS === "ios" ? IOS_KEY : "";
+  if (Platform.OS === "ios") return IOS_KEY;
+  if (Platform.OS === "android") return ANDROID_KEY;
+  return "";
 }
 
 export function isRevenueCatAvailable(): boolean {
-  return Platform.OS === "ios" && !!IOS_KEY;
+  const key = getRevenueCatKey();
+  return (Platform.OS === "ios" || Platform.OS === "android") && !!key;
 }
 
 /**
@@ -29,7 +39,7 @@ export function isRevenueCatAvailable(): boolean {
  */
 export async function configurePurchases(userId: string): Promise<void> {
   if (!isRevenueCatAvailable()) {
-    if (Platform.OS === "ios") {
+    if (Platform.OS === "ios" || Platform.OS === "android") {
       console.warn("[revenuecat] no SDK key set - skipping configure");
     }
     return;
