@@ -9,12 +9,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#F5F0E8",
-      "dark": {
-        "image": "./assets/splash-dark.png",
-        "resizeMode": "contain",
-        "backgroundColor": "#131009"
-      }
+      "backgroundColor": "#F5F0E8"
     },
     "ios": {
       "supportsTablet": true,
@@ -22,6 +17,16 @@
       "buildNumber": "14",
       "usesAppleSignIn": true,
       "associatedDomains": ["applinks:yourkew.app"],
+      "splash": {
+        "image": "./assets/splash.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#F5F0E8",
+        "dark": {
+          "image": "./assets/splash-dark.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#131009"
+        }
+      },
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
