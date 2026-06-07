@@ -173,6 +173,25 @@ export interface JournalEntry {
   updatedAt: string;
 }
 
+// ── Shared queues (public share-link payload) ────────────────────────────────
+
+export interface SharedQueueEntry {
+  position: number;
+  ytVideoId: string;
+  title: string;
+  channelTitle: string;
+  thumbnailUrl: string | null;
+  durationSecs: number | null;
+}
+
+export interface SharedQueue {
+  shareToken: string;
+  sharerDisplayName: string | null;
+  entries: SharedQueueEntry[];
+  videoCount: number;
+  createdAt: string;
+}
+
 export interface JournalFeedItem {
   completedAt: string;
   video: {

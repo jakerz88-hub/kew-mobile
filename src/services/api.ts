@@ -1,6 +1,6 @@
 import { supabase } from "./supabase";
 import Constants from "expo-constants";
-import type { Queue, BrowseVideo, Channel, User, SkipResult, Playlist, PlaylistVideosResult, ImportResult, KewQueue, Insights, InsightsPeriod, Intentionality, WatchLimits, WatchEventType, JournalEntry, JournalFeedItem, QueuedVideo } from "../types";
+import type { Queue, BrowseVideo, Channel, User, SkipResult, Playlist, PlaylistVideosResult, ImportResult, KewQueue, Insights, InsightsPeriod, Intentionality, WatchLimits, WatchEventType, JournalEntry, JournalFeedItem, QueuedVideo, SharedQueue } from "../types";
 
 // Final fallback: see src/services/supabase.ts — Constants.expoConfig.extra can return null
 // in OTA-delivered manifests, leaving BASE_URL undefined and hanging fetchUser() forever
@@ -27,6 +27,17 @@ async function getAuthToken(): Promise<string> {
   const token = data.session?.access_token;
   if (!token) throw new Error("Not authenticated");
   return token;
+}
+
+async function requestPublic<T>(path: string): Promise<T> {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) {
+    const errorBody = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(`${res.status}: ${errorBody.detail || "Request failed"}`);
+  }
+  return keysToCamel<T>(await res.json());
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -247,6 +258,10 @@ export const api = {
       method: "POST",
       body: JSON.stringify(queueId ? { queue_id: queueId } : {}),
     });
+  },
+
+  getSharedQueue(token: string): Promise<SharedQueue> {
+    return requestPublic(`/v1/shared/${token}`);
   },
 
   searchYouTube(q: string, limit: number = 12): Promise<BrowseVideo[]> {

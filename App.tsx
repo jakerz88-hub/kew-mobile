@@ -2,7 +2,7 @@ import "react-native-url-polyfill/auto";
 import React, { useEffect, useRef, useState } from "react";
 import { AppState, View, ActivityIndicator } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { NavigationContainer, createNavigationContainerRef } from "@react-navigation/native";
+import { NavigationContainer, createNavigationContainerRef, LinkingOptions } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import {
@@ -43,6 +43,7 @@ import NewQueueScreen from "./src/screens/NewQueueScreen";
 import InsightsScreen from "./src/screens/InsightsScreen";
 import BenefitsScreen from "./src/screens/BenefitsScreen";
 import AppIconScreen from "./src/screens/AppIconScreen";
+import SharedQueueScreen from "./src/screens/SharedQueueScreen";
 import TabletNavigator from "./src/navigation/TabletNavigator";
 import { useIsTablet } from "./src/hooks/useIsTablet";
 
@@ -53,6 +54,20 @@ const Tab   = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 export const navigationRef = createNavigationContainerRef<any>();
+
+// React Navigation linking configuration for inbound deep links and iOS
+// Universal Links. The `kew://` scheme is the existing custom-scheme
+// fallback; the https prefixes match the iOS Associated Domain entry
+// (`applinks:yourkew.app`) and accept both apex and www variants since
+// links shared from desktop browsers often include the www prefix.
+const linking: LinkingOptions<any> = {
+  prefixes: ["kew://", "https://yourkew.app", "https://www.yourkew.app"],
+  config: {
+    screens: {
+      SharedQueue: "s/:token",
+    },
+  },
+};
 
 function LoadingScreen() {
   const { colors } = useTheme();
@@ -162,6 +177,7 @@ function AppNavigator() {
       <Stack.Screen name="Insights"             component={InsightsScreen} />
       <Stack.Screen name="Benefits"             component={BenefitsScreen} />
       <Stack.Screen name="AppIcon"              component={AppIconScreen} />
+      <Stack.Screen name="SharedQueue"          component={SharedQueueScreen} />
     </Stack.Navigator>
   );
 }
@@ -276,18 +292,20 @@ function AppInner() {
   }
 
   return (
-    <NavigationContainer ref={navigationRef}>
+    <NavigationContainer ref={navigationRef} linking={linking} fallback={<LoadingScreen />}>
       {!session ? (
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Login">
           <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="SharedQueue" component={SharedQueueScreen} />
         </Stack.Navigator>
       ) : (user === null && isLoadingUser) ? (
         // fetchUser in-flight — show splash
         <LoadingScreen />
       ) : user === null ? (
         // fetchUser failed (expired token, 403, network error) — send to Login
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Login">
           <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="SharedQueue" component={SharedQueueScreen} />
         </Stack.Navigator>
       ) : !nuxDone ? (
         <Stack.Navigator screenOptions={{ headerShown: false }}>

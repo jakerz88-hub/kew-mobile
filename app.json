@@ -9,13 +9,19 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#F5F0E8"
+      "backgroundColor": "#F5F0E8",
+      "dark": {
+        "image": "./assets/splash-dark.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#131009"
+      }
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.kew.app",
       "buildNumber": "14",
       "usesAppleSignIn": true,
+      "associatedDomains": ["applinks:yourkew.app"],
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
@@ -104,6 +110,7 @@
           }
         }
       ],
+      "./plugins/withIpadAlternateIcons",
       "expo-font"
     ],
     "scheme": "kew",

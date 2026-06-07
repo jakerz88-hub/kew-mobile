@@ -25,10 +25,14 @@ export function useAddToQueue(onAdded?: (ytVideoId: string) => void) {
   const [watchNowTitle, setWatchNowTitle]     = useState<string>("");
 
   // Ensure queues are populated so the picker has data regardless of
-  // which tab the user landed on first.
+  // which tab the user landed on first. Gate on signed-in: signed-out
+  // surfaces (e.g. SharedQueueScreen reached via Universal Link) mount
+  // this hook too, and an unauthenticated fetchQueues throws an auth
+  // error that surfaces a spurious banner before the user even sees
+  // the screen.
   useEffect(() => {
-    if (queues.length === 0) fetchQueues();
-  }, []);
+    if (user && queues.length === 0) fetchQueues();
+  }, [user]);
 
   /** Low-level add — called directly or from the picker modal. */
   const doAddVideo = async (ytVideoId: string, queueId?: string) => {
