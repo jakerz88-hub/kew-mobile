@@ -126,8 +126,17 @@ export default function AppIconScreen() {
       // Reflect the icon iOS actually settled on, not an assumed value.
       setCurrentSlot(normalizeCurrentSlot(getAppIcon()));
       showToast("Icon updated");
-    } catch {
-      setError("Couldn't update app icon. Please try again.");
+    } catch (e: any) {
+      // DIAGNOSTIC (temporary, OTA 2026-06-09): surface the real rejection from
+      // the patched native module. Icon switching works on the ad-hoc staging
+      // build but fails on the store/TestFlight build despite byte-identical
+      // icon config — so we need the exact error code + iOS message to tell
+      // ERR_ALTERNATE_ICONS_UNSUPPORTED (runtime support false) apart from
+      // ERR_SET_APP_ICON (setAlternateIconName failed, with iOS's reason).
+      // Revert to the generic message once the cause is known.
+      const code = e?.code ?? "(no code)";
+      const msg = e?.message ?? String(e);
+      setError(`icon switch failed. code: ${code} | msg: ${msg}`);
     }
   }, [currentSlot]);
 
