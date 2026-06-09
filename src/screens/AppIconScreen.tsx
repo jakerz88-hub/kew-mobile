@@ -75,12 +75,51 @@ const ICON_THEMES: IconTheme[] = [
 // eslint-disable-next-line kew/no-raw-colors -- intentional non-palette green: brighter saturation reads better as a selection ring over the varied iOS app-icon backgrounds than Colors.green (#4A7C59)
 const SELECTION_GREEN = "#1D9E75";
 
+// ── Icon-key scheme resilience ───────────────────────────────────────────────
+//
+// The catalog above uses snake_case slot keys, matching app.json's current
+// expo-dynamic-app-icon config. But a given installed BINARY may have been
+// built from an older config that registered camelCase keys (e.g. the 1.0.0
+// build, or a 1.0.1 build whose embedded bundle/registration drifted from
+// source). Since we can't know at runtime which scheme the binary actually
+// registered, both the setter and the read-back tolerate either scheme.
+
+// snake_case -> camelCase, e.g. "golden_hour_light" -> "goldenHourLight"
+function toCamel(slot: string): string {
+  return slot.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+}
+
+// camelCase -> snake_case, e.g. "goldenHourLight" -> "golden_hour_light".
+// Snake input is unaffected (no uppercase to match), so this is idempotent
+// for the canonical catalog keys.
+function toSnake(slot: string): string {
+  return slot.replace(/([A-Z])/g, (_, c) => `_${c.toLowerCase()}`);
+}
+
+// Try the snake_case key first (matches current source); fall back to the
+// camelCase equivalent if the binary registered the legacy scheme. Returns the
+// truthy result from setAppIcon on success, or false if both attempts fail.
+async function setAppIconResilient(slot: string): Promise<boolean | string> {
+  try {
+    const r = await setAppIcon(slot);
+    if (r) return r;
+  } catch { /* fall through to camelCase attempt */ }
+  // Binary may register the legacy camelCase keys (pre-snake_case builds)
+  try {
+    const r2 = await setAppIcon(toCamel(slot));
+    if (r2) return r2;
+  } catch { /* both failed */ }
+  return false;
+}
+
 // When iOS is showing the primary icon (the one in app.json's `icon` field),
 // getAppIcon() returns "DEFAULT". Treat that as standard_light for selection
-// state — the primary asset is visually identical to standard_light.
+// state — the primary asset is visually identical to standard_light. Whatever
+// scheme the binary reports (snake or camel), normalize to the catalog's
+// canonical snake_case so the selected-state highlight matches.
 function normalizeCurrentSlot(raw: string | null): IconSlot {
   if (!raw || raw === "DEFAULT") return "standard_light";
-  return raw as IconSlot;
+  return toSnake(raw) as IconSlot;
 }
 
 export default function AppIconScreen() {
@@ -119,12 +158,14 @@ export default function AppIconScreen() {
     // iOS shows its own "An app has changed your icon" alert after success,
     // so we only add a brief in-app confirmation toast on top of that.
     try {
-      const result = await setAppIcon(slot);
+      // Resilient setter tries snake_case then camelCase so it works regardless
+      // of which key scheme the installed binary registered.
+      const result = await setAppIconResilient(slot);
       if (result) {
         setCurrentSlot(slot);
         showToast("Icon updated");
       } else {
-        // setAppIcon returned falsy without throwing — surface as a generic
+        // Both schemes returned falsy without throwing — surface as a generic
         // failure so the user isn't left wondering why the selection didn't
         // stick (most common cause: the user denied the system prompt).
         setError("Couldn't update app icon. Please try again.");
