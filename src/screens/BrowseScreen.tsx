@@ -617,15 +617,15 @@ function BrowseVideoCard({ video, inQueue, adding, onAdd, onLongPress }: {
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
           <SansText style={tStyles.videoCardMeta}>{timeAgo(video.publishedAt)}</SansText>
           <TouchableOpacity
-            style={[tStyles.addBtn, inQueue && tStyles.addBtnQueued]}
+            style={[tStyles.addBtn, inQueue && tStyles.addBtnAdded]}
             onPress={inQueue ? undefined : () => onAdd(video.ytVideoId)}
             onLongPress={inQueue ? undefined : onLongPress}
             delayLongPress={400}
             disabled={inQueue || adding}
             activeOpacity={0.7}
           >
-            <SansText style={[tStyles.addBtnText, inQueue && tStyles.addBtnTextQueued]}>
-              {adding ? "..." : inQueue ? "In queue" : "+ Add"}
+            <SansText style={[tStyles.addBtnText, inQueue && tStyles.addBtnTextAdded]}>
+              {adding ? "..." : inQueue ? "✓" : "+"}
             </SansText>
           </TouchableOpacity>
         </View>
@@ -728,10 +728,10 @@ function makeTabletStyles(c: ColorPalette) {
     videoCardChannel: { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2, fontFamily: FontFamily.sansMedium },
     videoCardTitle:   { fontSize: FontSize.sm, color: c.ink, lineHeight: 18 },
     videoCardMeta:    { fontSize: FontSize.xxs, color: c.queued },
-    addBtn:           { paddingHorizontal: 10, paddingVertical: 4, backgroundColor: c.accent, borderRadius: Radius.pill },
-    addBtnQueued:     { backgroundColor: "transparent", borderWidth: 1.5, borderColor: c.greenText },
-    addBtnText:       { fontSize: FontSize.xxs, color: c.buttonText, fontFamily: FontFamily.sansMedium },
-    addBtnTextQueued: { color: c.greenText },
+    addBtn:           { width: 34, height: 34, borderRadius: 17, backgroundColor: c.accent, alignItems: "center", justifyContent: "center", flexShrink: 0 },
+    addBtnAdded:      { backgroundColor: c.green },
+    addBtnText:       { fontSize: FontSize.lg, color: c.buttonText, lineHeight: 24, marginTop: -2 },
+    addBtnTextAdded:  { color: c.buttonText, fontSize: FontSize.sm, marginTop: 0 },
     footerContainer: { alignItems: "center", paddingVertical: Spacing.lg },
     loadOlderBtn:    { paddingHorizontal: Spacing.xl, paddingVertical: Spacing.sm, borderRadius: Radius.pill, borderWidth: 1.5, borderColor: c.accent },
     loadOlderText:   { fontSize: FontSize.sm, color: c.accent, fontFamily: FontFamily.sansMedium },

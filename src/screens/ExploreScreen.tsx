@@ -324,15 +324,15 @@ export default function ExploreScreen() {
                   </View>
                 </View>
 
-                {/* Actions — stacked vertically on mobile */}
+                {/* Actions — side-by-side: add/in-queue pill + "Try another" */}
                 <View style={styles.surpriseActions}>
                   {!!queuedVideos[surpriseVideo.ytVideoId] ? (
-                    <View style={[styles.surpriseActionBtn, styles.surpriseActionBtnQueued]}>
+                    <View style={[styles.surpriseActionBtn, styles.surpriseActionBtnQueued, { flex: 1 }]}>
                       <SansText style={styles.surpriseActionBtnTextQueued}>In queue ✓</SansText>
                     </View>
                   ) : (
                     <TouchableOpacity
-                      style={styles.surpriseActionBtn}
+                      style={[styles.surpriseActionBtn, { flex: 1 }]}
                       onPress={() => handleAddToQueue(surpriseVideo)}
                       onLongPress={() => handleWatchNow(surpriseVideo.ytVideoId, surpriseVideo.title)}
                       delayLongPress={400}
@@ -346,7 +346,7 @@ export default function ExploreScreen() {
                     </TouchableOpacity>
                   )}
                   <TouchableOpacity
-                    style={styles.surpriseTryBtn}
+                    style={[styles.surpriseTryBtn, { flex: 1 }]}
                     onPress={handleSurprise}
                     disabled={surpriseSearching}
                     activeOpacity={0.75}
@@ -585,19 +585,16 @@ export default function ExploreScreen() {
                       </TouchableOpacity>
                     </View>
                     <TouchableOpacity
-                      style={[styles.addBtn, queued && styles.addBtnQueued]}
+                      style={[styles.addBtn, queued && styles.addBtnAdded]}
                       onPress={() => !queued && handleAddToQueue(item)}
                       onLongPress={queued ? undefined : () => handleWatchNow(item.ytVideoId, item.title)}
                       delayLongPress={400}
                       disabled={queued || adding}
                       activeOpacity={0.75}
                     >
-                      {adding
-                        ? <ActivityIndicator size="small" color={colors.buttonText} />
-                        : <SansText style={[styles.addBtnText, queued && styles.addBtnTextQueued]}>
-                            {queued ? "In queue ✓" : "+ Add to queue"}
-                          </SansText>
-                      }
+                      <SansText style={[styles.addBtnText, queued && styles.addBtnTextAdded]}>
+                        {adding ? "..." : queued ? "✓" : "+"}
+                      </SansText>
                     </TouchableOpacity>
                   </View>
                 );
@@ -708,11 +705,11 @@ function makeStyles(c: ColorPalette) {
     surpriseInfo:       { padding: Spacing.sm, gap: 4 },
     surpriseChannel:    { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 0.5, fontFamily: FontFamily.sansMedium },
     surpriseTitle:      { fontSize: FontSize.sm, color: c.ink, lineHeight: 18 },
-    surpriseActions:    { gap: Spacing.sm, marginTop: Spacing.xs },
+    surpriseActions:    { flexDirection: "row", gap: Spacing.sm, marginTop: Spacing.xs },
     surpriseActionBtn:  { paddingVertical: 12, borderRadius: Radius.pill, backgroundColor: c.accent, alignItems: "center" },
     surpriseActionBtnText: { fontSize: FontSize.sm, color: c.buttonText, fontFamily: FontFamily.sansMedium },
-    surpriseActionBtnQueued: { backgroundColor: "transparent", borderWidth: 1.5, borderColor: c.greenText },
-    surpriseActionBtnTextQueued: { fontSize: FontSize.sm, color: c.greenText, fontFamily: FontFamily.sansMedium },
+    surpriseActionBtnQueued: { backgroundColor: c.green },
+    surpriseActionBtnTextQueued: { fontSize: FontSize.sm, color: c.buttonText, fontFamily: FontFamily.sansMedium },
     surpriseTryBtn:     { paddingVertical: 12, borderRadius: Radius.pill, borderWidth: 1, borderColor: c.divider, alignItems: "center" },
     surpriseTryBtnText: { fontSize: FontSize.sm, color: c.warmMid, fontFamily: FontFamily.sansMedium },
     surpriseEmpty:      { alignItems: "center", paddingVertical: 60, gap: Spacing.sm },
@@ -726,10 +723,10 @@ function makeStyles(c: ColorPalette) {
     resultChannel:  { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 0.5 },
     resultTitle:    { fontSize: FontSize.sm, color: c.ink, lineHeight: 17 },
     resultDate:     { fontSize: FontSize.xxs, color: c.queued },
-    addBtn:         { alignSelf: "flex-start", marginTop: 4, paddingHorizontal: 10, paddingVertical: 4, borderRadius: Radius.pill, backgroundColor: c.accent },
-    addBtnQueued:   { backgroundColor: "transparent", borderWidth: 1.5, borderColor: c.greenText },
-    addBtnText:     { fontSize: FontSize.xxs, color: c.buttonText, fontFamily: FontFamily.sansMedium },
-    addBtnTextQueued: { color: c.greenText },
+    addBtn:          { width: 34, height: 34, borderRadius: 17, backgroundColor: c.accent, alignItems: "center", justifyContent: "center", flexShrink: 0, alignSelf: "center" },
+    addBtnAdded:     { backgroundColor: c.green },
+    addBtnText:      { fontSize: FontSize.lg, color: c.buttonText, lineHeight: 24, marginTop: -2 },
+    addBtnTextAdded: { color: c.buttonText, fontSize: FontSize.sm, marginTop: 0 },
     loadMoreBtn:    { alignSelf: "center", marginVertical: Spacing.md, paddingHorizontal: 16, paddingVertical: 10, borderRadius: Radius.pill, borderWidth: 1.5, borderColor: c.divider },
     loadMoreText:   { fontSize: FontSize.sm, color: c.warmMid, fontFamily: FontFamily.sansMedium },
   });
