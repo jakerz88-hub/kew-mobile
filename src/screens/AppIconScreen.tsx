@@ -116,19 +116,16 @@ export default function AppIconScreen() {
   const handleSelect = useCallback(async (slot: IconSlot) => {
     if (slot === currentSlot) return;
     setError(null);
-    // iOS shows its own "An app has changed your icon" alert after success,
-    // so we only add a brief in-app confirmation toast on top of that.
+    // The native module is patched to the public setAlternateIconName API: it
+    // resolves only when iOS confirms the switch, and rejects with the real
+    // error otherwise (the upstream private-selector version always "succeeded"
+    // and silently no-op'd). iOS shows its own "changed your icon" system alert
+    // on success, so we add only a brief in-app confirmation toast on top.
     try {
-      const result = await setAppIcon(slot);
-      if (result) {
-        setCurrentSlot(slot);
-        showToast("Icon updated");
-      } else {
-        // setAppIcon returned falsy without throwing — surface as a generic
-        // failure so the user isn't left wondering why the selection didn't
-        // stick (most common cause: the user denied the system prompt).
-        setError("Couldn't update app icon. Please try again.");
-      }
+      await setAppIcon(slot);
+      // Reflect the icon iOS actually settled on, not an assumed value.
+      setCurrentSlot(normalizeCurrentSlot(getAppIcon()));
+      showToast("Icon updated");
     } catch {
       setError("Couldn't update app icon. Please try again.");
     }

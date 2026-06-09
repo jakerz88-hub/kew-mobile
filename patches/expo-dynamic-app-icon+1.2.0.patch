@@ -1,0 +1,72 @@
+diff --git a/node_modules/expo-dynamic-app-icon/ios/ExpoDynamicAppIconModule.swift b/node_modules/expo-dynamic-app-icon/ios/ExpoDynamicAppIconModule.swift
+index 429bfe2..af41bf3 100644
+--- a/node_modules/expo-dynamic-app-icon/ios/ExpoDynamicAppIconModule.swift
++++ b/node_modules/expo-dynamic-app-icon/ios/ExpoDynamicAppIconModule.swift
+@@ -1,32 +1,49 @@
+ import ExpoModulesCore
++import UIKit
+ 
+ public class ExpoDynamicAppIconModule: Module {
+   public func definition() -> ModuleDefinition {
+ 
+     Name("ExpoDynamicAppIcon")
+ 
+-    Function("setAppIcon") { (name:String) -> String in
+-      self.setAppIconWithoutAlert(name)
+-
+-      return name
++    // PATCHED (Kew, via patch-package). Upstream 1.2.0 called the PRIVATE
++    // selector `_setAlternateIconName:completionHandler:` with an empty
++    // completion handler that discarded the NSError, then unconditionally
++    // returned the name (always "success"). On recent iOS the private call is
++    // silently rejected, so the icon switch no-op'd with no error surfaced to
++    // JS. See memory feedback_app_icon_private_api.md.
++    //
++    // This version uses the PUBLIC `setAlternateIconName(_:completionHandler:)`
++    // API as an AsyncFunction: it resolves the JS promise only when iOS reports
++    // success, and rejects with the real NSError otherwise. Tradeoff: the public
++    // API shows iOS's "You've changed the icon to …" system alert on each switch
++    // (Apple's OS-level confirmation, not a Kew pattern).
++    AsyncFunction("setAppIcon") { (name: String, promise: Promise) in
++      // "DEFAULT" is the sentinel getAppIcon() returns for the primary icon;
++      // passing nil to setAlternateIconName restores it.
++      let iconName: String? = (name == "DEFAULT") ? nil : name
++
++      DispatchQueue.main.async {
++        guard UIApplication.shared.supportsAlternateIcons else {
++          promise.reject(
++            "ERR_ALTERNATE_ICONS_UNSUPPORTED",
++            "This build does not support alternate icons."
++          )
++          return
++        }
++
++        UIApplication.shared.setAlternateIconName(iconName) { error in
++          if let error = error {
++            promise.reject("ERR_SET_APP_ICON", error.localizedDescription)
++          } else {
++            promise.resolve(name)
++          }
++        }
++      }
+     }
+ 
+     Function("getAppIcon") { () -> String in
+       return UIApplication.shared.alternateIconName ?? "DEFAULT"
+     }
+   }
+-
+-  private func setAppIconWithoutAlert(_ iconName: String?) {
+-    if UIApplication.shared.responds(to: #selector(getter: UIApplication.supportsAlternateIcons)) && UIApplication.shared.supportsAlternateIcons {
+-      typealias setAlternateIconName = @convention(c) (NSObject, Selector, NSString?, @escaping (NSError) -> ()) -> ()
+-      
+-      let selectorString = "_setAlternateIconName:completionHandler:"
+-      
+-      let selector = NSSelectorFromString(selectorString)
+-      let imp = UIApplication.shared.method(for: selector)
+-      let method = unsafeBitCast(imp, to: setAlternateIconName.self)
+-      method(UIApplication.shared, selector, iconName as NSString?, { _ in })
+-    }
+-  }
+-
+ }
