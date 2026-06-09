@@ -116,27 +116,29 @@ export default function AppIconScreen() {
   const handleSelect = useCallback(async (slot: IconSlot) => {
     if (slot === currentSlot) return;
     setError(null);
-    // The native module is patched to the public setAlternateIconName API: it
-    // resolves only when iOS confirms the switch, and rejects with the real
-    // error otherwise (the upstream private-selector version always "succeeded"
-    // and silently no-op'd). iOS shows its own "changed your icon" system alert
-    // on success, so we add only a brief in-app confirmation toast on top.
-    try {
-      await setAppIcon(slot);
-      // Reflect the icon iOS actually settled on, not an assumed value.
-      setCurrentSlot(normalizeCurrentSlot(getAppIcon()));
-      showToast("Icon updated");
-    } catch (e: any) {
-      // DIAGNOSTIC (temporary, OTA 2026-06-09): surface the real rejection from
-      // the patched native module. Icon switching works on the ad-hoc staging
-      // build but fails on the store/TestFlight build despite byte-identical
-      // icon config — so we need the exact error code + iOS message to tell
-      // ERR_ALTERNATE_ICONS_UNSUPPORTED (runtime support false) apart from
-      // ERR_SET_APP_ICON (setAlternateIconName failed, with iOS's reason).
-      // Revert to the generic message once the cause is known.
-      const code = e?.code ?? "(no code)";
-      const msg = e?.message ?? String(e);
-      setError(`icon switch failed. code: ${code} | msg: ${msg}`);
+    // The native module is patched to the public setAlternateIconName API,
+    // which resolves only when iOS confirms the switch and rejects otherwise.
+    // On store/TestFlight builds iOS intermittently rejects the call with
+    // EAGAIN ("Resource temporarily unavailable") — the alternate-icon
+    // resource is momentarily locked. Since it's transient, retry a few times
+    // with a short delay before surfacing failure. iOS shows its own "changed
+    // your icon" alert on success, so we add only a brief confirmation toast.
+    const MAX_ATTEMPTS = 3;
+    const RETRY_DELAY_MS = 400;
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      try {
+        await setAppIcon(slot);
+        // Reflect the icon iOS actually settled on, not an assumed value.
+        setCurrentSlot(normalizeCurrentSlot(getAppIcon()));
+        showToast("Icon updated");
+        return;
+      } catch {
+        if (attempt < MAX_ATTEMPTS) {
+          await new Promise<void>((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
+        } else {
+          setError("Couldn't update app icon. Please try again.");
+        }
+      }
     }
   }, [currentSlot]);
 
