@@ -229,7 +229,7 @@ export default function InsightsScreen() {
               <StatCell
                 label="Completion rate"
                 value={`${Math.round(insights.stats.completionRate)}%`}
-                delta={formatDelta(Math.round(insights.stats.completionRate), Math.round(insights.prevPeriodComparison.completionRate), period, "pp")}
+                delta={formatDelta(Math.round(insights.stats.completionRate), Math.round(insights.prevPeriodComparison.completionRate), period, " percentage pts")}
                 colors={colors} styles={styles}
               />
               <StatCell
