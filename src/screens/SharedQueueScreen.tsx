@@ -148,7 +148,7 @@ export default function SharedQueueScreen() {
           <EmptyState
             icon="▶"
             title="Queue not found"
-            subtitle="This link may have expired or been removed."
+            subtitle="This queue is no longer available."
           />
         </View>
       </SafeAreaView>
