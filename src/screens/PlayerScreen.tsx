@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback, useMemo } from "react";
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Modal, Image, StatusBar, useWindowDimensions, ActivityIndicator } from "react-native";
+import { AppState, View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Modal, Image, StatusBar, useWindowDimensions, ActivityIndicator } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import * as ScreenOrientation from "expo-screen-orientation";
 import * as WebBrowser from "expo-web-browser";
@@ -73,9 +73,20 @@ export default function PlayerScreen() {
   useEffect(() => {
     ScreenOrientation.unlockAsync();
 
+    // Re-unlock when returning from background — iOS can silently reassert a
+    // portrait lock while the app is backgrounded, which breaks tilt-to-fullscreen
+    // on return. Re-calling unlockAsync whenever the app becomes 'active' restores
+    // free rotation without any visible side effect.
+    const appStateSub = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') {
+        ScreenOrientation.unlockAsync();
+      }
+    });
+
     let lockTimer: ReturnType<typeof setTimeout> | null = null;
 
     return () => {
+      appStateSub.remove();
       lockTimer = setTimeout(() => {
         ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
       }, 400);
@@ -379,7 +390,7 @@ export default function PlayerScreen() {
         natural aspect ratio with black bars on the sides (or top/bottom
         on more square form factors).
       */}
-      <View style={isLandscape ? styles.videoLandscape : undefined}>
+      <View style={isLandscape ? styles.videoLandscape : styles.videoPortraitWrap}>
         <YoutubePlayer
           ref={playerRef}
           height={isLandscape ? landscapePlayerHeight : 210}
@@ -406,6 +417,19 @@ export default function PlayerScreen() {
             mediaPlaybackRequiresUserAction: false,
           }}
         />
+        {/* Fullscreen button — portrait only. Locks to landscape-right so the
+            screen rotates the same direction as tilting right. */}
+        {!isLandscape && (
+          <TouchableOpacity
+            style={styles.fullscreenBtn}
+            onPress={() => ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE_RIGHT)}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Go fullscreen"
+          >
+            <Feather name="maximize" size={14} color="white" />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Portrait-only scroll content */}
@@ -716,6 +740,8 @@ function makeStyles(c: ColorPalette) {
   return StyleSheet.create({
     container:           { flex: 1, backgroundColor: c.cream },
     videoLandscape:      { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 10, backgroundColor: "black", alignItems: "center", justifyContent: "center" },
+    videoPortraitWrap:   { position: "relative" },
+    fullscreenBtn:       { position: "absolute", bottom: 8, right: 8, width: 32, height: 32, borderRadius: 16, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" },
     nav:                 { flexDirection: "row", alignItems: "center", paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm },
     navLockup:           { flexDirection: "row", alignItems: "center", gap: 6 },
     scrollContent:       { paddingBottom: 60 },
