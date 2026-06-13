@@ -423,7 +423,16 @@ export default function PlayerScreen() {
         {!isLandscape && (
           <TouchableOpacity
             style={styles.fullscreenBtn}
-            onPress={() => ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE_LEFT)}
+            onPress={async () => {
+              // Snap to the preferred direction first, then widen the lock to
+              // allow both landscape orientations so the user can flip if needed.
+              // The 450ms delay lets the initial rotation animation settle before
+              // the lock loosens — otherwise the device might jump to the wrong side.
+              await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE_LEFT);
+              setTimeout(() => {
+                ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+              }, 450);
+            }}
             activeOpacity={0.7}
             accessibilityRole="button"
             accessibilityLabel="Go fullscreen"
