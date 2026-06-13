@@ -205,7 +205,7 @@ function makeStyles(c: ColorPalette) {
       borderColor: c.accent,
       backgroundColor: withAlpha(c.accent, 0.08),
     },
-    emojiChar:       { fontSize: FontSize.xxl },
+    emojiChar:       { fontSize: FontSize.xxl, lineHeight: FontSize.xxl, textAlign: "center" },
 
     createBtn: {
       marginTop: Spacing.sm,

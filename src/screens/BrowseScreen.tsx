@@ -746,7 +746,7 @@ function makePhoneStyles(c: ColorPalette) {
     header:               { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm },
     pageTitleRow:         { padding: Spacing.md, paddingBottom: Spacing.sm },
     pageTitle:            { fontSize: FontSize.lg },
-    channelCount:         { fontSize: FontSize.xs, color: c.warmMid, paddingHorizontal: Spacing.md, marginTop: 2 },
+    channelCount:         { fontSize: FontSize.xs, color: c.warmMid, marginTop: 2 },
     recentStrip:          { paddingHorizontal: Spacing.md, paddingTop: Spacing.sm, paddingBottom: Spacing.xs },
     recentStripHeader:    { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: Spacing.xs },
     recentStripLabel:     { fontSize: FontSize.xxs, color: c.warmMid, textTransform: "uppercase", letterSpacing: 0.8, fontFamily: FontFamily.sansMedium },
