@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { friendlyError } from "../utils/friendlyError";
 import {
-  View, TouchableOpacity, StyleSheet, SafeAreaView,
+  View, Text, TouchableOpacity, StyleSheet, SafeAreaView,
   TextInput, ScrollView, Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
@@ -134,7 +134,7 @@ export default function NewQueueScreen() {
                 onPress={() => handleEmojiSelect(emoji)}
                 activeOpacity={0.7}
               >
-                <SansText style={styles.emojiChar}>{emoji}</SansText>
+                <Text style={styles.emojiChar}>{emoji}</Text>
               </TouchableOpacity>
             ))}
           </View>
