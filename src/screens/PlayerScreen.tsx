@@ -417,17 +417,36 @@ export default function PlayerScreen() {
             mediaPlaybackRequiresUserAction: false,
           }}
         />
-        {/* Fullscreen button — portrait only. Locks to landscape-right so the
-            screen rotates the same direction as tilting right. */}
+        {/* Fullscreen button — portrait only.
+            LANDSCAPE_LEFT = phone tilted clockwise (top goes right), which is
+            what "rotate right" means physically. */}
         {!isLandscape && (
           <TouchableOpacity
             style={styles.fullscreenBtn}
-            onPress={() => ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE_RIGHT)}
+            onPress={() => ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE_LEFT)}
             activeOpacity={0.7}
             accessibilityRole="button"
             accessibilityLabel="Go fullscreen"
           >
             <Feather name="maximize" size={14} color="white" />
+          </TouchableOpacity>
+        )}
+
+        {/* Exit button — landscape only. Snaps back to portrait then re-unlocks
+            so tilt-to-fullscreen continues to work afterward. Shown whether the
+            user tilted in or tapped the button, so there's always a clear exit. */}
+        {isLandscape && (
+          <TouchableOpacity
+            style={styles.exitFullscreenBtn}
+            onPress={async () => {
+              await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+              setTimeout(() => ScreenOrientation.unlockAsync(), 300);
+            }}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Exit fullscreen"
+          >
+            <Feather name="minimize" size={14} color="white" />
           </TouchableOpacity>
         )}
       </View>
@@ -742,6 +761,7 @@ function makeStyles(c: ColorPalette) {
     videoLandscape:      { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 10, backgroundColor: "black", alignItems: "center", justifyContent: "center" },
     videoPortraitWrap:   { position: "relative" },
     fullscreenBtn:       { position: "absolute", bottom: 8, right: 8, width: 32, height: 32, borderRadius: 16, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" },
+    exitFullscreenBtn:   { position: "absolute", top: 12, right: 12, width: 36, height: 36, borderRadius: 18, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center", zIndex: 20 },
     nav:                 { flexDirection: "row", alignItems: "center", paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm },
     navLockup:           { flexDirection: "row", alignItems: "center", gap: 6 },
     scrollContent:       { paddingBottom: 60 },
