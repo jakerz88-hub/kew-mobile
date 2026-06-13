@@ -134,7 +134,9 @@ export default function NewQueueScreen() {
                 onPress={() => handleEmojiSelect(emoji)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.emojiChar}>{emoji}</Text>
+                <View style={styles.emojiCellInner}>
+                  <Text style={styles.emojiChar}>{emoji}</Text>
+                </View>
               </TouchableOpacity>
             ))}
           </View>
@@ -197,9 +199,12 @@ function makeStyles(c: ColorPalette) {
     emojiCell: {
       width: "22%",
       aspectRatio: 1,
-      alignItems: "center", justifyContent: "center",
       borderRadius: Radius.md, borderWidth: 1.5, borderColor: c.divider,
       backgroundColor: c.cardBg,
+    },
+    emojiCellInner: {
+      position: "absolute", top: 0, left: 0, right: 0, bottom: 0,
+      alignItems: "center", justifyContent: "center",
     },
     emojiCellActive: {
       borderColor: c.accent,
