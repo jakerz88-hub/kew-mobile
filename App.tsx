@@ -1,6 +1,7 @@
 import "react-native-url-polyfill/auto";
 import React, { useEffect, useRef, useState } from "react";
-import { AppState, View, ActivityIndicator } from "react-native";
+import { AppState, Platform, View, ActivityIndicator } from "react-native";
+import * as ScreenOrientation from "expo-screen-orientation";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NavigationContainer, createNavigationContainerRef, LinkingOptions } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -159,6 +160,19 @@ function TabNavigator() {
 
 function TabsOrTablet() {
   const isTablet = useIsTablet();
+
+  // Android's manifest locks the app to portrait globally (required for phones).
+  // For Android tablets the TabletNavigator has orientation-responsive layout
+  // (sidebar in landscape, top+bottom bars in portrait), but it never triggers
+  // unless we unlock rotation at the OS level. iOS tablets are handled by the
+  // UISupportedInterfaceOrientations~ipad plist entry; Android needs a runtime
+  // unlock here. This is a no-op on iOS and on Android phones (width < 768).
+  useEffect(() => {
+    if (Platform.OS === "android" && isTablet) {
+      ScreenOrientation.unlockAsync();
+    }
+  }, [isTablet]);
+
   return isTablet ? <TabletNavigator /> : <TabNavigator />;
 }
 
