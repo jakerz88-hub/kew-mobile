@@ -1,7 +1,8 @@
 import React, { useRef, useState, useCallback, useEffect } from "react";
 import {
-  View, FlatList, TouchableOpacity, Animated, SafeAreaView, useWindowDimensions,
+  View, FlatList, TouchableOpacity, Animated, useWindowDimensions,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { SansText, SerifText, SkipIcon } from "../components/UI";
 import { LogoMark } from "../components/TabIcons";

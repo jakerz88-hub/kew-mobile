@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback, useMemo } from "react";
-import { AppState, View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Modal, Image, StatusBar, useWindowDimensions, ActivityIndicator } from "react-native";
+import { AppState, View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, Image, StatusBar, useWindowDimensions, ActivityIndicator } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import * as ScreenOrientation from "expo-screen-orientation";
 import * as WebBrowser from "expo-web-browser";

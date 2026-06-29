@@ -1,9 +1,10 @@
 import React, { useState, useRef, useMemo } from "react";
 import { friendlyError } from "../utils/friendlyError";
 import {
-  View, Text, TextInput, StyleSheet, SafeAreaView, ScrollView,
+  View, Text, TextInput, StyleSheet, ScrollView,
   TouchableOpacity, ActivityIndicator, Platform, KeyboardAvoidingView,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import * as WebBrowser from "expo-web-browser";
 import * as AuthSession from "expo-auth-session";
 import * as AppleAuthentication from "expo-apple-authentication";

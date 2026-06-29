@@ -2,9 +2,10 @@ import React, { useEffect, useState, useCallback, useMemo, useRef } from "react"
 import { friendlyError } from "../utils/friendlyError";
 import {
   View, FlatList, TextInput, TouchableOpacity, StyleSheet,
-  SafeAreaView, Image, RefreshControl, ActivityIndicator, ScrollView,
+  Image, RefreshControl, ActivityIndicator, ScrollView,
   Platform, Modal,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { api } from "../services/api";

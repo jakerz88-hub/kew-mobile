@@ -2,8 +2,9 @@ import React, { useEffect, useState, useMemo } from "react";
 import { friendlyError } from "../utils/friendlyError";
 import {
   View, FlatList, TouchableOpacity, StyleSheet,
-  SafeAreaView, Image, ActivityIndicator,
+  Image, ActivityIndicator,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { api } from "../services/api";

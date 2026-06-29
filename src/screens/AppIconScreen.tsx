@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
-import { View, ScrollView, SafeAreaView, TouchableOpacity, Image, StyleSheet } from "react-native";
+import { View, ScrollView, TouchableOpacity, Image, StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { setAppIcon, getAppIcon } from "expo-dynamic-app-icon";

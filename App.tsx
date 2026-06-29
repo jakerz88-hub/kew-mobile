@@ -19,6 +19,7 @@ import { configurePurchases, logoutPurchases } from "./src/services/revenuecat";
 import { useStore } from "./src/store";
 import { FontFamily, FontSize } from "./src/types/theme";
 import { ThemeProvider, useTheme } from "./src/contexts/ThemeContext";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { QueueTabIcon, BrowseTabIcon, ExploreTabIcon, HistoryTabIcon, JournalTabIcon, LogoMark } from "./src/components/TabIcons";
 import { KewLogo } from "./src/components/UI";
 import { KewPlusSheet } from "./src/components/KewPlusSheet";
@@ -368,8 +369,10 @@ function AppInner() {
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <AppInner />
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <AppInner />
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

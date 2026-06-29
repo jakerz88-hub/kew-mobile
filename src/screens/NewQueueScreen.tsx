@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { friendlyError } from "../utils/friendlyError";
 import {
-  View, Text, TouchableOpacity, StyleSheet, SafeAreaView,
+  View, Text, TouchableOpacity, StyleSheet, 
   TextInput, ScrollView, Alert,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { useStore } from "../store";

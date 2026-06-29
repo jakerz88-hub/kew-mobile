@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { friendlyError } from "../utils/friendlyError";
-import { View, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, Image, ActivityIndicator, RefreshControl, Platform } from "react-native";
+import { View, FlatList, TouchableOpacity, StyleSheet, Image, ActivityIndicator, RefreshControl, Platform } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useIsTablet } from "../hooks/useIsTablet";
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";

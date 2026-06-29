@@ -1,9 +1,10 @@
 import React, { useEffect, useCallback, useState, useRef, useMemo } from "react";
 import {
   View, Text, FlatList, TouchableOpacity, Modal, Pressable,
-  StyleSheet, SafeAreaView, RefreshControl, Image, ScrollView,
+  StyleSheet, RefreshControl, Image, ScrollView,
   useWindowDimensions, Share, Animated, PanResponder,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Svg, { Path } from "react-native-svg";
 import { QueueActionSheet } from "../components/QueueActionSheet";

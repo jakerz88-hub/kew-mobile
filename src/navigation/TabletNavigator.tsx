@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from "react";
-import { View, TouchableOpacity, SafeAreaView, useWindowDimensions } from "react-native";
+import { View, TouchableOpacity, useWindowDimensions } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { TabletSidebar, TabletTab } from "../components/TabletSidebar";
@@ -116,7 +117,7 @@ function TabletTopBar({ onProfilePress }: { onProfilePress: () => void }) {
   const { colors } = useTheme();
   const user = useStore(s => s.user);
   return (
-    <SafeAreaView style={{ backgroundColor: colors.cardBg, borderBottomColor: colors.divider, borderBottomWidth: 1 }}>
+    <SafeAreaView edges={['top']} style={{ backgroundColor: colors.cardBg, borderBottomColor: colors.divider, borderBottomWidth: 1 }}>
       <View
         style={{
           flexDirection: "row",
@@ -164,7 +165,7 @@ function TabletBottomTabBar({
     { tab: "Import",  label: "Import",  icon: (color) => <Feather name="download" size={20} color={color} /> },
   ];
   return (
-    <SafeAreaView style={{ backgroundColor: colors.cardBg, borderTopColor: colors.divider, borderTopWidth: 1 }}>
+    <SafeAreaView edges={['bottom']} style={{ backgroundColor: colors.cardBg, borderTopColor: colors.divider, borderTopWidth: 1 }}>
       <View style={{ flexDirection: "row" }}>
         {bottomTabs.map(({ tab, label, icon }) => {
           const isActive = activeTab === tab;

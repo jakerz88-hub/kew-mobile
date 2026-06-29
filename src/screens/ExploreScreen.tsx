@@ -2,8 +2,9 @@ import React, { useState, useCallback, useRef, useMemo, useEffect } from "react"
 import { friendlyError } from "../utils/friendlyError";
 import {
   View, TextInput, FlatList, ScrollView, TouchableOpacity, StyleSheet,
-  SafeAreaView, Image, ActivityIndicator, Keyboard, Platform, RefreshControl,
+  Image, ActivityIndicator, Keyboard, Platform, RefreshControl,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { api } from "../services/api";

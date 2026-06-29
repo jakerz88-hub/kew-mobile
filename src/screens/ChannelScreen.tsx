@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { friendlyError } from "../utils/friendlyError";
-import { View, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, Image, RefreshControl, Platform } from "react-native";
+import { View, FlatList, TouchableOpacity, StyleSheet, Image, RefreshControl, Platform } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { useStore } from "../store";

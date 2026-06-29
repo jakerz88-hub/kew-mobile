@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
-import { View, FlatList, StyleSheet, SafeAreaView, Image, RefreshControl, TouchableOpacity, Platform } from "react-native";
+import { View, FlatList, StyleSheet, Image, RefreshControl, TouchableOpacity, Platform } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { supabase } from "../services/supabase";

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { friendlyError } from "../utils/friendlyError";
-import { View, ScrollView, SafeAreaView, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import { View, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { useStore } from "../store";

@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
-import { View, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Text } from "react-native";
+import { View, TouchableOpacity, StyleSheet, ScrollView, Text } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { SansText, SerifText, Divider } from "../components/UI";

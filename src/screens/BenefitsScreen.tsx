@@ -2,8 +2,9 @@ import React, { useMemo, useState } from "react";
 import * as WebBrowser from "expo-web-browser";
 import { friendlyError } from "../utils/friendlyError";
 import {
-  View, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator,
+  View, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import Svg, { Rect, Path, Polyline, Circle, Line } from "react-native-svg";
